@@ -161,6 +161,9 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 @keyframes pulse{0%{box-shadow:0 0 0 0 #22c55e99}70%{box-shadow:0 0 0 8px #22c55e00}100%{box-shadow:0 0 0 0 #22c55e00}}
 .stb{border-radius:16px;padding:14px 16px;color:#fff;box-shadow:0 4px 14px #0f172a1f}
 .st-black{background:linear-gradient(135deg,#1f2937,#0f172a)}
+.timebar{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:14px}
+.timebar.back{background:var(--warn2);border-color:#f59e0b;color:#78350f}.timebar.edit{background:#fffbeb;border-color:#fcd34d}
+.timebar input{padding:5px 8px}.bdbig{font-size:20px;font-weight:800;color:#b45309}
 .scopelab{color:var(--bad);font-weight:800;margin-left:6px}
 .st-green{background:linear-gradient(135deg,#16a34a,#15803d)}.st-orange{background:linear-gradient(135deg,#f97316,#ea580c)}.st-pink{background:linear-gradient(135deg,#ec4899,#db2777)}
 .stt{font-size:15px;font-weight:700;opacity:.95}
@@ -223,9 +226,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.0.0';
-const MIN_SERVER_VERSION = '3.0.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '3.1.0';
+const MIN_SERVER_VERSION = '3.1.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.1.0': ['ตรวจสอบสถานะ: ตั้งวัน/เวลาบันทึกย้อนหลังได้ คงค่าไว้ใช้ต่อเนื่อง ไม่ใช้งานเกินเวลาที่แอดมินกำหนดจะกลับเป็นเวลาปัจจุบัน'],
   '3.0.0': ['แผงสถิติเพิ่มบล็อกสีดำ "นักเรียนทั้งหมด"', 'ตรวจสอบสถานะ: เลือกห้อง/นักเรียน แล้วสถิติและตารางแสดงเฉพาะห้องนั้น (ชื่อห้องสีแดงต่อท้ายเมนู)', 'ลบรายการบันทึกเข้าได้ภายใน 30 นาที (หลังจากนั้นแอดมิน)', 'ลงทะเบียนครู: กันลงซ้ำ แสดง/แก้ไข/ลบที่ปรึกษาร่วม สถิติเฉพาะห้องตัวเอง'],
   '2.9.0': ['รายงานพฤติกรรม: รายงานรวมตามช่วงวันที่ และ/หรือ ชั้น/ห้อง (เว้นช่องพิมพ์ว่างแล้วกดค้นหา)'],
   '2.8.1': ['เอาเมนู "บันทึกมาสาย (ไม่ขออนุญาต)" ออก — หน้าตรวจสอบสถานะบันทึกให้อัตโนมัติอยู่แล้ว'],
@@ -1301,8 +1305,8 @@ function statsLayout(inner) { return `<div class="withstats"><div class="wsmain"
 function statsHTML(r) {
   const pct = (a, b) => b ? Math.min(100, Math.round(a * 100 / b)) : 0;
   const lab = STATS_SCOPE && STATS_SCOPE.label ? ` <span style="color:var(--bad)">${esc(STATS_SCOPE.label)}</span>` : '';
-  return `<div class="sthead">📊 สถิติการมาสายวันนี้${lab}<small>${esc(thDate(r.date))} · อัปเดต ${esc(String(r.time).slice(0, 8))} <span class="live"></span></small></div>
-   <div class="stb st-black"><div class="stt">นักเรียนทั้งหมด${lab ? ' ' + esc(STATS_SCOPE.label) : ''}</div><div class="stn">${r.studentCount}<small> คน</small></div><div class="sts">เข้าสายวันนี้ <b>${r.totalLate}</b> คน</div></div>
+  return `<div class="sthead">📊 สถิติการมาสาย${curAt() ? '' : 'วันนี้'}${lab}<small>${curAt() ? '<b style="color:var(--warn)">⏪ ย้อนหลัง</b> ' : ''}${esc(thDate(r.date))} · อัปเดต ${esc(String(r.time).slice(0, 8))} <span class="live"></span></small></div>
+   <div class="stb st-black"><div class="stt">นักเรียนทั้งหมด${lab ? ' ' + esc(STATS_SCOPE.label) : ''}</div><div class="stn">${r.studentCount}<small> คน</small></div><div class="sts">เข้าสาย${curAt() ? 'วันนั้น' : 'วันนี้'} <b>${r.totalLate}</b> คน</div></div>
    <div class="stb st-green"><div class="stt">มีบัตรอนุญาต</div><div class="stn">${r.passCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.passEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.passEntered, r.passCount)}%"></i></div></div>
    <div class="stb st-orange"><div class="stt">ขออนุญาตครูไว้</div><div class="stn">${r.reqCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.reqEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.reqEntered, r.reqCount)}%"></i></div></div>
    <div class="stb st-pink"><div class="stt">เข้าสายวันนี้ (ไม่ขออนุญาต)</div><div class="stn">${r.unauthCount}<small> คน</small></div><div class="sts">รวมเข้าสายทุกประเภท <b>${r.totalLate}</b> คน</div></div>`;
@@ -1311,7 +1315,7 @@ async function refreshStats() {
   const el = $('#statsPanel'); if (!el) return;
   const sc = STATS_SCOPE;
   try {
-    const r = await rpc('lateStats', ['', sc ? { grade: sc.grade || '', room: sc.room || '', rooms: sc.rooms || [] } : {}], S.token);
+    const r = await rpc('lateStats', [(curAt() || {}).date || '', sc ? { grade: sc.grade || '', room: sc.room || '', rooms: sc.rooms || [] } : {}], S.token);
     if ($('#statsPanel') && sc === STATS_SCOPE) $('#statsPanel').innerHTML = statsHTML(r);
   } catch (e) { }
 }
@@ -1321,11 +1325,71 @@ function startStats() {
   PAGE_CLEANUP.push(() => clearInterval(t));
 }
 
+/* ---------- ตั้งวันเวลาบันทึกย้อนหลัง (หน้าตรวจสอบสถานะ) ----------
+   ตั้งแล้วคงค่าไว้ใช้ต่อเนื่อง / ไม่มีการใช้งานเกินเวลาที่แอดมินกำหนด → กลับเป็นเวลาปัจจุบัน */
+let BACKDATE = (() => { try { return JSON.parse(store.get('backdate') || 'null'); } catch (e) { return null; } })();
+const bdLimitMs = () => (S.backdateMinutes || 10) * 60000;
+function bdExpired() { return BACKDATE && (Date.now() - BACKDATE.last > bdLimitMs()); }
+function curAt() { if (CUR !== 'status' || !BACKDATE || !S.canBackdate || bdExpired()) return null; return { date: BACKDATE.date, time: BACKDATE.time }; }
+function bdSave() { store.set('backdate', BACKDATE ? JSON.stringify(BACKDATE) : null); }
+let bdLastWrite = 0;
+function bdTouch() { if (!BACKDATE || bdExpired()) return; BACKDATE.last = Date.now(); if (Date.now() - bdLastWrite > 2000) { bdLastWrite = Date.now(); bdSave(); } }
+['keydown', 'mousedown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => { if (CUR === 'status') bdTouch(); }, true));
+
 PAGES.status = pg => {
-  pg.innerHTML = statsLayout(`${searchBar('scQ', 'พิมพ์รหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง เพื่อตรวจสอบสถานะ', 'ตรวจสอบ')}<div id="scOut"></div>
+  pg.innerHTML = statsLayout(`<div id="scTime" class="timebar"></div>${searchBar('scQ', 'พิมพ์รหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง เพื่อตรวจสอบสถานะ', 'ตรวจสอบ')}<div id="scOut"></div>
    <div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">รายการนักเรียนเข้าสาย</h3><div class="row" style="margin:0"><input type="date" id="scDate" value="${S.today}"><button class="btn ghost" id="scRef">โหลด</button></div></div><div id="scTbl"></div></div>`);
   startStats();
   const lateTopic = () => (S.topics.find(t => t.system === 'LATE') || { points: '-5' }).points;
+  /* ---- แถบวันเวลา ---- */
+  let editing = false;
+  const fmtLeft = ms => { const s2 = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s2 / 60) + ':' + pad(s2 % 60); };
+  const nowText = () => { const d = new Date(); return `${thDate(d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()))} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} น.`; };
+  const applyDate = () => { $('#scDate').value = (curAt() || {}).date || S.today; refreshStats(); loadTable(); };
+  const drawTime = () => {
+    const el = $('#scTime'); if (!el) return;
+    const at = curAt();
+    if (editing) {
+      const d0 = at ? at.date : S.today, t0 = at ? at.time.slice(0, 5) : nowHM();
+      el.className = 'timebar edit';
+      el.innerHTML = `<b>⏪ ตั้งวันเวลาบันทึกย้อนหลัง</b><input type="date" id="bdD" value="${d0}" max="${S.today}"><input type="time" id="bdT" value="${t0}"><button class="btn sm" id="bdOk">ใช้วันเวลานี้</button><button class="btn sm ghost" id="bdCancel">ยกเลิก</button>
+        <span class="muted">คงค่าไว้จนกว่าจะกดกลับ หรือไม่ได้ใช้งานเกิน ${S.backdateMinutes} นาที</span>`;
+      $('#bdOk').onclick = () => {
+        const d = $('#bdD').value, t = $('#bdT').value;
+        if (!d || !t) return toast('ใส่ทั้งวันที่และเวลา', 'err');
+        const now = new Date(), sel = new Date(d + 'T' + t);
+        if (sel > now) return toast('ตั้งวันเวลาในอนาคตไม่ได้', 'err');
+        BACKDATE = { date: d, time: t, last: Date.now() }; bdSave(); editing = false; drawTime(); applyDate();
+        toast('ตั้งวันเวลาย้อนหลังแล้ว', 'ok');
+      };
+      $('#bdCancel').onclick = () => { editing = false; drawTime(); };
+      return;
+    }
+    if (at) {
+      el.className = 'timebar back';
+      el.innerHTML = `<b>⏪ กำลังบันทึกย้อนหลัง:</b><span class="bdbig">${esc(thDate(at.date))} เวลา ${esc(at.time.slice(0, 5))} น.</span>
+        <button class="btn sm ghost" id="bdEdit">แก้ไข</button><button class="btn sm" id="bdClear">กลับเป็นเวลาปัจจุบัน</button>
+        <span class="muted" id="bdLeft"></span>`;
+      $('#bdEdit').onclick = () => { editing = true; drawTime(); };
+      $('#bdClear').onclick = () => { BACKDATE = null; bdSave(); drawTime(); applyDate(); toast('กลับมาใช้วันเวลาปัจจุบันแล้ว', 'ok'); };
+      tick();
+      return;
+    }
+    el.className = 'timebar';
+    el.innerHTML = `<span>🕒 บันทึกด้วยวันเวลาปัจจุบัน: <b id="bdNow">${nowText()}</b></span>${S.canBackdate ? '<button class="btn sm ghost" id="bdEdit">⏪ ตั้งวัน/เวลาย้อนหลัง</button>' : ''}`;
+    if ($('#bdEdit')) $('#bdEdit').onclick = () => { editing = true; drawTime(); };
+  };
+  const tick = () => {
+    if (BACKDATE && bdExpired()) {
+      BACKDATE = null; bdSave(); editing = false; drawTime(); applyDate();
+      toast(`ไม่ได้ใช้งานเกิน ${S.backdateMinutes} นาที — กลับมาใช้วันเวลาปัจจุบันแล้ว`); return;
+    }
+    if ($('#bdNow')) $('#bdNow').textContent = nowText();
+    if ($('#bdLeft') && BACKDATE) $('#bdLeft').textContent = `จะกลับเป็นเวลาปัจจุบันถ้าไม่ได้ใช้งาน ${S.backdateMinutes} นาที (เหลือ ${fmtLeft(bdLimitMs() - (Date.now() - BACKDATE.last))})`;
+  };
+  const tmr = setInterval(tick, 1000);
+  PAGE_CLEANUP.push(() => clearInterval(tmr));
+  if (bdExpired()) { BACKDATE = null; bdSave(); }
   /* ขอบเขตที่กำลังดู: ไม่เลือก = ทั้งหมด / เลือกชั้น-ห้อง หรือเลือกนักเรียน = เฉพาะห้องนั้น */
   const setScope = (g, r) => {
     STATS_SCOPE = (g || r) ? { grade: g || '', room: r || '', label: scopeText(g, r) } : null;
@@ -1348,10 +1412,10 @@ PAGES.status = pg => {
   $('#scRef').onclick = () => safe(loadTable);
   $('#scDate').onchange = () => safe(loadTable);
   bindSearch('scQ', async sid => {
-    const r = await api('checkStatus', sid); S.today = r.today;
+    const r = await api('checkStatus', sid, curAt()); S.today = r.today;
     const b = r.bundle, s = b.student;
     setScope(s.grade, s.room);
-    const entered = r.entries.length ? `<div class="banner info">วันนี้บันทึกเข้าแล้ว ${r.entries.length} ครั้ง: ${r.entries.map(e => esc(hm(e.time)) + ' (' + esc(e.type) + ')').join(', ')}</div>` : '';
+    const entered = r.entries.length ? `<div class="banner info">${curAt() ? 'วันที่ ' + esc(thDate(r.today)) : 'วันนี้'}บันทึกเข้าแล้ว ${r.entries.length} ครั้ง: ${r.entries.map(e => esc(hm(e.time)) + ' (' + esc(e.type) + ')').join(', ')}</div>` : '';
     let html = '', auto = false;
     if (r.mode === 'pass') {
       html = `<div class="banner ok">✅ มีบัตรอนุญาตเข้าสายวันนี้ · เวลาเข้า ${esc(hm(r.card.pass.entryTime))} น.</div>${entered}
@@ -1365,7 +1429,7 @@ PAGES.status = pg => {
         <div class="block" style="margin-top:12px"><h4>รายละเอียดการขอเข้าสาย</h4><div class="person">${q.photo ? `<img src="${q.photo}" style="max-width:180px;border-radius:8px">` : '<div class="ph lg nophoto">ขอเลื่อน<br>แนบรูป</div>'}<table class="kv"><tr><th>วันที่</th><td>${esc(thDate(q.date))}</td></tr><tr><th>เวลารับเรื่อง</th><td>${esc(hm(q.receivedTime))} น.</td></tr><tr><th>เวลาที่ขอเข้า</th><td>${esc(hm(q.entryTime))} น.</td></tr><tr><th>เหตุผล</th><td>${esc(q.reason)}</td></tr><tr><th>ผู้บันทึก</th><td>${esc(q.recordedBy)}</td></tr></table></div></div>
         <button class="btn green" id="scIn" style="font-size:18px;padding:14px 24px;margin-top:12px">✔ บันทึกเข้าโรงเรียน</button>`;
     } else {
-      html = `<div class="banner bad">✖ ไม่พบบัตรอนุญาตหรือการขอเข้าสายของวันนี้ (${esc(thDate(r.today))})${r.pendingPass ? '<div style="font-size:14px;font-weight:600">มีคำขอทำบัตรของวันนี้ แต่แอดมินยังไม่อนุมัติ</div>' : ''}${r.otherDates && r.otherDates.length ? `<div style="font-size:14px;font-weight:600">พบรายการของวันที่ ${r.otherDates.map(thDate).join(', ')} ซึ่งไม่ตรงกับวันนี้</div>` : ''}</div>${entered}
+      html = `<div class="banner bad">✖ ไม่พบบัตรอนุญาตหรือการขอเข้าสายของ${curAt() ? 'วันที่' : 'วันนี้'} (${esc(thDate(r.today))})${r.pendingPass ? '<div style="font-size:14px;font-weight:600">มีคำขอทำบัตรของวันนี้ แต่แอดมินยังไม่อนุมัติ</div>' : ''}${r.otherDates && r.otherDates.length ? `<div style="font-size:14px;font-weight:600">พบรายการของวันที่ ${r.otherDates.map(thDate).join(', ')} ซึ่งไม่ตรงกับวันนี้</div>` : ''}</div>${entered}
         <div class="grid2">${studentBlock(s, 'lg')}${r.pendingPass
           ? `<div class="block"><h4>มาสายโดยไม่ขออนุญาต</h4><p>มีคำขอทำบัตรรอแอดมินอนุมัติอยู่ ระบบจึงยังไม่บันทึกอัตโนมัติ ถ้าต้องการบันทึกมาสายไม่ขออนุญาต (หัก <b style="color:var(--bad)">${esc(lateTopic())}</b> คะแนน) กดปุ่มนี้</p><button class="btn red" id="scUn">บันทึกมาสายไม่ขออนุญาต</button></div>`
           : '<div class="block" id="scAuto"><h4>มาสายโดยไม่ขออนุญาต</h4><p>⏳ กำลังบันทึกอัตโนมัติ...</p></div>'}</div>`;
@@ -1373,7 +1437,7 @@ PAGES.status = pg => {
     }
     $('#scOut').innerHTML = html;
     if (auto) {
-      const res = await api('recordUnauthorizedLate', s.studentId, false);
+      const res = await api('recordUnauthorizedLate', s.studentId, false, curAt());
       const box = $('#scAuto'); if (!box) return;
       if (res.duplicate) {
         box.innerHTML = `<h4>มาสายโดยไม่ขออนุญาต</h4><div class="banner warn" style="margin:0">วันนี้บันทึกไว้แล้วเวลา ${esc(hm(res.entry.time))} น. (ไม่บันทึกซ้ำ ไม่หักคะแนนซ้ำ)</div>`;
@@ -1392,8 +1456,8 @@ PAGES.status = pg => {
       loadTable(); refreshStats();
     }
     if ($('#scIn')) $('#scIn').onclick = () => safe(async () => {
-      let res = await api('recordEntry', s.studentId, false);
-      if (res.duplicate) { if (!await confirmBox(`วันนี้บันทึกเข้าไปแล้วเวลา ${esc(hm(res.entry.time))} น. ต้องการบันทึกซ้ำหรือไม่?`, 'บันทึกซ้ำ')) return; res = await api('recordEntry', s.studentId, true); }
+      let res = await api('recordEntry', s.studentId, false, curAt());
+      if (res.duplicate) { if (!await confirmBox(`วันนี้บันทึกเข้าไปแล้วเวลา ${esc(hm(res.entry.time))} น. ต้องการบันทึกซ้ำหรือไม่?`, 'บันทึกซ้ำ')) return; res = await api('recordEntry', s.studentId, true, curAt()); }
       toast(`บันทึกเข้าโรงเรียนแล้ว เวลา ${hm(res.entry.time)} น.`, 'ok');
       $('#scOut').innerHTML = `<div class="banner ok">บันทึกเข้าโรงเรียน: ${esc(fullName(s))} (${esc(classRoom(s))}) เวลา ${esc(hm(res.entry.time))} น. <button class="btn sm ghost danger" id="scDelIn" style="margin-left:8px">🗑 ลบรายการนี้</button><div class="muted" style="font-weight:400;font-size:13px">ผู้บันทึกลบได้ภายใน 30 นาที หลังจากนั้นแอดมินเท่านั้นที่ลบได้</div></div>`;
       $('#scDelIn').onclick = () => safe(async () => { if (!await confirmBox('ลบรายการบันทึกเข้านี้?', 'ลบ', true)) return; await api('deleteEntry', res.entry.entryId); $('#scOut').innerHTML = '<div class="banner info">ลบรายการแล้ว</div>'; loadTable(); refreshStats(); });
@@ -1405,12 +1469,14 @@ PAGES.status = pg => {
       $('#scQ').value = ''; $('#scQ').focus(); loadTable();
     });
   }, { onScope: (g, r) => setScope(g, r) });
+  drawTime();
+  if (curAt()) $('#scDate').value = curAt().date;
   loadTable();
 };
 async function unauthorized(s, outEl) {
-  let r = await api('recordUnauthorizedLate', s.studentId, false);
-  if (r.hasPermission) { if (!await confirmBox(`นักเรียนคนนี้${r.hasPass ? 'มีบัตรอนุญาต' : 'แจ้งครูที่ปรึกษา'}สำหรับวันนี้แล้ว ควรใช้เมนู "ตรวจสอบสถานะ / บันทึกเข้า"\nยังต้องการบันทึกเป็น "ไม่ขออนุญาต" และหักคะแนนหรือไม่?`, 'บันทึกและหักคะแนน', true)) return false; r = await api('recordUnauthorizedLate', s.studentId, true); }
-  else if (r.duplicate) { if (!await confirmBox(`วันนี้บันทึกมาสายไม่ขออนุญาตไปแล้วเวลา ${esc(hm(r.entry.time))} น. ต้องการบันทึกซ้ำ (หักคะแนนอีกครั้ง) หรือไม่?`, 'บันทึกซ้ำ', true)) return false; r = await api('recordUnauthorizedLate', s.studentId, true); }
+  let r = await api('recordUnauthorizedLate', s.studentId, false, curAt());
+  if (r.hasPermission) { if (!await confirmBox(`นักเรียนคนนี้${r.hasPass ? 'มีบัตรอนุญาต' : 'แจ้งครูที่ปรึกษา'}สำหรับวันนี้แล้ว ควรใช้เมนู "ตรวจสอบสถานะ / บันทึกเข้า"\nยังต้องการบันทึกเป็น "ไม่ขออนุญาต" และหักคะแนนหรือไม่?`, 'บันทึกและหักคะแนน', true)) return false; r = await api('recordUnauthorizedLate', s.studentId, true, curAt()); }
+  else if (r.duplicate) { if (!await confirmBox(`วันนี้บันทึกมาสายไม่ขออนุญาตไปแล้วเวลา ${esc(hm(r.entry.time))} น. ต้องการบันทึกซ้ำ (หักคะแนนอีกครั้ง) หรือไม่?`, 'บันทึกซ้ำ', true)) return false; r = await api('recordUnauthorizedLate', s.studentId, true, curAt()); }
   outEl.innerHTML = `<div class="banner bad">บันทึกแล้ว: ${esc(fullName(s))} (${esc(classRoom(s))}) มาสายโดยไม่ขออนุญาต วันที่ ${esc(thDate(r.entry.date))} เวลา ${esc(hm(r.entry.time))} น. · หักคะแนน ${esc(r.points)}</div>`;
   toast('บันทึกและหักคะแนนแล้ว', 'ok'); refreshStats();
   return true;
@@ -1447,6 +1513,8 @@ PAGES.settings = async pg => {
   const ta = (k, l) => `<label style="flex:1;min-width:240px">${l}<textarea data-f="${k}" rows="2" style="min-height:0">${esc(s[k] || '')}</textarea></label>`;
   pg.innerHTML = `<div class="card"><h3>ข้อมูลโรงเรียน / บัตร</h3><p class="muted" style="margin-top:-6px">กด Enter เพื่อขึ้นบรรทัดใหม่ได้ ที่แสดงผล (หัวเว็บ หน้าเข้าสู่ระบบ รายงาน บัตร) จะขึ้นบรรทัดใหม่ตาม</p><div class="row" id="sf1">${ta('schoolName', 'ชื่อโรงเรียน')}${ta('signerName', 'ชื่อผู้ลงนามในบัตร')}${ta('signerPosition', 'ตำแหน่งใต้ลายเซ็น')}</div></div>
    <div class="card"><h3>บัญชีแอดมิน / รหัสลายเซ็น</h3><div class="row" id="sf2">${f('adminUser', 'ชื่อผู้ใช้แอดมิน')}${f('adminPassword', 'รหัสผ่านแอดมิน')}${f('signatureCode', 'รหัสลายเซ็นบนบัตร (ใช้ตอนอนุมัติ)')}${f('registerCode', 'รหัสลงทะเบียนครู (เว้นว่าง = ปิด)')}</div>
+    <h3 style="margin-top:14px">บันทึกย้อนหลัง (หน้าตรวจสอบสถานะ)</h3><div class="row">${f('backdateMinutes', 'คงค่าวันเวลาย้อนหลังไว้ (นาที) ถ้าไม่ใช้งานเกินนี้ กลับเป็นเวลาปัจจุบัน', 'number')}
+    <div><div style="font-weight:600;font-size:14px;margin-bottom:6px">บทบาทที่ลงย้อนหลังได้</div><label class="chk"><input type="checkbox" checked disabled> แอดมิน</label> <label class="chk"><input type="checkbox" data-bdr="teacher" ${String(s.backdateRoles || '').split(',').includes('teacher') ? 'checked' : ''}> ครู</label> <label class="chk"><input type="checkbox" data-bdr="public" ${String(s.backdateRoles || '').split(',').includes('public') ? 'checked' : ''}> บุคคลทั่วไป</label></div></div>
     <p class="muted">ครูเข้าระบบด้วยเบอร์โทรที่อยู่ในรายชื่อครูที่ปรึกษา (เบอร์เป็นทั้งชื่อผู้ใช้และรหัสผ่าน) · บุคคลทั่วไปเข้าได้โดยไม่ต้องใส่รหัส</p></div>
    <div class="row"><button class="btn" id="sfSave">บันทึกการตั้งค่า</button></div>
    <div class="card"><h3>ภาพลายเซ็นผู้ออกบัตร</h3><p class="muted">แนะนำไฟล์ PNG พื้นโปร่งใส ระบบย่อให้กว้าง 400px ลายเซ็นจะขึ้นบนบัตรเฉพาะเมื่อใส่รหัสลายเซ็นถูกต้อง</p>
@@ -1454,6 +1522,8 @@ PAGES.settings = async pg => {
    <div class="card"><h3>คะแนนหักเมื่อมาสายโดยไม่ขออนุญาต</h3><p>ปัจจุบัน <b style="color:var(--bad)">${esc(s.latePoints)}</b> คะแนน — แก้ไขได้ที่เมนู "หัวข้อพฤติกรรม"</p></div>`;
   $('#sfSave').onclick = () => safe(async () => {
     const o = {}; $$('[data-f]', pg).forEach(i => o[i.dataset.f] = i.value);
+    o.backdateRoles = ['admin'].concat($$('[data-bdr]', pg).filter(c => c.checked).map(c => c.dataset.bdr)).join(',');
+    S.backdateMinutes = Number(o.backdateMinutes) || S.backdateMinutes;
     S.school = await api('saveSettings', o); $('#hdSchool').textContent = S.school; toast('บันทึกแล้ว', 'ok');
   });
   $('#sigUp').onclick = () => pickImage(async d => { const u = await api('uploadSignature', d); $('#sigPrev').innerHTML = `<img src="${u}" style="max-height:90px">`; toast('อัปโหลดลายเซ็นแล้ว', 'ok'); }, { png: true });
@@ -1533,7 +1603,7 @@ function showWhatsNew() {
 /* =================== เข้าสู่ระบบ =================== */
 async function startApp() {
   const b = await api('getBootstrap');
-  Object.assign(S, { role: b.role, roleName: b.roleName, school: b.schoolName, topics: b.topics, today: b.today, classes: b.classes || [] });
+  Object.assign(S, { role: b.role, roleName: b.roleName, school: b.schoolName, topics: b.topics, today: b.today, classes: b.classes || [], backdateMinutes: b.backdateMinutes || 10, canBackdate: !!b.canBackdate });
   $('#loginView').hidden = true; $('#appView').hidden = false;
   $('#hdSchool').textContent = S.school; $('#hdRole').textContent = S.roleName;
   renderNav(); updateBell(b.pendingCount); showVersions();
