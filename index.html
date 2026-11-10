@@ -143,12 +143,30 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 .updbar{position:fixed;top:0;left:0;right:0;z-index:120;background:#0f172a;color:#fff;padding:10px 16px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font-weight:600;box-shadow:0 2px 10px #0004}
 .updbar .btn{padding:5px 12px}
 .srvwarn{background:var(--warn2);color:var(--warn);font-weight:700;padding:8px 16px;font-size:14px;text-align:center}
-.acwrap{position:relative;flex:1;min-width:0;display:flex}.acwrap input{flex:1;min-width:0}
+.search{flex-wrap:wrap}
+.acsel{display:flex;gap:6px}.acsel select{font-size:16px;padding:10px 8px;min-width:96px}
+.search{position:relative}
+.acwrap{flex:1;min-width:220px;display:flex}
+@media(max-width:600px){.acsel{width:100%}.acsel select{flex:1}.acwrap{min-width:0}
+ .aci{flex-wrap:wrap;gap:2px 10px}.acid{min-width:0}.acnm{flex:1 1 calc(100% - 90px)}.accr{margin-left:auto}}.acwrap input{flex:1;min-width:0}
 .acl{position:absolute;top:100%;left:0;right:0;z-index:30;background:#fff;border:1px solid #cbd5e1;border-radius:10px;margin-top:4px;box-shadow:0 10px 30px #0f172a26;max-height:min(420px,60vh);overflow:auto}
 .aci{display:flex;gap:10px;align-items:center;padding:9px 14px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:15px}
 .aci:hover,.aci.on{background:var(--pri2)}
 .acid{font-weight:800;min-width:70px}.acnm{flex:1}.accr{color:var(--mut);font-size:13px;white-space:nowrap}
 .acn{padding:8px 14px;font-size:12px;color:var(--mut);background:#f8fafc}
+.withstats{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start}
+.stats{position:sticky;top:66px;display:flex;flex-direction:column;gap:12px}
+.sthead{font-weight:800;font-size:16px;color:#0f172a}.sthead small{display:block;font-weight:600;font-size:12px;color:var(--mut)}
+.live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-left:4px;animation:pulse 1.5s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #22c55e99}70%{box-shadow:0 0 0 8px #22c55e00}100%{box-shadow:0 0 0 0 #22c55e00}}
+.stb{border-radius:16px;padding:14px 16px;color:#fff;box-shadow:0 4px 14px #0f172a1f}
+.st-green{background:linear-gradient(135deg,#16a34a,#15803d)}.st-orange{background:linear-gradient(135deg,#f97316,#ea580c)}.st-pink{background:linear-gradient(135deg,#ec4899,#db2777)}
+.stt{font-size:15px;font-weight:700;opacity:.95}
+.stn{font-size:60px;font-weight:800;line-height:1.05}.stn small{font-size:20px;font-weight:700}
+.sts{font-size:19px;font-weight:600}.sts b{font-size:30px}
+.stbar{height:7px;background:#ffffff44;border-radius:6px;margin-top:8px;overflow:hidden}.stbar i{display:block;height:100%;background:#fff;border-radius:6px}
+@media(max-width:1000px){.withstats{grid-template-columns:minmax(0,1fr)}.wsmain{min-width:0}.stats{position:static;order:-1;flex-direction:row;flex-wrap:wrap;gap:8px}.sthead{width:100%}.stb{flex:1 1 0;min-width:0;padding:10px 12px}.stn{font-size:40px}.sts b{font-size:22px}.sts{font-size:15px}}
+@media(max-width:600px){.stb{padding:8px 9px;border-radius:12px}.stt{font-size:12px;line-height:1.2;min-height:29px}.stn{font-size:32px}.stn small{font-size:13px}.sts{font-size:12px}.sts b{font-size:17px}.stbar{height:5px}}
 .lc-pending{color:#dc2626;font-weight:800;font-size:8pt}
 [hidden]{display:none!important}
 #printArea{display:none}
@@ -201,9 +219,11 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '2.4.0';
-const MIN_SERVER_VERSION = '2.4.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '2.6.0';
+const MIN_SERVER_VERSION = '2.6.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '2.6.0': ['ตรวจสอบสถานะ: ถ้าไม่มีบัตร/ไม่ได้ขออนุญาตครู บันทึกมาสายไม่ขออนุญาตทันที (ยกเลิกได้ใน 10 นาที)', 'แผงสถิติการมาสายแบบเรียลไทม์ด้านขวา (มีบัตร / ขออนุญาตครู / เข้าสายวันนี้)'],
+  '2.5.0': ['ทุกช่องค้นหามีดรอปดาวน์เลือกชั้น/ห้อง เลือกแล้วแสดงรายชื่อทันที', 'พิมพ์แล้วหยุด 1 วินาที ระบบค้นหาให้เอง (รวมหน้าจัดการนักเรียน)'],
   '2.4.0': ['ค้นหานักเรียนด้วยรหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง (เช่น ม.3/2) แล้วเลือกจากรายชื่อ', 'ชื่อเมนูไม่มีเลขนำหน้า'],
   '2.3.0': ['แสดงเวอร์ชันและอัปเดตหน้าเว็บอัตโนมัติ', 'รายชื่อนักเรียนแบ่งเป็นหน้า 1 2 3 … เลือกจำนวนต่อหน้าได้', 'ติ๊กเลือกข้ามหน้า / เลือกทั้งหมดตามเงื่อนไข'],
   '2.2.0': ['จัดการนักเรียน: กรองชั้น/ห้อง เลื่อนชั้น ย้ายห้อง ลบที่เลือก ลบทั้งหมด'],
@@ -415,56 +435,82 @@ function teachersBlock(ts, photos = true) {
   return `<div class="block"><h4>ครูที่ปรึกษา</h4><div class="plist">${ts.length ? ts.map(t => `<div class="pitem">${photos ? img(t.photo, 'md') : ''}<div><div class="n">${esc(fullName(t))}</div><div class="s">${esc(classRoom(t))}</div><div class="s">โทร: ${esc(t.phone || '-')}</div></div></div>`).join('') : '<div class="muted">ยังไม่มีครูที่ปรึกษาของชั้น/ห้องนี้</div>'}</div></div>`;
 }
 function searchBar(id, ph = 'พิมพ์รหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง เช่น ม.3/2', btn = 'ค้นหา') {
-  return `<div class="search noprint"><div class="acwrap"><input id="${id}" placeholder="${ph}" autocomplete="off"><div class="acl" id="${id}Ac" hidden></div></div><button class="btn" id="${id}Btn">${btn}</button></div>`;
+  return `<div class="search noprint" id="${id}Wrap">
+    <div class="acsel"><select id="${id}G" title="เลือกชั้น"><option value="">ทุกชั้น</option></select><select id="${id}R" title="เลือกห้อง"><option value="">ทุกห้อง</option></select></div>
+    <div class="acwrap"><input id="${id}" placeholder="${ph}" autocomplete="off"><div class="acl" id="${id}Ac" hidden></div></div><button class="btn" id="${id}Btn">${btn}</button></div>`;
 }
-/* ค้นหานักเรียน: พิมพ์แล้วมีรายชื่อขึ้นให้เลือก (รหัส / ชื่อ / นามสกุล / ชั้น/ห้อง) */
+/* ดรอปดาวน์ชั้น/ห้อง (ใช้ข้อมูลชั้นห้องจริงในระบบ) */
+function fillClassDropdowns(gSel, rSel) {
+  const g = gSel.value, r = rSel.value, cls = S.classes || [];
+  const grades = [...new Set(cls.map(c => c.grade))];
+  const sum = arr => arr.reduce((t, c) => t + c.count, 0);
+  gSel.innerHTML = '<option value="">ทุกชั้น</option>' + grades.map(x => `<option value="${esc(x)}" ${x === g ? 'selected' : ''}>${esc(x || '(ไม่ระบุ)')} (${sum(cls.filter(c => c.grade === x))})</option>`).join('');
+  const rc = cls.filter(c => !gSel.value || c.grade === gSel.value);
+  const rooms = [...new Set(rc.map(c => c.room))].sort((a, b) => String(a).localeCompare(String(b), 'th', { numeric: true }));
+  rSel.innerHTML = '<option value="">ทุกห้อง</option>' + rooms.map(x => `<option value="${esc(x)}" ${x === r ? 'selected' : ''}>ห้อง ${esc(x || '(ไม่ระบุ)')} (${sum(rc.filter(c => c.room === x))})</option>`).join('');
+}
+async function reloadClasses() { try { S.classes = await rpc('listClasses', [], S.token); } catch (e) { } }
+/* ค้นหานักเรียน: เลือกชั้น/ห้อง = ค้นหาทันที | พิมพ์รหัส/ชื่อ/นามสกุล/ชั้น/ห้อง แล้วหยุด 1 วินาที = ค้นหาเลย */
 function bindSearch(id, fn) {
-  const i = $('#' + id), box = $('#' + id + 'Ac');
-  let list = [], total = 0, hi = -1, seq = 0, timer = null, navigated = false;
-  const choose = s => { box.hidden = true; i.value = s.studentId; safe(() => fn(s.studentId)); };
-  const render = q => {
-    if (!list.length) { box.innerHTML = `<div class="acn">ไม่พบนักเรียนที่ตรงกับ "${esc(q)}"</div>`; box.hidden = false; return; }
+  const i = $('#' + id), box = $('#' + id + 'Ac'), gSel = $('#' + id + 'G'), rSel = $('#' + id + 'R'), wrap = $('#' + id + 'Wrap');
+  let list = [], total = 0, hi = -1, seq = 0, timer = null, navigated = false, lastKey = '';
+  fillClassDropdowns(gSel, rSel);
+  const choose = s => { box.hidden = true; i.value = s.studentId; lastKey = keyNow(); safe(() => fn(s.studentId)); };
+  const keyNow = () => i.value.trim() + '|' + gSel.value + '|' + rSel.value;
+  const label = () => [i.value.trim(), gSel.value && ('ชั้น ' + gSel.value), rSel.value && ('ห้อง ' + rSel.value)].filter(Boolean).join(' · ');
+  const render = () => {
+    if (!list.length) { box.innerHTML = `<div class="acn">ไม่พบนักเรียนที่ตรงกับ "${esc(label())}"</div>`; box.hidden = false; return; }
     box.innerHTML = list.map((s, k) => `<div class="aci ${k === hi ? 'on' : ''}" data-k="${k}"><span class="acid">${esc(s.studentId)}</span><span class="acnm">${esc(fullName(s))}</span><span class="accr">${esc(classRoom(s))}</span>${s.hasPhoto ? '' : '<span class="chip bad" style="font-size:11px">ไม่มีรูป</span>'}</div>`).join('') +
-      (total > list.length ? `<div class="acn">แสดง ${list.length} จาก ${total} คน — พิมพ์เพิ่มเพื่อให้แคบลง</div>` : `<div class="acn">${total} คน · ใช้ ↑ ↓ แล้วกด Enter หรือคลิกเลือก</div>`);
+      (total > list.length ? `<div class="acn">แสดง ${list.length} จาก ${total} คน — เลือกห้อง หรือพิมพ์เพิ่มเพื่อให้แคบลง</div>` : `<div class="acn">${total} คน · คลิกเลือก หรือใช้ ↑ ↓ แล้วกด Enter</div>`);
     box.hidden = false;
     $$('.aci', box).forEach(el => el.onmousedown = e => { e.preventDefault(); choose(list[+el.dataset.k]); });
     const on = $('.aci.on', box); if (on) on.scrollIntoView({ block: 'nearest' });
   };
-  const lookup = async q => {
+  const lookup = async () => {
     const my = ++seq;
-    const r = await rpc('findStudents', [q], S.token);
+    const r = await rpc('findStudents', [i.value.trim(), gSel.value, rSel.value], S.token);
     if (my !== seq) return false;
     list = r.items; total = r.total; hi = list.length ? 0 : -1; navigated = false;
     return true;
   };
-  const go = async () => {
-    const q = i.value.trim(); if (!q) return toast('พิมพ์รหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง', 'err');
+  /* ค้นหา: auto = มาจากการหยุดพิมพ์/เลือกดรอปดาวน์ (เปิดทันทีเฉพาะรหัสตรงทุกตัว) | กด Enter/ปุ่ม (พบคนเดียวก็เปิดเลย) */
+  const run = async auto => {
     clearTimeout(timer);
-    if (!box.hidden && navigated && list[hi]) return choose(list[hi]);
-    loading(true);
-    let ok; try { ok = await lookup(q); } catch (e) { loading(false); return safe(() => { throw e; }); }
-    loading(false); if (!ok) return;
-    const exact = list.find(s => s.studentId === q);
+    const q = i.value.trim();
+    if (!q && !gSel.value && !rSel.value) { seq++; lastKey = ''; box.hidden = true; if (!auto) toast('พิมพ์รหัส ชื่อ นามสกุล หรือเลือกชั้น/ห้อง', 'err'); return; }
+    if (!auto && !box.hidden && navigated && list[hi]) return choose(list[hi]);
+    if (auto && keyNow() === lastKey) return;      // ค้นหาเดิมไปแล้ว
+    if (!auto) loading(true);
+    let ok;
+    try { ok = await lookup(); }
+    catch (e) { if (!auto) safe(() => { throw e; }); return; }
+    finally { if (!auto) loading(false); }
+    if (!ok) return;
+    lastKey = keyNow();
+    const exact = q && list.find(s => s.studentId === q);
     if (exact) return choose(exact);
-    if (list.length === 1) return choose(list[0]);
-    render(q);
+    if (!auto && list.length === 1) return choose(list[0]);
+    render();
   };
+  gSel.onchange = () => { fillClassDropdowns(gSel, rSel); i.value = ''; run(true); };
+  rSel.onchange = () => { i.value = ''; run(true); };
   i.oninput = () => {
     clearTimeout(timer);
-    const q = i.value.trim(); if (!q) { box.hidden = true; return; }
-    timer = setTimeout(async () => { try { if (await lookup(q)) render(q); } catch (e) { } }, 250);
+    if (!i.value.trim() && !gSel.value && !rSel.value) { seq++; lastKey = ''; box.hidden = true; return; }
+    timer = setTimeout(() => run(true), 1000);
   };
   i.onkeydown = e => {
     if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !box.hidden && list.length) {
       e.preventDefault(); navigated = true;
-      hi = (hi + (e.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length; render(i.value.trim()); return;
+      hi = (hi + (e.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length; render(); return;
     }
     if (e.key === 'Escape') { box.hidden = true; return; }
-    if (e.key === 'Enter') { e.preventDefault(); go(); }
+    if (e.key === 'Enter') { e.preventDefault(); run(false); }
   };
-  i.onblur = () => setTimeout(() => { box.hidden = true; }, 150);
-  i.onfocus = () => { if (list.length && i.value.trim()) render(i.value.trim()); };
-  $('#' + id + 'Btn').onclick = go;
+  i.onfocus = () => { if (list.length) render(); };
+  const outside = e => { if (!wrap.isConnected) return document.removeEventListener('mousedown', outside); if (!wrap.contains(e.target)) box.hidden = true; };
+  document.addEventListener('mousedown', outside);
+  $('#' + id + 'Btn').onclick = () => run(false);
   setTimeout(() => i.focus(), 50);
 }
 
@@ -630,6 +676,7 @@ function showPage(id) {
   const item = MENU.flatMap(m => m[1]).find(i => i[0] === id);
   if (!item || !item[2].includes(S.role)) return;
   CUR = id; ON_PHOTO = null;
+  PAGE_CLEANUP.forEach(f => { try { f(); } catch (e) { } }); PAGE_CLEANUP = [];
   $$('#nav a').forEach(a => a.classList.toggle('on', a.dataset.p === id));
   $('#main').innerHTML = `<h2>${item[1]}</h2><div id="pg"></div>`;
   window.scrollTo(0, 0);
@@ -652,7 +699,7 @@ PAGES.importStudents = pg => {
         const r = await api('importStudents', ok.slice(i, i + 400));
         for (const k in r) tot[k] += r[k];
       }
-      toast('นำเข้าเรียบร้อย', 'ok');
+      toast('นำเข้าเรียบร้อย', 'ok'); reloadClasses();
       return `<div class="banner ok">นำเข้าเรียบร้อย · นักเรียนใหม่ ${tot.added} · อัปเดต ${tot.updated} · ผู้ปกครองใหม่ ${tot.parentsAdded} · อัปเดตผู้ปกครอง ${tot.parentsUpdated} · ข้าม (ไม่มีรหัส) ${tot.skipped}</div><p class="muted">อัปโหลดรูปนักเรียน/ผู้ปกครองได้ที่เมนู "จัดการข้อมูล/รูปนักเรียน"</p>`;
     }
   });
@@ -719,7 +766,7 @@ PAGES.students = pg => {
     if (!keepPage) page = 1;
     const g0 = $('#stG').value, r0 = $('#stR').value;
     const r = await api('searchStudents', $('#stQ').value, g0, r0, page, pageSize);
-    items = r.items; classes = r.classes; page = r.page; fillClassSelects();
+    items = r.items; classes = r.classes; S.classes = r.classes.filter(c => c.grade || c.room); page = r.page; fillClassSelects();
     if ($('#stG').value !== g0 || $('#stR').value !== r0) return search();   // ชั้น/ห้องที่เลือกไม่มีแล้ว
     allFound = r.all.map(x => x[0]); r.all.forEach(x => gradeOf[x[0]] = x[1]);
     const from = r.found ? (page - 1) * r.pageSize + 1 : 0, to = (page - 1) * r.pageSize + items.length;
@@ -740,7 +787,9 @@ PAGES.students = pg => {
   const newFilter = () => { sel.clear(); search(); };
   $('#stG').onchange = () => { $('#stR').value = ''; newFilter(); };
   $('#stR').onchange = newFilter;
-  $('#stQBtn').onclick = newFilter; $('#stQ').onkeydown = e => { if (e.key === 'Enter') newFilter(); };
+  let stTimer = null;
+  $('#stQBtn').onclick = newFilter; $('#stQ').onkeydown = e => { if (e.key === 'Enter') { clearTimeout(stTimer); newFilter(); } };
+  $('#stQ').oninput = () => { clearTimeout(stTimer); stTimer = setTimeout(newFilter, 1000); };   // หยุดพิมพ์ 1 วินาที = ค้นหาเลย
   $('#stNew').onclick = () => renderStudentEditor(null);
   $('#stPromote').onclick = () => safe(async () => {
     const ids = selected(), map = {};
@@ -1096,9 +1145,30 @@ function entriesAoa(d) {
   });
   return a;
 }
+/* ---------- แผงสถิติการมาสาย (ด้านขวา, อัปเดตทุก 15 วินาที) ---------- */
+let PAGE_CLEANUP = [];
+function statsLayout(inner) { return `<div class="withstats"><div class="wsmain">${inner}</div><aside class="stats noprint" id="statsPanel"><div class="muted">กำลังโหลดสถิติ...</div></aside></div>`; }
+function statsHTML(r) {
+  const pct = (a, b) => b ? Math.min(100, Math.round(a * 100 / b)) : 0;
+  return `<div class="sthead">📊 สถิติการมาสายวันนี้<small>${esc(thDate(r.date))} · อัปเดต ${esc(String(r.time).slice(0, 8))} <span class="live"></span></small></div>
+   <div class="stb st-green"><div class="stt">มีบัตรอนุญาต</div><div class="stn">${r.passCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.passEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.passEntered, r.passCount)}%"></i></div></div>
+   <div class="stb st-orange"><div class="stt">ขออนุญาตครูไว้</div><div class="stn">${r.reqCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.reqEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.reqEntered, r.reqCount)}%"></i></div></div>
+   <div class="stb st-pink"><div class="stt">เข้าสายวันนี้ (ไม่ขออนุญาต)</div><div class="stn">${r.unauthCount}<small> คน</small></div><div class="sts">รวมเข้าสายทุกประเภท <b>${r.totalLate}</b> คน</div></div>`;
+}
+async function refreshStats() {
+  const el = $('#statsPanel'); if (!el) return;
+  try { const r = await rpc('lateStats', [], S.token); if ($('#statsPanel')) $('#statsPanel').innerHTML = statsHTML(r); } catch (e) { }
+}
+function startStats() {
+  refreshStats();
+  const t = setInterval(() => { if (!document.hidden) refreshStats(); }, 15000);
+  PAGE_CLEANUP.push(() => clearInterval(t));
+}
+
 PAGES.status = pg => {
-  pg.innerHTML = `${searchBar('scQ', 'พิมพ์รหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง เพื่อตรวจสอบสถานะ', 'ตรวจสอบ')}<div id="scOut"></div>
-   <div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">รายการนักเรียนเข้าสาย</h3><div class="row" style="margin:0"><input type="date" id="scDate" value="${S.today}"><button class="btn ghost" id="scRef">โหลด</button></div></div><div id="scTbl"></div></div>`;
+  pg.innerHTML = statsLayout(`${searchBar('scQ', 'พิมพ์รหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง เพื่อตรวจสอบสถานะ', 'ตรวจสอบ')}<div id="scOut"></div>
+   <div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">รายการนักเรียนเข้าสาย</h3><div class="row" style="margin:0"><input type="date" id="scDate" value="${S.today}"><button class="btn ghost" id="scRef">โหลด</button></div></div><div id="scTbl"></div></div>`);
+  startStats();
   const lateTopic = () => (S.topics.find(t => t.system === 'LATE') || { points: '-5' }).points;
   const loadTable = async () => {
     const d = await api('entriesOfDay', $('#scDate').value);
@@ -1110,7 +1180,7 @@ PAGES.status = pg => {
     const r = await api('checkStatus', sid); S.today = r.today;
     const b = r.bundle, s = b.student;
     const entered = r.entries.length ? `<div class="banner info">วันนี้บันทึกเข้าแล้ว ${r.entries.length} ครั้ง: ${r.entries.map(e => esc(hm(e.time)) + ' (' + esc(e.type) + ')').join(', ')}</div>` : '';
-    let html = '';
+    let html = '', auto = false;
     if (r.mode === 'pass') {
       html = `<div class="banner ok">✅ มีบัตรอนุญาตเข้าสายวันนี้ · เวลาเข้า ${esc(hm(r.card.pass.entryTime))} น.</div>${entered}
         <div class="cardwrap"><div>${cardHTML(r.card)}</div><div style="flex:1;min-width:260px"><div class="block"><h4>เหตุผลขอเข้าสาย</h4><p style="font-size:17px">${esc(r.card.pass.reason)}</p>
@@ -1124,15 +1194,37 @@ PAGES.status = pg => {
         <button class="btn green" id="scIn" style="font-size:18px;padding:14px 24px;margin-top:12px">✔ บันทึกเข้าโรงเรียน</button>`;
     } else {
       html = `<div class="banner bad">✖ ไม่พบบัตรอนุญาตหรือการขอเข้าสายของวันนี้ (${esc(thDate(r.today))})${r.pendingPass ? '<div style="font-size:14px;font-weight:600">มีคำขอทำบัตรของวันนี้ แต่แอดมินยังไม่อนุมัติ</div>' : ''}${r.otherDates && r.otherDates.length ? `<div style="font-size:14px;font-weight:600">พบรายการของวันที่ ${r.otherDates.map(thDate).join(', ')} ซึ่งไม่ตรงกับวันนี้</div>` : ''}</div>${entered}
-        <div class="grid2">${studentBlock(s, 'lg')}<div class="block"><h4>มาสายโดยไม่ขออนุญาต</h4><p>บันทึกวันเวลาเข้าสาย และหักคะแนนพฤติกรรม <b style="color:var(--bad)">${esc(lateTopic())} คะแนน</b> ทันที</p><button class="btn red" id="scUn">บันทึกมาสายไม่ขออนุญาต</button></div></div>`;
+        <div class="grid2">${studentBlock(s, 'lg')}${r.pendingPass
+          ? `<div class="block"><h4>มาสายโดยไม่ขออนุญาต</h4><p>มีคำขอทำบัตรรอแอดมินอนุมัติอยู่ ระบบจึงยังไม่บันทึกอัตโนมัติ ถ้าต้องการบันทึกมาสายไม่ขออนุญาต (หัก <b style="color:var(--bad)">${esc(lateTopic())}</b> คะแนน) กดปุ่มนี้</p><button class="btn red" id="scUn">บันทึกมาสายไม่ขออนุญาต</button></div>`
+          : '<div class="block" id="scAuto"><h4>มาสายโดยไม่ขออนุญาต</h4><p>⏳ กำลังบันทึกอัตโนมัติ...</p></div>'}</div>`;
+      auto = !r.pendingPass;
     }
     $('#scOut').innerHTML = html;
+    if (auto) {
+      const res = await api('recordUnauthorizedLate', s.studentId, false);
+      const box = $('#scAuto'); if (!box) return;
+      if (res.duplicate) {
+        box.innerHTML = `<h4>มาสายโดยไม่ขออนุญาต</h4><div class="banner warn" style="margin:0">วันนี้บันทึกไว้แล้วเวลา ${esc(hm(res.entry.time))} น. (ไม่บันทึกซ้ำ ไม่หักคะแนนซ้ำ)</div>`;
+      } else if (res.ok) {
+        box.innerHTML = `<h4 style="color:var(--bad)">✔ บันทึกมาสายโดยไม่ขออนุญาตแล้ว</h4><div style="font-size:40px;font-weight:800;color:var(--bad);line-height:1.1">${esc(hm(res.entry.time))} น.</div>
+          <p>วันที่ ${esc(thDate(res.entry.date))} · หักคะแนน <b style="color:var(--bad)">${esc(res.points)}</b> (${esc(res.topicName)})</p>
+          <button class="btn sm ghost danger" id="scUndo">↩ ยกเลิกรายการนี้ (ค้นหาผิดคน)</button><div class="muted" style="margin-top:4px">ยกเลิกได้ภายใน 10 นาที${S.role === 'admin' ? ' (แอดมินยกเลิกได้ตลอด)' : ''}</div>`;
+        toast('บันทึกมาสายไม่ขออนุญาตและหักคะแนนแล้ว', 'ok');
+        $('#scUndo').onclick = () => safe(async () => {
+          if (!await confirmBox(`ยกเลิกการบันทึกมาสายของ ${esc(fullName(s))} และคืนคะแนน?`, 'ยกเลิกรายการ', true)) return;
+          await api('undoUnauthorizedLate', res.entry.entryId);
+          box.innerHTML = '<h4>มาสายโดยไม่ขออนุญาต</h4><div class="banner info" style="margin:0">ยกเลิกรายการแล้ว คืนคะแนนเรียบร้อย</div>';
+          toast('ยกเลิกแล้ว', 'ok'); loadTable(); refreshStats();
+        });
+      } else { box.innerHTML = '<h4>มาสายโดยไม่ขออนุญาต</h4><div class="banner warn" style="margin:0">นักเรียนมีสิทธิ์เข้าสายแล้ว กรุณาค้นหาใหม่</div>'; }
+      loadTable(); refreshStats();
+    }
     if ($('#scIn')) $('#scIn').onclick = () => safe(async () => {
       let res = await api('recordEntry', s.studentId, false);
       if (res.duplicate) { if (!await confirmBox(`วันนี้บันทึกเข้าไปแล้วเวลา ${esc(hm(res.entry.time))} น. ต้องการบันทึกซ้ำหรือไม่?`, 'บันทึกซ้ำ')) return; res = await api('recordEntry', s.studentId, true); }
       toast(`บันทึกเข้าโรงเรียนแล้ว เวลา ${hm(res.entry.time)} น.`, 'ok');
       $('#scOut').innerHTML = `<div class="banner ok">บันทึกเข้าโรงเรียน: ${esc(fullName(s))} (${esc(classRoom(s))}) เวลา ${esc(hm(res.entry.time))} น.</div>`;
-      $('#scQ').value = ''; $('#scQ').focus(); $('#scDate').value = res.entry.date; loadTable();
+      $('#scQ').value = ''; $('#scQ').focus(); $('#scDate').value = res.entry.date; loadTable(); refreshStats();
     });
     if ($('#scUn')) $('#scUn').onclick = () => safe(async () => {
       if (!await confirmBox(`ยืนยันบันทึก ${esc(fullName(s))} มาสายโดยไม่ขออนุญาต และหักคะแนน ${esc(lateTopic())}?`, 'บันทึกและหักคะแนน', true)) return;
@@ -1147,13 +1239,14 @@ async function unauthorized(s, outEl) {
   if (r.hasPermission) { if (!await confirmBox(`นักเรียนคนนี้${r.hasPass ? 'มีบัตรอนุญาต' : 'แจ้งครูที่ปรึกษา'}สำหรับวันนี้แล้ว ควรใช้เมนู "ตรวจสอบสถานะ / บันทึกเข้า"\nยังต้องการบันทึกเป็น "ไม่ขออนุญาต" และหักคะแนนหรือไม่?`, 'บันทึกและหักคะแนน', true)) return false; r = await api('recordUnauthorizedLate', s.studentId, true); }
   else if (r.duplicate) { if (!await confirmBox(`วันนี้บันทึกมาสายไม่ขออนุญาตไปแล้วเวลา ${esc(hm(r.entry.time))} น. ต้องการบันทึกซ้ำ (หักคะแนนอีกครั้ง) หรือไม่?`, 'บันทึกซ้ำ', true)) return false; r = await api('recordUnauthorizedLate', s.studentId, true); }
   outEl.innerHTML = `<div class="banner bad">บันทึกแล้ว: ${esc(fullName(s))} (${esc(classRoom(s))}) มาสายโดยไม่ขออนุญาต วันที่ ${esc(thDate(r.entry.date))} เวลา ${esc(hm(r.entry.time))} น. · หักคะแนน ${esc(r.points)}</div>`;
-  toast('บันทึกและหักคะแนนแล้ว', 'ok');
+  toast('บันทึกและหักคะแนนแล้ว', 'ok'); refreshStats();
   return true;
 }
 
 /* ---------- 8.1 บันทึกมาสายไม่ขออนุญาต ---------- */
 PAGES.late = pg => {
-  pg.innerHTML = searchBar('ltQ') + '<div id="ltOut"></div>';
+  pg.innerHTML = statsLayout(searchBar('ltQ') + '<div id="ltOut"></div>');
+  startStats();
   bindSearch('ltQ', async sid => {
     const r = await api('lateContext', sid); const s = r.student;
     $('#ltOut').innerHTML = `${r.hasPass || r.hasRequest ? `<div class="banner warn">นักเรียนคนนี้${r.hasPass ? 'มีบัตรอนุญาตเข้าสาย' : 'แจ้งขอเข้าสายกับครูที่ปรึกษา'}สำหรับวันนี้แล้ว ควรบันทึกที่เมนู "ตรวจสอบสถานะ / บันทึกเข้า"</div>` : ''}
@@ -1282,7 +1375,7 @@ function showWhatsNew() {
 /* =================== เข้าสู่ระบบ =================== */
 async function startApp() {
   const b = await api('getBootstrap');
-  Object.assign(S, { role: b.role, roleName: b.roleName, school: b.schoolName, topics: b.topics, today: b.today });
+  Object.assign(S, { role: b.role, roleName: b.roleName, school: b.schoolName, topics: b.topics, today: b.today, classes: b.classes || [] });
   $('#loginView').hidden = true; $('#appView').hidden = false;
   $('#hdSchool').textContent = S.school; $('#hdRole').textContent = S.roleName;
   renderNav(); updateBell(b.pendingCount); showVersions();
