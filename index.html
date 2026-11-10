@@ -167,6 +167,7 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 .stbar{height:7px;background:#ffffff44;border-radius:6px;margin-top:8px;overflow:hidden}.stbar i{display:block;height:100%;background:#fff;border-radius:6px}
 @media(max-width:1000px){.withstats{grid-template-columns:minmax(0,1fr)}.wsmain{min-width:0}.stats{position:static;order:-1;flex-direction:row;flex-wrap:wrap;gap:8px}.sthead{width:100%}.stb{flex:1 1 0;min-width:0;padding:10px 12px}.stn{font-size:40px}.sts b{font-size:22px}.sts{font-size:15px}}
 @media(max-width:600px){.stb{padding:8px 9px;border-radius:12px}.stt{font-size:12px;line-height:1.2;min-height:29px}.stn{font-size:32px}.stn small{font-size:13px}.sts{font-size:12px}.sts b{font-size:17px}.stbar{height:5px}}
+.btn.postpone{background:#fff;color:var(--warn);border:1px solid #fcd34d}.btn.postpone.on{background:var(--warn2);border-color:#f59e0b}
 .lc-pending{color:#dc2626;font-weight:800;font-size:8pt}
 [hidden]{display:none!important}
 #printArea{display:none}
@@ -219,9 +220,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '2.6.0';
-const MIN_SERVER_VERSION = '2.6.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '2.7.0';
+const MIN_SERVER_VERSION = '2.7.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '2.7.0': ['ตอนระบบบังคับรูป (ออกบัตร / รับเรื่องขอเข้าสาย) มีปุ่ม "ขอเลื่อน" ส่งรูปภายหลังได้'],
   '2.6.0': ['ตรวจสอบสถานะ: ถ้าไม่มีบัตร/ไม่ได้ขออนุญาตครู บันทึกมาสายไม่ขออนุญาตทันที (ยกเลิกได้ใน 10 นาที)', 'แผงสถิติการมาสายแบบเรียลไทม์ด้านขวา (มีบัตร / ขออนุญาตครู / เข้าสายวันนี้)'],
   '2.5.0': ['ทุกช่องค้นหามีดรอปดาวน์เลือกชั้น/ห้อง เลือกแล้วแสดงรายชื่อทันที', 'พิมพ์แล้วหยุด 1 วินาที ระบบค้นหาให้เอง (รวมหน้าจัดการนักเรียน)'],
   '2.4.0': ['ค้นหานักเรียนด้วยรหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง (เช่น ม.3/2) แล้วเลือกจากรายชื่อ', 'ชื่อเมนูไม่มีเลขนำหน้า'],
@@ -1020,7 +1022,7 @@ function cardHTML(d) {
   const s = d.student, p = d.pass;
   return `<div class="lcard">
    <div class="lc-head"><div class="lc-school">${esc(d.schoolName)}</div><div class="lc-title">บัตรอนุญาตเข้าสาย</div><div class="lc-date">วันที่ ${esc(thDate(p.date))}</div></div>
-   <div class="lc-top">${s.photo ? `<img class="lc-photo" src="${s.photo}">` : '<div class="lc-photo nophoto">ไม่มีรูป</div>'}<div class="lc-st"><b>${esc(fullName(s))}</b>รหัส ${esc(s.studentId)}<br>${esc(classRoom(s))}${s.phone ? '<br>โทร ' + esc(s.phone) : ''}</div></div>
+   <div class="lc-top">${s.photo ? `<img class="lc-photo" src="${s.photo}">` : `<div class="lc-photo nophoto">${p.photoPostponed === 'TRUE' ? 'รอรูป<br>(ขอเลื่อน)' : 'ไม่มีรูป'}</div>`}<div class="lc-st"><b>${esc(fullName(s))}</b>รหัส ${esc(s.studentId)}<br>${esc(classRoom(s))}${s.phone ? '<br>โทร ' + esc(s.phone) : ''}</div></div>
    <div class="lc-time"><span>อนุญาตเข้าโรงเรียนเวลา</span><b>${esc(hm(p.entryTime))} น.</b></div>
    <div class="lc-sec"><i>เหตุผล:</i> ${esc(p.reason)}</div>
    <div class="lc-sec"><i>ผู้ปกครอง:</i> ${d.parents.length ? d.parents.slice(0, 2).map(x => `${esc(fullName(x))}${x.relation ? ' (' + esc(x.relation) + ')' : ''} ${esc(x.phone || '')}`).join('<br>') : '-'}</div>
@@ -1030,7 +1032,7 @@ function cardHTML(d) {
 }
 function cardWithActions(d) {
   const id = 'cw' + Math.random().toString(36).slice(2), p = d.pass;
-  const meta = `<div class="muted">ออกโดย ${esc(p.issuedBy)} · ${esc(p.createdAt)}${p.approvedBy ? ' · ' + (p.status === 'rejected' ? 'ไม่อนุมัติโดย ' : 'อนุมัติโดย ') + esc(p.approvedBy) : ''}</div>`;
+  const meta = `${p.photoPostponed === 'TRUE' && !d.student.photo ? '<div><span class="chip warn">ขอเลื่อนส่งรูปนักเรียน</span></div>' : ''}<div class="muted">ออกโดย ${esc(p.issuedBy)} · ${esc(p.createdAt)}${p.approvedBy ? ' · ' + (p.status === 'rejected' ? 'ไม่อนุมัติโดย ' : 'อนุมัติโดย ') + esc(p.approvedBy) : ''}</div>`;
   if (p.status === 'pending') {
     const adminBox = S.role === 'admin' ? `<div class="block" style="margin-top:8px"><h4>อนุมัติบัตรใบนี้</h4><div class="row"><input type="password" placeholder="รหัสลายเซ็น (ไม่ใส่ก็ได้)" data-apcode="${esc(p.passId)}" style="width:200px"><button class="btn green" data-approve="${esc(p.passId)}">✔ อนุญาตออกบัตร</button><button class="btn red" data-reject="${esc(p.passId)}">✖ ไม่อนุญาต</button></div><p class="muted">กดอนุญาตแล้วลายเซ็นจะปรากฏบนบัตรเอง</p></div>` : '';
     return `<div class="cardwrap"><div id="${id}">${cardHTML(d)}</div><div style="flex:1;min-width:240px"><div class="banner warn">⏳ รอแอดมินอนุมัติ — ยังพิมพ์บัตรไม่ได้</div>${meta}${adminBox}</div></div>`;
@@ -1071,7 +1073,7 @@ PAGES.pass = pg => {
     const b = r.bundle, s = b.student; S.today = r.today;
     const noPhoto = !s.photo;
     ON_PHOTO = () => load(s.studentId);
-    $('#psOut').innerHTML = `${noPhoto ? '<div class="banner bad">⚠ นักเรียนคนนี้ยังไม่มีรูปในระบบ — ยังออกบัตรไม่ได้ กดถ่ายรูปหรืออัปโหลดรูปในช่องรูปด้านล่างก่อน</div>' : ''}
+    $('#psOut').innerHTML = `${noPhoto ? '<div class="banner warn">⚠ นักเรียนคนนี้ยังไม่มีรูปในระบบ — ถ่ายรูปหรืออัปโหลดในช่องรูปด้านล่าง หรือกด "ขอเลื่อนรูป" เพื่อออกบัตรก่อนแล้วส่งรูปภายหลัง</div>' : ''}
       <div class="grid3">${studentBlock(s, 'lg')}${parentsBlock(b.parents)}${teachersBlock(b.teachers)}</div>
       ${r.passes.length ? `<div class="card" style="margin-top:14px"><h3>บัตรที่ออกแล้ว (วันนี้เป็นต้นไป)</h3><div id="psOld">${r.passes.map(cardWithActions).join('<hr>')}</div></div>` : ''}
       <div class="card" style="margin-top:14px"><h3>ออกบัตรอนุญาตเข้าสาย</h3>
@@ -1079,18 +1081,22 @@ PAGES.pass = pg => {
        <div class="row"><label>วันที่อนุญาต<input type="date" id="psDate" value="${r.today}"></label><label>เวลาที่จะเข้าโรงเรียน<input type="time" id="psTime"></label></div>
        <label style="width:100%">เหตุผล<textarea id="psReason"></textarea></label>
        <p class="muted">${S.role === 'admin' ? 'แอดมินออกบัตร: อนุมัติทันทีและลายเซ็นขึ้นบนบัตรอัตโนมัติ' : 'บัตรที่ครูออกจะส่งไปให้แอดมินอนุมัติก่อน (มีกระดิ่งแจ้งเตือน) เมื่ออนุมัติแล้วลายเซ็นจะปรากฏและพิมพ์บัตรได้'}</p>
-       <button class="btn" id="psGo" ${noPhoto ? 'disabled' : ''}>${S.role === 'admin' ? 'ออกบัตร' : 'ส่งคำขอทำบัตร'}</button></div><div id="psCard" class="card" hidden></div>`;
+       <div class="row"><button class="btn" id="psGo" ${noPhoto ? 'disabled' : ''}>${S.role === 'admin' ? 'ออกบัตร' : 'ส่งคำขอทำบัตร'}</button>${noPhoto ? `<button class="btn postpone on" id="psLater">⏳ ขอเลื่อนรูป แล้ว${S.role === 'admin' ? 'ออกบัตร' : 'ส่งคำขอทำบัตร'}</button>` : ''}</div>
+       ${noPhoto ? '<p class="muted">ขอเลื่อนรูป: บัตรจะออกได้โดยช่องรูปเป็น "รอรูป" เมื่อเพิ่มรูปนักเรียนภายหลัง รูปจะขึ้นบนบัตรเองเมื่อพิมพ์ใหม่</p>' : ''}</div><div id="psCard" class="card" hidden></div>`;
     if ($('#psOld')) wireApprove($('#psOld'), () => load(s.studentId));
-    $('#psGo').onclick = () => safe(async () => {
-      if (noPhoto) return alertBox('นักเรียนยังไม่มีรูปในระบบ ยังออกบัตรไม่ได้');
+    const issue = postponePhoto => safe(async () => {
+      if (noPhoto && !postponePhoto) return alertBox('นักเรียนยังไม่มีรูปในระบบ — เพิ่มรูป หรือกด "ขอเลื่อนรูป"');
+      if (postponePhoto && !await confirmBox('ออกบัตรโดยขอเลื่อนส่งรูปนักเรียนภายหลัง?', 'ขอเลื่อนรูป')) return;
       try {
-        const d = await api('issueLatePass', { studentId: s.studentId, allowed: $('#psAllow').checked, date: $('#psDate').value, entryTime: $('#psTime').value, reason: $('#psReason').value });
+        const d = await api('issueLatePass', { studentId: s.studentId, allowed: $('#psAllow').checked, date: $('#psDate').value, entryTime: $('#psTime').value, reason: $('#psReason').value, postponePhoto: !!postponePhoto });
         const box = $('#psCard'); box.hidden = false;
         box.innerHTML = `<div class="banner ${d.pass.status === 'pending' ? 'warn' : 'ok'}">${d.pass.status === 'pending' ? 'ส่งคำขอทำบัตรแล้ว รอแอดมินอนุมัติ' : 'ออกบัตรเรียบร้อย'}</div>${cardWithActions(d)}`;
         wireApprove(box, () => load(s.studentId));
-        $('#psGo').disabled = true; box.scrollIntoView({ behavior: 'smooth' }); refreshBell();
-      } catch (e) { if (e.message === 'NO_PHOTO') throw new Error('นักเรียนยังไม่มีรูปในระบบ ยังออกบัตรไม่ได้ กรุณาเพิ่มรูปก่อน'); throw e; }
+        $('#psGo').disabled = true; if ($('#psLater')) $('#psLater').disabled = true; box.scrollIntoView({ behavior: 'smooth' }); refreshBell();
+      } catch (e) { if (e.message === 'NO_PHOTO') throw new Error('นักเรียนยังไม่มีรูปในระบบ — เพิ่มรูป หรือกด "ขอเลื่อนรูป"'); throw e; }
     });
+    $('#psGo').onclick = () => issue(false);
+    if ($('#psLater')) $('#psLater').onclick = () => issue(true);
   };
   bindSearch('psQ', load);
 };
@@ -1098,30 +1104,43 @@ PAGES.pass = pg => {
 /* ---------- 6.2 ครูรับเรื่องขอเข้าสาย ---------- */
 PAGES.request = pg => {
   pg.innerHTML = searchBar('rqQ') + '<div id="rqOut"></div>';
-  bindSearch('rqQ', async sid => {
+  const load = async sid => {
     const b = await api('requestContext', sid); const s = b.student; S.today = b.today;
-    let photo = '';
+    let photo = '', postpone = false;
+    const photoCell = q => q.photoId ? '<span class="chip ok">มีรูป</span>' : `<span class="chip warn">ขอเลื่อนแนบรูป</span> <button class="btn sm" data-att="${esc(q.requestId)}">📷 แนบรูป</button>`;
     $('#rqOut').innerHTML = `<div class="grid3">${studentBlock(s, 'lg')}${parentsBlock(b.parents)}${teachersBlock(b.teachers)}</div>
-      ${b.requests.length ? `<div class="card" style="margin-top:14px"><h4>เรื่องขอเข้าสายที่บันทึกไว้แล้ว</h4><table class="t"><thead><tr><th>วันที่</th><th>เวลารับเรื่อง</th><th>เวลาที่ขอเข้า</th><th>เหตุผล</th><th>ผู้บันทึก</th></tr></thead><tbody>${b.requests.map(q => `<tr><td>${esc(thDate(q.date))}</td><td>${esc(hm(q.receivedTime))}</td><td><b style="color:var(--bad)">${esc(hm(q.entryTime))}</b></td><td>${esc(q.reason)}</td><td>${esc(q.recordedBy)}</td></tr>`).join('')}</tbody></table></div>` : ''}
+      ${b.requests.length ? `<div class="card" style="margin-top:14px"><h4>เรื่องขอเข้าสายที่บันทึกไว้แล้ว</h4><div class="scroll"><table class="t"><thead><tr><th>วันที่</th><th>เวลารับเรื่อง</th><th>เวลาที่ขอเข้า</th><th>เหตุผล</th><th>รูปเหตุการณ์</th><th>ผู้บันทึก</th></tr></thead><tbody>${b.requests.map(q => `<tr><td>${esc(thDate(q.date))}</td><td>${esc(hm(q.receivedTime))}</td><td><b style="color:var(--bad)">${esc(hm(q.entryTime))}</b></td><td>${esc(q.reason)}</td><td style="white-space:nowrap">${photoCell(q)}</td><td>${esc(q.recordedBy)}</td></tr>`).join('')}</tbody></table></div></div>` : ''}
       <div class="card" style="margin-top:14px"><h3>บันทึกการขอเข้าสาย</h3>
        <div class="row"><label class="chk" style="font-size:17px"><input type="checkbox" id="rqOk"> รับเรื่องขอเข้าสาย</label></div>
        <div class="row"><label>วันที่ขอเข้าสาย<input type="date" id="rqDate" value="${b.today}"></label><label>เวลาที่รับเรื่อง<input type="time" id="rqRecv" value="${nowHM()}"></label><label>เวลาที่ขอเข้า<input type="time" id="rqTime"></label></div>
        <label style="width:100%">เหตุผล<textarea id="rqReason"></textarea></label>
-       <div class="row"><div><div style="font-weight:600;font-size:14px;margin-bottom:4px">รูปเหตุการณ์ (บังคับ)</div><button class="btn" id="rqCam">📷 ถ่ายรูป</button> <button class="btn ghost" id="rqPick">📁 เลือกไฟล์</button></div><div id="rqPrev"></div></div>
-       <p class="muted" id="rqHint">ต้องแนบรูปเหตุการณ์ก่อน จึงจะกดบันทึกได้</p>
+       <div class="row"><div><div style="font-weight:600;font-size:14px;margin-bottom:4px">รูปเหตุการณ์</div><button class="btn" id="rqCam">📷 ถ่ายรูป</button> <button class="btn ghost" id="rqPick">📁 เลือกไฟล์</button> <button class="btn ghost postpone" id="rqLater">⏳ ขอเลื่อน (แนบรูปภายหลัง)</button></div><div id="rqPrev"></div></div>
+       <p class="muted" id="rqHint">ต้องแนบรูปเหตุการณ์ หรือกด "ขอเลื่อน" ก่อน จึงจะกดบันทึกได้</p>
        <button class="btn" id="rqGo" disabled>บันทึก</button></div>`;
-    const check = () => { $('#rqGo').disabled = !(photo && $('#rqOk').checked); $('#rqHint').hidden = !!photo; };
+    $$('[data-att]', $('#rqOut')).forEach(btn => btn.onclick = () => {
+      openModal(`<h3>แนบรูปเหตุการณ์</h3><div class="row"><button class="btn" id="atCam">📷 ถ่ายรูป</button><button class="btn ghost" id="atFile">📁 เลือกไฟล์</button></div>`);
+      const done = async d => { closeModal(); await api('attachRequestPhoto', btn.dataset.att, d); toast('แนบรูปแล้ว', 'ok'); load(s.studentId); };
+      $('#atCam').onclick = () => takePhoto(done); $('#atFile').onclick = () => pickImage(done);
+    });
+    const check = () => { $('#rqGo').disabled = !((photo || postpone) && $('#rqOk').checked); $('#rqHint').hidden = !!(photo || postpone); };
     $('#rqOk').onchange = check;
-    const setPhoto = d => { photo = d; $('#rqPrev').innerHTML = `<img src="${d}" style="max-width:200px;border-radius:8px;border:1px solid var(--bd)">`; check(); };
+    const setPhoto = d => { photo = d; postpone = false; $('#rqLater').classList.remove('on'); $('#rqPrev').innerHTML = `<img src="${d}" style="max-width:200px;border-radius:8px;border:1px solid var(--bd)">`; check(); };
     $('#rqPick').onclick = () => pickImage(setPhoto);
     $('#rqCam').onclick = () => takePhoto(setPhoto);
+    $('#rqLater').onclick = () => {
+      postpone = !postpone; $('#rqLater').classList.toggle('on', postpone);
+      if (postpone) { photo = ''; $('#rqPrev').innerHTML = '<div class="banner warn" style="margin:0">⏳ ขอเลื่อนแนบรูป — แนบภายหลังได้ที่ตาราง "เรื่องขอเข้าสายที่บันทึกไว้แล้ว"</div>'; }
+      else $('#rqPrev').innerHTML = '';
+      check();
+    };
     $('#rqGo').onclick = () => safe(async () => {
-      if (!photo) return alertBox('ต้องแนบรูปเหตุการณ์ก่อน จึงจะบันทึกได้');
-      const q = await api('submitLateRequest', { studentId: s.studentId, accepted: $('#rqOk').checked, date: $('#rqDate').value, receivedTime: $('#rqRecv').value, entryTime: $('#rqTime').value, reason: $('#rqReason').value, photo });
-      $('#rqOut').innerHTML = `<div class="banner ok">บันทึกเรียบร้อย: ${esc(fullName(s))} (${esc(classRoom(s))}) ขอเข้าสายวันที่ ${esc(thDate(q.date))} เวลา ${esc(hm(q.entryTime))} น.</div>`;
+      if (!photo && !postpone) return alertBox('ต้องแนบรูปเหตุการณ์ หรือกด "ขอเลื่อน" ก่อน จึงจะบันทึกได้');
+      const q = await api('submitLateRequest', { studentId: s.studentId, accepted: $('#rqOk').checked, date: $('#rqDate').value, receivedTime: $('#rqRecv').value, entryTime: $('#rqTime').value, reason: $('#rqReason').value, photo, postponePhoto: postpone });
+      $('#rqOut').innerHTML = `<div class="banner ok">บันทึกเรียบร้อย: ${esc(fullName(s))} (${esc(classRoom(s))}) ขอเข้าสายวันที่ ${esc(thDate(q.date))} เวลา ${esc(hm(q.entryTime))} น.${q.photoPostponed === 'TRUE' ? '<div style="font-size:14px">⏳ ขอเลื่อนแนบรูปเหตุการณ์ — ค้นหานักเรียนคนนี้อีกครั้งเพื่อแนบรูป</div>' : ''}</div>`;
       $('#rqQ').value = ''; $('#rqQ').focus();
     });
-  });
+  };
+  bindSearch('rqQ', load);
 };
 
 /* ---------- 7. ตรวจสอบสถานะ ---------- */
@@ -1190,7 +1209,7 @@ PAGES.status = pg => {
       const q = r.request;
       html = `<div class="banner ok">✅ ขอเข้าสายกับครูที่ปรึกษาแล้ว · เวลาที่ขอเข้า <span style="color:var(--bad);font-size:22px">${esc(hm(q.entryTime))} น.</span></div>${entered}
         <div class="grid3">${studentBlock(s, 'lg')}${parentsBlock(b.parents)}${teachersBlock(b.teachers)}</div>
-        <div class="block" style="margin-top:12px"><h4>รายละเอียดการขอเข้าสาย</h4><div class="person">${q.photo ? `<img src="${q.photo}" style="max-width:180px;border-radius:8px">` : ''}<table class="kv"><tr><th>วันที่</th><td>${esc(thDate(q.date))}</td></tr><tr><th>เวลารับเรื่อง</th><td>${esc(hm(q.receivedTime))} น.</td></tr><tr><th>เวลาที่ขอเข้า</th><td>${esc(hm(q.entryTime))} น.</td></tr><tr><th>เหตุผล</th><td>${esc(q.reason)}</td></tr><tr><th>ผู้บันทึก</th><td>${esc(q.recordedBy)}</td></tr></table></div></div>
+        <div class="block" style="margin-top:12px"><h4>รายละเอียดการขอเข้าสาย</h4><div class="person">${q.photo ? `<img src="${q.photo}" style="max-width:180px;border-radius:8px">` : '<div class="ph lg nophoto">ขอเลื่อน<br>แนบรูป</div>'}<table class="kv"><tr><th>วันที่</th><td>${esc(thDate(q.date))}</td></tr><tr><th>เวลารับเรื่อง</th><td>${esc(hm(q.receivedTime))} น.</td></tr><tr><th>เวลาที่ขอเข้า</th><td>${esc(hm(q.entryTime))} น.</td></tr><tr><th>เหตุผล</th><td>${esc(q.reason)}</td></tr><tr><th>ผู้บันทึก</th><td>${esc(q.recordedBy)}</td></tr></table></div></div>
         <button class="btn green" id="scIn" style="font-size:18px;padding:14px 24px;margin-top:12px">✔ บันทึกเข้าโรงเรียน</button>`;
     } else {
       html = `<div class="banner bad">✖ ไม่พบบัตรอนุญาตหรือการขอเข้าสายของวันนี้ (${esc(thDate(r.today))})${r.pendingPass ? '<div style="font-size:14px;font-weight:600">มีคำขอทำบัตรของวันนี้ แต่แอดมินยังไม่อนุมัติ</div>' : ''}${r.otherDates && r.otherDates.length ? `<div style="font-size:14px;font-weight:600">พบรายการของวันที่ ${r.otherDates.map(thDate).join(', ')} ซึ่งไม่ตรงกับวันนี้</div>` : ''}</div>${entered}
