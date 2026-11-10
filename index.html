@@ -160,6 +160,8 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 .live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-left:4px;animation:pulse 1.5s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 #22c55e99}70%{box-shadow:0 0 0 8px #22c55e00}100%{box-shadow:0 0 0 0 #22c55e00}}
 .stb{border-radius:16px;padding:14px 16px;color:#fff;box-shadow:0 4px 14px #0f172a1f}
+.st-black{background:linear-gradient(135deg,#1f2937,#0f172a)}
+.scopelab{color:var(--bad);font-weight:800;margin-left:6px}
 .st-green{background:linear-gradient(135deg,#16a34a,#15803d)}.st-orange{background:linear-gradient(135deg,#f97316,#ea580c)}.st-pink{background:linear-gradient(135deg,#ec4899,#db2777)}
 .stt{font-size:15px;font-weight:700;opacity:.95}
 .stn{font-size:60px;font-weight:800;line-height:1.05}.stn small{font-size:20px;font-weight:700}
@@ -221,9 +223,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '2.9.0';
-const MIN_SERVER_VERSION = '2.9.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '3.0.0';
+const MIN_SERVER_VERSION = '3.0.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.0.0': ['แผงสถิติเพิ่มบล็อกสีดำ "นักเรียนทั้งหมด"', 'ตรวจสอบสถานะ: เลือกห้อง/นักเรียน แล้วสถิติและตารางแสดงเฉพาะห้องนั้น (ชื่อห้องสีแดงต่อท้ายเมนู)', 'ลบรายการบันทึกเข้าได้ภายใน 30 นาที (หลังจากนั้นแอดมิน)', 'ลงทะเบียนครู: กันลงซ้ำ แสดง/แก้ไข/ลบที่ปรึกษาร่วม สถิติเฉพาะห้องตัวเอง'],
   '2.9.0': ['รายงานพฤติกรรม: รายงานรวมตามช่วงวันที่ และ/หรือ ชั้น/ห้อง (เว้นช่องพิมพ์ว่างแล้วกดค้นหา)'],
   '2.8.1': ['เอาเมนู "บันทึกมาสาย (ไม่ขออนุญาต)" ออก — หน้าตรวจสอบสถานะบันทึกให้อัตโนมัติอยู่แล้ว'],
   '2.8.0': ['ครูลงทะเบียนเป็นครูที่ปรึกษาเองได้ (รหัสลงทะเบียน) พร้อมรูป', 'ตั้งค่าชื่อโรงเรียน/ผู้ลงนาม กด Enter ขึ้นบรรทัดใหม่ได้'],
@@ -500,8 +503,8 @@ function bindSearch(id, fn, opts = {}) {
     if (!auto && list.length === 1) return choose(list[0]);
     render();
   };
-  gSel.onchange = () => { fillClassDropdowns(gSel, rSel); i.value = ''; if (opts.noAutoSelect) { seq++; box.hidden = true; } else run(true); };
-  rSel.onchange = () => { i.value = ''; if (opts.noAutoSelect) { seq++; box.hidden = true; } else run(true); };
+  gSel.onchange = () => { fillClassDropdowns(gSel, rSel); i.value = ''; if (opts.onScope) opts.onScope(gSel.value, rSel.value); if (opts.noAutoSelect) { seq++; box.hidden = true; } else run(true); };
+  rSel.onchange = () => { i.value = ''; if (opts.onScope) opts.onScope(gSel.value, rSel.value); if (opts.noAutoSelect) { seq++; box.hidden = true; } else run(true); };
   i.oninput = () => {
     clearTimeout(timer);
     if (!i.value.trim() && !gSel.value && !rSel.value) { seq++; lastKey = ''; box.hidden = true; return; }
@@ -684,7 +687,7 @@ function renderNav() {
 function showPage(id) {
   const item = MENU.flatMap(m => m[1]).find(i => i[0] === id);
   if (!item || !item[2].includes(S.role)) return;
-  CUR = id; ON_PHOTO = null;
+  CUR = id; ON_PHOTO = null; STATS_SCOPE = null; setScopeLabel('');
   PAGE_CLEANUP.forEach(f => { try { f(); } catch (e) { } }); PAGE_CLEANUP = [];
   $$('#nav a').forEach(a => a.classList.toggle('on', a.dataset.p === id));
   $('#main').innerHTML = `<h2>${item[1]}</h2><div id="pg"></div>`;
@@ -1084,13 +1087,40 @@ function wireApprove(root, after) {
 }
 
 /* ---------- ลงทะเบียนครูที่ปรึกษา (เข้าด้วยรหัสลงทะเบียน) ---------- */
+function renderAdvisors(r) {
+  const card = $('#rgCard'); if (!card) return;
+  const draw = list => {
+    const others = list.filter(a => !a.isMe);
+    card.innerHTML = `<div class="banner ok">✅ ลงทะเบียนแล้ว: ${esc(r.name)} · ${r.rooms.map(x => esc(classRoom(x))).join(', ')} · User/Password: <b>${esc(r.phone)}</b></div>
+      <h3>ครูที่ปรึกษาของห้อง ${r.rooms.map(x => esc(scopeText(x.grade, x.room))).join(', ')}</h3>
+      ${others.length ? `<p class="muted">มีครูที่ปรึกษาร่วม ${others.length} คน — แก้ไขหรือลบได้ (เช่น ลงชื่อผิด หรือย้ายออกแล้ว)</p>` : '<p class="muted">ยังไม่มีครูที่ปรึกษาร่วมในห้องนี้</p>'}
+      <div class="scroll"><table class="t"><thead><tr><th>รูป</th><th>ชื่อ-สกุล</th><th>เบอร์โทร</th><th class="c">ชั้น</th><th class="c">ห้อง</th><th></th></tr></thead><tbody>
+      ${list.map(t => `<tr><td>${img(t.photo, 'sm')}</td><td>${esc(fullName(t))} ${t.isMe ? '<span class="chip ok">คุณ</span>' : '<span class="chip info">ที่ปรึกษาร่วม</span>'}</td><td>${esc(t.phone)}</td><td class="c">${esc(t.grade)}</td><td class="c">${esc(t.room)}</td>
+        <td style="white-space:nowrap">${t.isMe ? '' : `<button class="btn sm ghost" data-ced="${esc(t.teacherId)}">แก้ไข</button> <button class="btn sm red" data-cdl="${esc(t.teacherId)}">ลบ</button>`}</td></tr>`).join('')}</tbody></table></div>
+      <div class="row" style="margin-top:14px"><button class="btn ghost" id="rgAgain">+ ลงทะเบียนครูคนอื่น</button></div>`;
+    const byId = Object.fromEntries(list.map(t => [t.teacherId, t]));
+    $('#rgAgain').onclick = () => showPage('register');
+    $$('[data-cdl]', card).forEach(b => b.onclick = () => safe(async () => {
+      const t = byId[b.dataset.cdl];
+      if (!await confirmBox(`ลบ ${esc(fullName(t))} ออกจากครูที่ปรึกษาห้อง ${esc(scopeText(t.grade, t.room))}?`, 'ลบ', true)) return;
+      draw(await api('deleteCoAdvisor', t.teacherId)); toast('ลบแล้ว', 'ok');
+    }));
+    $$('[data-ced]', card).forEach(b => b.onclick = () => {
+      const t = byId[b.dataset.ced];
+      const f = (k, l) => `<label>${l}<input data-f="${k}" value="${esc(t[k] || '')}"></label>`;
+      openModal(`<h3>แก้ไขที่ปรึกษาร่วม (${esc(scopeText(t.grade, t.room))})</h3><div class="row" id="cef">${f('prefix', 'คำนำหน้า')}${f('firstName', 'ชื่อ')}${f('lastName', 'นามสกุล')}${f('phone', 'เบอร์โทร')}</div><div class="row end"><button class="btn" id="cefSave">บันทึก</button></div>`);
+      $('#cefSave').onclick = () => safe(async () => { const o = { teacherId: t.teacherId }; $$('#cef [data-f]').forEach(i => o[i.dataset.f] = i.value); const l = await api('updateCoAdvisor', o); closeModal(); draw(l); toast('บันทึกแล้ว', 'ok'); });
+    });
+  };
+  draw(r.advisors);
+}
 PAGES.register = pg => {
   let photo = '';
   const grades = [...new Set((S.classes || []).map(c => c.grade))];
   const roomRow = () => `<div class="row rrow" style="margin:4px 0"><label>ชั้น<select data-rg><option value="">— เลือกชั้น —</option>${grades.map(g => `<option>${esc(g)}</option>`).join('')}<option value="__other">อื่น ๆ (พิมพ์เอง)</option></select></label>
      <label>ห้อง<select data-rr><option value="">— เลือกห้อง —</option></select></label><input data-rgo placeholder="พิมพ์ชั้น เช่น ม.1" hidden style="width:130px"><input data-rro placeholder="ห้อง" hidden style="width:80px">
      <button class="btn sm ghost danger" data-rdel title="ลบห้องนี้">✕</button></div>`;
-  pg.innerHTML = statsLayout(`<div class="card"><h3>📝 ลงทะเบียนเป็นครูที่ปรึกษา</h3>
+  pg.innerHTML = statsLayout(`<div class="card" id="rgCard"><h3>📝 ลงทะเบียนเป็นครูที่ปรึกษา</h3>
     <p class="muted">กรอกข้อมูลให้ครบ แล้วกดลงทะเบียน หลังลงทะเบียน ใช้ <b>เบอร์โทร</b> เป็นทั้งชื่อผู้ใช้และรหัสผ่านเข้าระบบ</p>
     <div class="person" style="flex-wrap:wrap"><div style="text-align:center"><div id="rgPh" class="ph xl nophoto">ยังไม่มีรูป</div>
       <div style="margin-top:6px"><button class="btn sm" id="rgCam">📷 ถ่ายรูป</button> <button class="btn sm ghost" id="rgFile">📁 อัปโหลด</button></div><div class="muted" style="font-size:12px">รูปครู (จำเป็น)</div></div>
@@ -1126,12 +1156,18 @@ PAGES.register = pg => {
     if (!rooms.length) return alertBox('กรุณาเลือกชั้นและห้องที่เป็นครูที่ปรึกษา');
     if (!photo) return alertBox('กรุณาถ่ายรูปหรืออัปโหลดรูปครู');
     const r = await api('registerTeacher', { prefix: $('#rgPre').value, firstName: $('#rgFn').value, lastName: $('#rgLn').value, phone: $('#rgPhone').value, rooms, photo });
+    // หลังลงทะเบียน: สถิติแสดงเฉพาะห้องของตัวเอง + รายการที่ปรึกษาร่วม
+    STATS_SCOPE = { rooms: r.rooms, label: r.rooms.map(x => scopeText(x.grade, x.room)).join(', ') };
+    setScopeLabel(STATS_SCOPE.label, 'register'); refreshStats();
+    renderAdvisors(r);
     openModal(`<div style="text-align:center"><div style="font-size:48px">✅</div><h3>ลงทะเบียนครูที่ปรึกษาเรียบร้อย</h3>
       <p>${esc(r.name)} · ${r.rooms.map(x => esc(classRoom(x))).join(', ')}</p>
       <div class="block" style="font-size:20px;text-align:left;display:inline-block;padding:14px 22px"><div>User คือ <b style="font-size:26px;color:var(--pri)">${esc(r.phone)}</b></div><div>Password คือ <b style="font-size:26px;color:var(--pri)">${esc(r.phone)}</b></div></div>
       <p class="muted">(เบอร์โทรของครู) ใช้เลือก "ครู" ที่หน้าเข้าสู่ระบบ</p>
       <div class="row" style="justify-content:center"><button class="btn green" id="rgLogin">เข้าสู่ระบบด้วยบัญชีครูเลย</button><button class="btn ghost" id="rgMore">ลงทะเบียนครูคนอื่นต่อ</button></div></div>`);
     $('#rgMore').onclick = () => { closeModal(); showPage('register'); };
+    const others = r.advisors.filter(a => !a.isMe);
+    if (others.length) $('.mbox').insertAdjacentHTML('beforeend', `<div class="banner info" style="margin:12px 0 0;font-size:14px">ห้องนี้มีครูที่ปรึกษาร่วม ${others.length} คน ดู/แก้ไขได้ในหน้านี้หลังปิดหน้าต่าง</div><div class="row end"><button class="btn ghost" onclick="closeModal()">ปิด</button></div>`);
     $('#rgLogin').onclick = () => safe(async () => {
       closeModal(); rpc('logout', [], S.token).catch(() => { });
       const t = await rpc('login', [r.phone, r.phone], null);
@@ -1233,10 +1269,10 @@ PAGES.request = pg => {
 function entriesTableHTML(rows) {
   if (!rows.length) return '<p class="muted">ยังไม่มีนักเรียนเข้าสายในวันนี้</p>';
   const typeChip = t => `<span class="chip ${t === 'ไม่ขออนุญาต' ? 'bad' : t === 'มีบัตรอนุญาต' ? 'ok' : 'info'}">${esc(t)}</span>`;
-  return `<table class="t"><thead><tr><th>รูป</th><th>รหัส / บทบาท</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>ชั้น</th><th>ห้อง</th><th>เบอร์โทร</th><th>ประเภท</th><th>เวลาเข้า</th></tr></thead><tbody>${rows.map((r, i) => {
+  return `<table class="t"><thead><tr><th>รูป</th><th>รหัส / บทบาท</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>ชั้น</th><th>ห้อง</th><th>เบอร์โทร</th><th>ประเภท</th><th>เวลาเข้า</th><th class="noprint" data-html2canvas-ignore="true">ลบ</th></tr></thead><tbody>${rows.map((r, i) => {
     const s = r.student, rs = 1 + r.parents.length + r.teachers.length;
     const sub = (lab, p) => `<tr class="sub"><td>${lab}</td><td>${esc(p.prefix)}</td><td>${esc(p.firstName)}</td><td>${esc(p.lastName)}</td><td colspan="2"></td><td>${esc(p.phone)}</td><td colspan="2"></td></tr>`;
-    return `<tr class="grp"><td rowspan="${rs}">${stuPhoto(s, 'sm')}</td><td><b>${esc(s.studentId)}</b></td><td>${esc(s.prefix)}</td><td>${esc(s.firstName)}</td><td>${esc(s.lastName)}</td><td>${esc(s.grade)}</td><td>${esc(s.room)}</td><td>${esc(s.phone)}</td><td>${typeChip(r.entry.type)}</td><td><b>${esc(hm(r.entry.time))}</b></td></tr>` +
+    return `<tr class="grp"><td rowspan="${rs}">${stuPhoto(s, 'sm')}</td><td><b>${esc(s.studentId)}</b></td><td>${esc(s.prefix)}</td><td>${esc(s.firstName)}</td><td>${esc(s.lastName)}</td><td>${esc(s.grade)}</td><td>${esc(s.room)}</td><td>${esc(s.phone)}</td><td>${typeChip(r.entry.type)}</td><td><b>${esc(hm(r.entry.time))}</b></td><td rowspan="${rs}" class="noprint c" data-html2canvas-ignore="true">${r.canDelete ? `<button class="btn sm ghost danger" data-delent="${esc(r.entry.entryId)}" data-delname="${esc(fullName(s))}" data-deltype="${esc(r.entry.type)}" title="ลบรายการ">🗑</button>` : ''}</td></tr>` +
       r.parents.map(p => sub('ผู้ปกครอง' + (p.relation ? ' (' + esc(p.relation) + ')' : ''), p)).join('') +
       r.teachers.map(t => sub('ครูที่ปรึกษา', t)).join('');
   }).join('')}</tbody></table>`;
@@ -1250,19 +1286,34 @@ function entriesAoa(d) {
   });
   return a;
 }
+/* แสดงห้องที่กำลังดู ต่อท้ายชื่อเมนู/หัวหน้า ตัวสีแดง */
+function setScopeLabel(label, page = 'status') {
+  $$('.scopelab').forEach(e => e.remove());
+  if (!label) return;
+  const a = $(`#nav a[data-p="${page}"]`); if (a) a.insertAdjacentHTML('beforeend', `<span class="scopelab">${esc(label)}</span>`);
+  const h2 = $('#main h2'); if (h2 && CUR === page) h2.insertAdjacentHTML('beforeend', `<span class="scopelab">${esc(label)}</span>`);
+}
+const scopeText = (g, r) => g && r ? `${g}/${r}` : g ? g : r ? 'ห้อง ' + r : '';
+
 /* ---------- แผงสถิติการมาสาย (ด้านขวา, อัปเดตทุก 15 วินาที) ---------- */
-let PAGE_CLEANUP = [];
+let PAGE_CLEANUP = [], STATS_SCOPE = null;
 function statsLayout(inner) { return `<div class="withstats"><div class="wsmain">${inner}</div><aside class="stats noprint" id="statsPanel"><div class="muted">กำลังโหลดสถิติ...</div></aside></div>`; }
 function statsHTML(r) {
   const pct = (a, b) => b ? Math.min(100, Math.round(a * 100 / b)) : 0;
-  return `<div class="sthead">📊 สถิติการมาสายวันนี้<small>${esc(thDate(r.date))} · อัปเดต ${esc(String(r.time).slice(0, 8))} <span class="live"></span></small></div>
+  const lab = STATS_SCOPE && STATS_SCOPE.label ? ` <span style="color:var(--bad)">${esc(STATS_SCOPE.label)}</span>` : '';
+  return `<div class="sthead">📊 สถิติการมาสายวันนี้${lab}<small>${esc(thDate(r.date))} · อัปเดต ${esc(String(r.time).slice(0, 8))} <span class="live"></span></small></div>
+   <div class="stb st-black"><div class="stt">นักเรียนทั้งหมด${lab ? ' ' + esc(STATS_SCOPE.label) : ''}</div><div class="stn">${r.studentCount}<small> คน</small></div><div class="sts">เข้าสายวันนี้ <b>${r.totalLate}</b> คน</div></div>
    <div class="stb st-green"><div class="stt">มีบัตรอนุญาต</div><div class="stn">${r.passCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.passEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.passEntered, r.passCount)}%"></i></div></div>
    <div class="stb st-orange"><div class="stt">ขออนุญาตครูไว้</div><div class="stn">${r.reqCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.reqEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.reqEntered, r.reqCount)}%"></i></div></div>
    <div class="stb st-pink"><div class="stt">เข้าสายวันนี้ (ไม่ขออนุญาต)</div><div class="stn">${r.unauthCount}<small> คน</small></div><div class="sts">รวมเข้าสายทุกประเภท <b>${r.totalLate}</b> คน</div></div>`;
 }
 async function refreshStats() {
   const el = $('#statsPanel'); if (!el) return;
-  try { const r = await rpc('lateStats', [], S.token); if ($('#statsPanel')) $('#statsPanel').innerHTML = statsHTML(r); } catch (e) { }
+  const sc = STATS_SCOPE;
+  try {
+    const r = await rpc('lateStats', ['', sc ? { grade: sc.grade || '', room: sc.room || '', rooms: sc.rooms || [] } : {}], S.token);
+    if ($('#statsPanel') && sc === STATS_SCOPE) $('#statsPanel').innerHTML = statsHTML(r);
+  } catch (e) { }
 }
 function startStats() {
   refreshStats();
@@ -1275,15 +1326,31 @@ PAGES.status = pg => {
    <div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">รายการนักเรียนเข้าสาย</h3><div class="row" style="margin:0"><input type="date" id="scDate" value="${S.today}"><button class="btn ghost" id="scRef">โหลด</button></div></div><div id="scTbl"></div></div>`);
   startStats();
   const lateTopic = () => (S.topics.find(t => t.system === 'LATE') || { points: '-5' }).points;
+  /* ขอบเขตที่กำลังดู: ไม่เลือก = ทั้งหมด / เลือกชั้น-ห้อง หรือเลือกนักเรียน = เฉพาะห้องนั้น */
+  const setScope = (g, r) => {
+    STATS_SCOPE = (g || r) ? { grade: g || '', room: r || '', label: scopeText(g, r) } : null;
+    setScopeLabel(STATS_SCOPE ? STATS_SCOPE.label : '');
+    refreshStats(); loadTable();
+  };
   const loadTable = async () => {
-    const d = await api('entriesOfDay', $('#scDate').value);
+    const sc = STATS_SCOPE || {};
+    const d = await api('entriesOfDay', $('#scDate').value, sc.grade || '', sc.room || '');
+    const scopeChip = STATS_SCOPE ? ` · <span style="color:var(--bad);font-weight:800">${esc(STATS_SCOPE.label)}</span> <a href="#" id="scAll" class="noprint" style="font-size:13px">✕ ดูทั้งหมด</a>` : ' · ทุกชั้น/ห้อง';
     $('#scTbl').innerHTML = actionBar({ el: () => $('#scRep'), name: 'นักเรียนเข้าสาย_' + d.date, excel: () => entriesAoa(d) }) +
-      `<div class="rep" id="scRep" style="padding:0;border:0">${reportHead('รายการนักเรียนเข้าสาย', 'วันที่ ' + esc(thDate(d.date)) + ' · ' + d.rows.length + ' คน', localStamp())}<div class="scroll">${entriesTableHTML(d.rows)}</div></div>`;
+      `<div class="rep" id="scRep" style="padding:0;border:0">${reportHead('รายการนักเรียนเข้าสาย', 'วันที่ ' + esc(thDate(d.date)) + scopeChip + ' · ' + d.rows.length + ' คน', localStamp())}<div class="scroll">${entriesTableHTML(d.rows)}</div></div>`;
+    if ($('#scAll')) $('#scAll').onclick = e => { e.preventDefault(); $('#scQG').value = ''; fillClassDropdowns($('#scQG'), $('#scQR')); $('#scQR').value = ''; setScope('', ''); };
+    $$('[data-delent]', $('#scTbl')).forEach(b => b.onclick = () => safe(async () => {
+      const unauth = b.dataset.deltype === 'ไม่ขออนุญาต';
+      if (!await confirmBox(`ลบรายการบันทึกเข้าของ ${esc(b.dataset.delname)}?${unauth ? '\n(คืนคะแนนที่หักจากการมาสายด้วย)' : ''}`, 'ลบ', true)) return;
+      await api('deleteEntry', b.dataset.delent); toast('ลบรายการแล้ว', 'ok'); loadTable(); refreshStats();
+    }));
   };
   $('#scRef').onclick = () => safe(loadTable);
+  $('#scDate').onchange = () => safe(loadTable);
   bindSearch('scQ', async sid => {
     const r = await api('checkStatus', sid); S.today = r.today;
     const b = r.bundle, s = b.student;
+    setScope(s.grade, s.room);
     const entered = r.entries.length ? `<div class="banner info">วันนี้บันทึกเข้าแล้ว ${r.entries.length} ครั้ง: ${r.entries.map(e => esc(hm(e.time)) + ' (' + esc(e.type) + ')').join(', ')}</div>` : '';
     let html = '', auto = false;
     if (r.mode === 'pass') {
@@ -1313,7 +1380,7 @@ PAGES.status = pg => {
       } else if (res.ok) {
         box.innerHTML = `<h4 style="color:var(--bad)">✔ บันทึกมาสายโดยไม่ขออนุญาตแล้ว</h4><div style="font-size:40px;font-weight:800;color:var(--bad);line-height:1.1">${esc(hm(res.entry.time))} น.</div>
           <p>วันที่ ${esc(thDate(res.entry.date))} · หักคะแนน <b style="color:var(--bad)">${esc(res.points)}</b> (${esc(res.topicName)})</p>
-          <button class="btn sm ghost danger" id="scUndo">↩ ยกเลิกรายการนี้ (ค้นหาผิดคน)</button><div class="muted" style="margin-top:4px">ยกเลิกได้ภายใน 10 นาที${S.role === 'admin' ? ' (แอดมินยกเลิกได้ตลอด)' : ''}</div>`;
+          <button class="btn sm ghost danger" id="scUndo">↩ ยกเลิกรายการนี้ (ค้นหาผิดคน)</button><div class="muted" style="margin-top:4px">ผู้บันทึกยกเลิกได้ภายใน 30 นาที${S.role === 'admin' ? ' (แอดมินยกเลิกได้ตลอด)' : ' หลังจากนั้นแอดมินเท่านั้น'}</div>`;
         toast('บันทึกมาสายไม่ขออนุญาตและหักคะแนนแล้ว', 'ok');
         $('#scUndo').onclick = () => safe(async () => {
           if (!await confirmBox(`ยกเลิกการบันทึกมาสายของ ${esc(fullName(s))} และคืนคะแนน?`, 'ยกเลิกรายการ', true)) return;
@@ -1328,7 +1395,8 @@ PAGES.status = pg => {
       let res = await api('recordEntry', s.studentId, false);
       if (res.duplicate) { if (!await confirmBox(`วันนี้บันทึกเข้าไปแล้วเวลา ${esc(hm(res.entry.time))} น. ต้องการบันทึกซ้ำหรือไม่?`, 'บันทึกซ้ำ')) return; res = await api('recordEntry', s.studentId, true); }
       toast(`บันทึกเข้าโรงเรียนแล้ว เวลา ${hm(res.entry.time)} น.`, 'ok');
-      $('#scOut').innerHTML = `<div class="banner ok">บันทึกเข้าโรงเรียน: ${esc(fullName(s))} (${esc(classRoom(s))}) เวลา ${esc(hm(res.entry.time))} น.</div>`;
+      $('#scOut').innerHTML = `<div class="banner ok">บันทึกเข้าโรงเรียน: ${esc(fullName(s))} (${esc(classRoom(s))}) เวลา ${esc(hm(res.entry.time))} น. <button class="btn sm ghost danger" id="scDelIn" style="margin-left:8px">🗑 ลบรายการนี้</button><div class="muted" style="font-weight:400;font-size:13px">ผู้บันทึกลบได้ภายใน 30 นาที หลังจากนั้นแอดมินเท่านั้นที่ลบได้</div></div>`;
+      $('#scDelIn').onclick = () => safe(async () => { if (!await confirmBox('ลบรายการบันทึกเข้านี้?', 'ลบ', true)) return; await api('deleteEntry', res.entry.entryId); $('#scOut').innerHTML = '<div class="banner info">ลบรายการแล้ว</div>'; loadTable(); refreshStats(); });
       $('#scQ').value = ''; $('#scQ').focus(); $('#scDate').value = res.entry.date; loadTable(); refreshStats();
     });
     if ($('#scUn')) $('#scUn').onclick = () => safe(async () => {
@@ -1336,7 +1404,7 @@ PAGES.status = pg => {
       await unauthorized(s, $('#scOut'));
       $('#scQ').value = ''; $('#scQ').focus(); loadTable();
     });
-  });
+  }, { onScope: (g, r) => setScope(g, r) });
   loadTable();
 };
 async function unauthorized(s, outEl) {
