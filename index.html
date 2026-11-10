@@ -4,6 +4,16 @@
 <base target="_top">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เข้า รร.-ติดตาม</title>
+<!-- แอปบนหน้าจอ (PWA) -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1e3a8a">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="เข้า รร.-ติดตาม">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -174,6 +184,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 @media(max-width:600px){.stb{padding:8px 9px;border-radius:12px}.stt{font-size:12px;line-height:1.2;min-height:29px}.stn{font-size:32px}.stn small{font-size:13px}.sts{font-size:12px}.sts b{font-size:17px}.stbar{height:5px}}
 .btn.postpone{background:#fff;color:var(--warn);border:1px solid #fcd34d}.btn.postpone.on{background:var(--warn2);border-color:#f59e0b}
 #hdSchool,#lgSchool,.rhead .s1,.lc-school,.lc-sign div,.ml{white-space:pre-line}
+.applogo{width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 4px 8px #1e3a8a33)}
+.hdlogo{width:34px;height:34px;object-fit:contain}
+.installbox{border:1px dashed #93c5fd;background:#eff6ff;border-radius:10px;padding:10px 12px;font-size:13px;text-align:center;color:#1e3a8a}
+.installbox .btn{margin-bottom:4px}
 .lc-pending{color:#dc2626;font-weight:800;font-size:8pt}
 [hidden]{display:none!important}
 #printArea{display:none}
@@ -193,7 +207,7 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 <div id="loginView" class="login">
   <div class="lbox">
     <button class="bell" id="lgBell" title="คำขอทำบัตรที่รออนุมัติ" hidden>🔔<span class="badge" id="lgBellN">0</span></button>
-    <div style="text-align:center;font-size:44px">🏫</div>
+    <div style="text-align:center"><img src="icons/icon-192.png" alt="" class="applogo" onerror="this.outerHTML='<div style=&quot;font-size:44px&quot;>🏫</div>'"></div>
     <h1 id="lgSchool">ระบบพฤติกรรมและการมาสาย</h1>
     <div id="lgBellMsg" class="bellmsg" hidden></div>
     <div><div class="muted" style="margin-bottom:6px">เข้าใช้งานในฐานะ</div>
@@ -211,7 +225,7 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 </div>
 
 <div id="appView" hidden>
-  <header><button id="burger">☰</button><div class="t" id="hdSchool"></div><button class="bell hd" id="hdBell" title="คำขอทำบัตรที่รออนุมัติ" hidden>🔔<span class="badge" id="hdBellN">0</span></button><span class="r" id="hdRole"></span><button class="btn ghost sm" id="logoutBtn">ออกจากระบบ</button></header>
+  <header><button id="burger">☰</button><img src="icons/icon-192.png" alt="" class="hdlogo" onerror="this.remove()"><div class="t" id="hdSchool"></div><button class="bell hd" id="hdBell" title="คำขอทำบัตรที่รออนุมัติ" hidden>🔔<span class="badge" id="hdBellN">0</span></button><span class="r" id="hdRole"></span><button class="btn ghost sm" id="logoutBtn">ออกจากระบบ</button></header>
   <div class="wrap"><nav id="nav"></nav><main id="main"></main></div>
 </div>
 
@@ -226,9 +240,11 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.1.0';
+const APP_VERSION = '3.2.1';
 const MIN_SERVER_VERSION = '3.1.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.2.1': ['ไอคอนแอปเป็นรูปโรงเรียน ชื่อแอป "เข้า รร.-ติดตาม"', 'เอาปุ่มติดตั้งออกจากหน้าเว็บ (เบราว์เซอร์แสดงแถบติดตั้งเอง)'],
+  '3.2.0': ['ติดตั้งเป็นแอปบนหน้าจอมือถือ/คอมได้ พร้อมไอคอนใหม่'],
   '3.1.0': ['ตรวจสอบสถานะ: ตั้งวัน/เวลาบันทึกย้อนหลังได้ คงค่าไว้ใช้ต่อเนื่อง ไม่ใช้งานเกินเวลาที่แอดมินกำหนดจะกลับเป็นเวลาปัจจุบัน'],
   '3.0.0': ['แผงสถิติเพิ่มบล็อกสีดำ "นักเรียนทั้งหมด"', 'ตรวจสอบสถานะ: เลือกห้อง/นักเรียน แล้วสถิติและตารางแสดงเฉพาะห้องนั้น (ชื่อห้องสีแดงต่อท้ายเมนู)', 'ลบรายการบันทึกเข้าได้ภายใน 30 นาที (หลังจากนั้นแอดมิน)', 'ลงทะเบียนครู: กันลงซ้ำ แสดง/แก้ไข/ลบที่ปรึกษาร่วม สถิติเฉพาะห้องตัวเอง'],
   '2.9.0': ['รายงานพฤติกรรม: รายงานรวมตามช่วงวันที่ และ/หรือ ชั้น/ห้อง (เว้นช่องพิมพ์ว่างแล้วกดค้นหา)'],
@@ -1648,11 +1664,23 @@ $('#lgBell').onclick = () => $('#lgBellMsg').click();
 $('#hdBell').onclick = () => showPage('approvals');
 $('#logoutBtn').onclick = () => doLogout(false);
 $('#burger').onclick = () => $('#nav').classList.toggle('open');
+/* =================== แอปบนหน้าจอ (PWA) ===================
+   ไม่มีปุ่มติดตั้งบนหน้าเว็บ: Chrome/Edge จะแสดงแถบ "ติดตั้งแอป" ของเบราว์เซอร์เองเมื่อเปิดลิงก์
+   iPhone/iPad (Safari) ไม่มีแถบนี้ → แสดงคำแนะนำสั้น ๆ ครั้งเดียวต่อเครื่อง */
+const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function iosHintOnce() {
+  if (isStandalone() || !isIOS() || store.get('iosHint')) return;
+  store.set('iosHint', '1');
+  setTimeout(() => toast('📲 เพิ่มเป็นแอป: กดปุ่ม "แชร์" ของ Safari แล้วเลือก "เพิ่มไปยังหน้าจอโฮม"'), 1500);
+}
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => { });
+
 setInterval(refreshBell, 60000);
 setInterval(checkUpdate, 5 * 60000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkUpdate(); refreshBell(); } });
 (function init() {
-  showVersions(); showWhatsNew();
+  showVersions(); showWhatsNew(); iosHintOnce();
   setTimeout(checkUpdate, 3000);
   refreshBell();
   const t = store.get('tok');
