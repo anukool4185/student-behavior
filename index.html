@@ -168,6 +168,7 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 @media(max-width:1000px){.withstats{grid-template-columns:minmax(0,1fr)}.wsmain{min-width:0}.stats{position:static;order:-1;flex-direction:row;flex-wrap:wrap;gap:8px}.sthead{width:100%}.stb{flex:1 1 0;min-width:0;padding:10px 12px}.stn{font-size:40px}.sts b{font-size:22px}.sts{font-size:15px}}
 @media(max-width:600px){.stb{padding:8px 9px;border-radius:12px}.stt{font-size:12px;line-height:1.2;min-height:29px}.stn{font-size:32px}.stn small{font-size:13px}.sts{font-size:12px}.sts b{font-size:17px}.stbar{height:5px}}
 .btn.postpone{background:#fff;color:var(--warn);border:1px solid #fcd34d}.btn.postpone.on{background:var(--warn2);border-color:#f59e0b}
+#hdSchool,#lgSchool,.rhead .s1,.lc-school,.lc-sign div,.ml{white-space:pre-line}
 .lc-pending{color:#dc2626;font-weight:800;font-size:8pt}
 [hidden]{display:none!important}
 #printArea{display:none}
@@ -220,9 +221,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '2.7.0';
-const MIN_SERVER_VERSION = '2.7.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '2.8.0';
+const MIN_SERVER_VERSION = '2.8.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '2.8.0': ['ครูลงทะเบียนเป็นครูที่ปรึกษาเองได้ (รหัสลงทะเบียน) พร้อมรูป', 'ตั้งค่าชื่อโรงเรียน/ผู้ลงนาม กด Enter ขึ้นบรรทัดใหม่ได้'],
   '2.7.0': ['ตอนระบบบังคับรูป (ออกบัตร / รับเรื่องขอเข้าสาย) มีปุ่ม "ขอเลื่อน" ส่งรูปภายหลังได้'],
   '2.6.0': ['ตรวจสอบสถานะ: ถ้าไม่มีบัตร/ไม่ได้ขออนุญาตครู บันทึกมาสายไม่ขออนุญาตทันที (ยกเลิกได้ใน 10 นาที)', 'แผงสถิติการมาสายแบบเรียลไทม์ด้านขวา (มีบัตร / ขออนุญาตครู / เข้าสายวันนี้)'],
   '2.5.0': ['ทุกช่องค้นหามีดรอปดาวน์เลือกชั้น/ห้อง เลือกแล้วแสดงรายชื่อทันที', 'พิมพ์แล้วหยุด 1 วินาที ระบบค้นหาให้เอง (รวมหน้าจัดการนักเรียน)'],
@@ -662,7 +664,8 @@ const MENU = [
   ['ข้อมูลพื้นฐาน', [['importStudents', 'นำเข้าข้อมูลนักเรียน', A], ['students', 'จัดการข้อมูล/รูปนักเรียน', A], ['teachers', 'ครูที่ปรึกษา', A], ['topics', 'หัวข้อพฤติกรรม', A]]],
   ['พฤติกรรม', [['behavior', 'บันทึกพฤติกรรม', ST], ['behaviorReport', 'รายงานพฤติกรรม', ST], ['report', 'รายงานผลรายบุคคล', ST]]],
   ['การมาสาย', [['approvals', '🔔 อนุมัติบัตรเข้าสาย', A], ['pass', 'ออกบัตรอนุญาตเข้าสาย', ST], ['request', 'ครูรับเรื่องขอเข้าสาย', ST], ['status', 'ตรวจสอบสถานะ / บันทึกเข้า', AL], ['late', 'บันทึกมาสาย (ไม่ขออนุญาต)', AL], ['lateReport', 'รายงานนักเรียนเข้าสาย', ST]]],
-  ['ระบบ', [['settings', 'ตั้งค่า', A]]]
+  ['ระบบ', [['settings', 'ตั้งค่า', A]]],
+  ['ครูที่ปรึกษา', [['register', 'ลงทะเบียนครูที่ปรึกษา', ['register']]]]
 ];
 const PAGES = {};
 let CUR = '';
@@ -1054,6 +1057,63 @@ function wireApprove(root, after) {
   }));
 }
 
+/* ---------- ลงทะเบียนครูที่ปรึกษา (เข้าด้วยรหัสลงทะเบียน) ---------- */
+PAGES.register = pg => {
+  let photo = '';
+  const grades = [...new Set((S.classes || []).map(c => c.grade))];
+  const roomRow = () => `<div class="row rrow" style="margin:4px 0"><label>ชั้น<select data-rg><option value="">— เลือกชั้น —</option>${grades.map(g => `<option>${esc(g)}</option>`).join('')}<option value="__other">อื่น ๆ (พิมพ์เอง)</option></select></label>
+     <label>ห้อง<select data-rr><option value="">— เลือกห้อง —</option></select></label><input data-rgo placeholder="พิมพ์ชั้น เช่น ม.1" hidden style="width:130px"><input data-rro placeholder="ห้อง" hidden style="width:80px">
+     <button class="btn sm ghost danger" data-rdel title="ลบห้องนี้">✕</button></div>`;
+  pg.innerHTML = statsLayout(`<div class="card"><h3>📝 ลงทะเบียนเป็นครูที่ปรึกษา</h3>
+    <p class="muted">กรอกข้อมูลให้ครบ แล้วกดลงทะเบียน หลังลงทะเบียน ใช้ <b>เบอร์โทร</b> เป็นทั้งชื่อผู้ใช้และรหัสผ่านเข้าระบบ</p>
+    <div class="person" style="flex-wrap:wrap"><div style="text-align:center"><div id="rgPh" class="ph xl nophoto">ยังไม่มีรูป</div>
+      <div style="margin-top:6px"><button class="btn sm" id="rgCam">📷 ถ่ายรูป</button> <button class="btn sm ghost" id="rgFile">📁 อัปโหลด</button></div><div class="muted" style="font-size:12px">รูปครู (จำเป็น)</div></div>
+     <div style="flex:1;min-width:260px"><div class="row">
+       <label>คำนำหน้า<input id="rgPre" list="rgPreL" style="width:120px"><datalist id="rgPreL"><option>นาย</option><option>นาง</option><option>นางสาว</option><option>ว่าที่ร้อยตรี</option><option>ดร.</option></datalist></label>
+       <label style="flex:1;min-width:150px">ชื่อ<input id="rgFn"></label><label style="flex:1;min-width:150px">นามสกุล<input id="rgLn"></label></div>
+      <div class="row"><label>เบอร์โทร (ใช้เป็นชื่อผู้ใช้และรหัสผ่าน)<input id="rgPhone" inputmode="tel" placeholder="เช่น 0812345678" style="width:240px;font-size:18px"></label></div>
+      <h4 style="margin-top:10px">ชั้น/ห้องที่เป็นครูที่ปรึกษา</h4><div id="rgRooms">${roomRow()}</div>
+      <button class="btn sm ghost" id="rgAddRoom">+ เพิ่มห้อง</button></div></div>
+    <div class="row" style="margin-top:16px"><button class="btn green" id="rgGo" style="font-size:18px;padding:12px 26px">✔ ลงทะเบียน</button></div></div>`);
+  startStats();
+  const wireRow = row => {
+    const g = $('[data-rg]', row), r = $('[data-rr]', row), go = $('[data-rgo]', row), ro = $('[data-rro]', row);
+    g.onchange = () => {
+      const other = g.value === '__other';
+      go.hidden = ro.hidden = !other; r.parentNode.hidden = other;
+      const rooms = [...new Set((S.classes || []).filter(c => c.grade === g.value).map(c => c.room))];
+      r.innerHTML = '<option value="">— เลือกห้อง —</option>' + rooms.map(x => `<option>${esc(x)}</option>`).join('');
+    };
+    $('[data-rdel]', row).onclick = () => { if ($$('#rgRooms .rrow').length > 1) row.remove(); };
+  };
+  wireRow($('#rgRooms .rrow'));
+  $('#rgAddRoom').onclick = () => { $('#rgRooms').insertAdjacentHTML('beforeend', roomRow()); wireRow($$('#rgRooms .rrow').pop()); };
+  const setPhoto = d => { photo = d; $('#rgPh').outerHTML = `<img id="rgPh" class="ph xl" src="${d}">`; };
+  $('#rgCam').onclick = () => takePhoto(setPhoto);
+  $('#rgFile').onclick = () => pickImage(setPhoto);
+  $('#rgGo').onclick = () => safe(async () => {
+    const rooms = $$('#rgRooms .rrow').map(row => {
+      const g = $('[data-rg]', row).value;
+      return g === '__other' ? { grade: $('[data-rgo]', row).value, room: $('[data-rro]', row).value } : { grade: g, room: $('[data-rr]', row).value };
+    }).filter(r => r.grade && r.room);
+    if (!$('#rgFn').value.trim() || !$('#rgLn').value.trim()) return alertBox('กรุณาใส่ชื่อและนามสกุล');
+    if (!rooms.length) return alertBox('กรุณาเลือกชั้นและห้องที่เป็นครูที่ปรึกษา');
+    if (!photo) return alertBox('กรุณาถ่ายรูปหรืออัปโหลดรูปครู');
+    const r = await api('registerTeacher', { prefix: $('#rgPre').value, firstName: $('#rgFn').value, lastName: $('#rgLn').value, phone: $('#rgPhone').value, rooms, photo });
+    openModal(`<div style="text-align:center"><div style="font-size:48px">✅</div><h3>ลงทะเบียนครูที่ปรึกษาเรียบร้อย</h3>
+      <p>${esc(r.name)} · ${r.rooms.map(x => esc(classRoom(x))).join(', ')}</p>
+      <div class="block" style="font-size:20px;text-align:left;display:inline-block;padding:14px 22px"><div>User คือ <b style="font-size:26px;color:var(--pri)">${esc(r.phone)}</b></div><div>Password คือ <b style="font-size:26px;color:var(--pri)">${esc(r.phone)}</b></div></div>
+      <p class="muted">(เบอร์โทรของครู) ใช้เลือก "ครู" ที่หน้าเข้าสู่ระบบ</p>
+      <div class="row" style="justify-content:center"><button class="btn green" id="rgLogin">เข้าสู่ระบบด้วยบัญชีครูเลย</button><button class="btn ghost" id="rgMore">ลงทะเบียนครูคนอื่นต่อ</button></div></div>`);
+    $('#rgMore').onclick = () => { closeModal(); showPage('register'); };
+    $('#rgLogin').onclick = () => safe(async () => {
+      closeModal(); rpc('logout', [], S.token).catch(() => { });
+      const t = await rpc('login', [r.phone, r.phone], null);
+      S.token = t.token; store.set('tok', t.token); await startApp(); toast('เข้าสู่ระบบด้วยบัญชีครูแล้ว', 'ok');
+    });
+  });
+};
+
 /* ---------- อนุมัติบัตร (แอดมิน) ---------- */
 PAGES.approvals = async pg => {
   const list = await api('pendingPasses');
@@ -1306,8 +1366,9 @@ PAGES.lateReport = pg => {
 PAGES.settings = async pg => {
   const s = await api('getAdminSettings');
   const f = (k, l, type = 'text') => `<label>${l}<input type="${type}" data-f="${k}" value="${esc(s[k] || '')}"></label>`;
-  pg.innerHTML = `<div class="card"><h3>ข้อมูลโรงเรียน / บัตร</h3><div class="row" id="sf1">${f('schoolName', 'ชื่อโรงเรียน')}${f('signerName', 'ชื่อผู้ลงนามในบัตร')}${f('signerPosition', 'ตำแหน่งใต้ลายเซ็น')}</div></div>
-   <div class="card"><h3>บัญชีแอดมิน / รหัสลายเซ็น</h3><div class="row" id="sf2">${f('adminUser', 'ชื่อผู้ใช้แอดมิน')}${f('adminPassword', 'รหัสผ่านแอดมิน')}${f('signatureCode', 'รหัสลายเซ็นบนบัตร (ใช้ตอนอนุมัติ)')}</div>
+  const ta = (k, l) => `<label style="flex:1;min-width:240px">${l}<textarea data-f="${k}" rows="2" style="min-height:0">${esc(s[k] || '')}</textarea></label>`;
+  pg.innerHTML = `<div class="card"><h3>ข้อมูลโรงเรียน / บัตร</h3><p class="muted" style="margin-top:-6px">กด Enter เพื่อขึ้นบรรทัดใหม่ได้ ที่แสดงผล (หัวเว็บ หน้าเข้าสู่ระบบ รายงาน บัตร) จะขึ้นบรรทัดใหม่ตาม</p><div class="row" id="sf1">${ta('schoolName', 'ชื่อโรงเรียน')}${ta('signerName', 'ชื่อผู้ลงนามในบัตร')}${ta('signerPosition', 'ตำแหน่งใต้ลายเซ็น')}</div></div>
+   <div class="card"><h3>บัญชีแอดมิน / รหัสลายเซ็น</h3><div class="row" id="sf2">${f('adminUser', 'ชื่อผู้ใช้แอดมิน')}${f('adminPassword', 'รหัสผ่านแอดมิน')}${f('signatureCode', 'รหัสลายเซ็นบนบัตร (ใช้ตอนอนุมัติ)')}${f('registerCode', 'รหัสลงทะเบียนครู (เว้นว่าง = ปิด)')}</div>
     <p class="muted">ครูเข้าระบบด้วยเบอร์โทรที่อยู่ในรายชื่อครูที่ปรึกษา (เบอร์เป็นทั้งชื่อผู้ใช้และรหัสผ่าน) · บุคคลทั่วไปเข้าได้โดยไม่ต้องใส่รหัส</p></div>
    <div class="row"><button class="btn" id="sfSave">บันทึกการตั้งค่า</button></div>
    <div class="card"><h3>ภาพลายเซ็นผู้ออกบัตร</h3><p class="muted">แนะนำไฟล์ PNG พื้นโปร่งใส ระบบย่อให้กว้าง 400px ลายเซ็นจะขึ้นบนบัตรเฉพาะเมื่อใส่รหัสลายเซ็นถูกต้อง</p>
@@ -1398,7 +1459,7 @@ async function startApp() {
   $('#loginView').hidden = true; $('#appView').hidden = false;
   $('#hdSchool').textContent = S.school; $('#hdRole').textContent = S.roleName;
   renderNav(); updateBell(b.pendingCount); showVersions();
-  showPage(S.role === 'admin' ? (b.pendingCount > 0 ? 'approvals' : 'importStudents') : S.role === 'teacher' ? 'behavior' : 'status');
+  showPage(S.role === 'admin' ? (b.pendingCount > 0 ? 'approvals' : 'importStudents') : S.role === 'teacher' ? 'behavior' : S.role === 'register' ? 'register' : 'status');
 }
 function lgRole() { return $('[name=role]:checked').value; }
 function setLoginRole() {
@@ -1408,7 +1469,7 @@ function setLoginRole() {
   $('#lgUser').placeholder = r === 'admin' ? 'admin' : 'เช่น 0812345678';
   $('#lgUser').inputMode = r === 'teacher' ? 'tel' : 'text';
   $('#lgPw').placeholder = r === 'teacher' ? 'ใช้เบอร์โทรเดียวกัน' : '';
-  $('#lgHint').textContent = r === 'public' ? 'ไม่ต้องใส่รหัส · ตรวจสอบสถานะเข้าสาย / บันทึกมาสายโดยไม่ขออนุญาต' : r === 'teacher' ? 'ครูใช้เบอร์โทรเป็นทั้งชื่อผู้ใช้และรหัสผ่าน' : '';
+  $('#lgHint').textContent = r === 'public' ? 'ไม่ต้องใส่รหัส · ตรวจสอบสถานะเข้าสาย / บันทึกมาสายโดยไม่ขออนุญาต' : r === 'teacher' ? 'ครูใช้เบอร์โทรเป็นทั้งชื่อผู้ใช้และรหัสผ่าน · ครูใหม่ใช้รหัสลงทะเบียนจากโรงเรียน' : '';
   $('#lgHint').hidden = !$('#lgHint').textContent;
   $('#lgBtn').textContent = r === 'public' ? 'เข้าใช้งาน' : 'เข้าสู่ระบบ';
 }
