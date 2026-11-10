@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style id="pageStyle">@page{size:A4 portrait;margin:10mm}</style>
+<style>
+:root{--pri:#1d4ed8;--pri2:#dbeafe;--ok:#15803d;--ok2:#dcfce7;--bad:#b91c1c;--bad2:#fee2e2;--warn:#b45309;--warn2:#fef3c7;--bd:#e2e8f0;--mut:#64748b;--bg:#f1f5f9}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Sarabun',system-ui,sans-serif;font-size:15px;color:#0f172a;background:var(--bg)}
+button,input,select,textarea{font-family:inherit;font-size:15px}
+input,select,textarea{padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;max-width:100%}
+textarea{width:100%;min-height:70px}
+input:focus,select:focus,textarea:focus{outline:2px solid #93c5fd;border-color:var(--pri)}
+label{display:inline-flex;flex-direction:column;gap:4px;font-weight:600;font-size:14px}
+label.chk{flex-direction:row;align-items:center;gap:8px;cursor:pointer}
+label.chk input{width:20px;height:20px}
+.btn{background:var(--pri);color:#fff;border:0;border-radius:8px;padding:9px 16px;cursor:pointer;font-weight:600;white-space:nowrap}
+.btn:hover{filter:brightness(1.08)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:#fff;color:var(--pri);border:1px solid #bfdbfe}
+.btn.red{background:var(--bad)}.btn.green{background:var(--ok)}
+.btn.sm{padding:5px 10px;font-size:13px}.btn.full{width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:8px 0}.row.end{justify-content:flex-end}
+.muted{color:var(--mut);font-size:13px}
+h2{margin:0 0 14px;font-size:22px}h3{margin:0 0 10px;font-size:18px}h4{margin:0 0 8px;font-size:15px;color:#334155}
+.card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:800px){.grid2,.grid3{grid-template-columns:1fr}}
+/* layout */
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#1e3a8a,#2563eb)}
+.lbox{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px}
+.lbox h1{font-size:20px;margin:0;text-align:center}.lbox label{width:100%}.lbox input{width:100%}
+.roles{display:flex;gap:6px}.roles label{flex:1;flex-direction:row;justify-content:center;align-items:center;border:1px solid #cbd5e1;border-radius:8px;padding:8px;cursor:pointer;font-weight:600}
+.roles input{display:none}.roles label:has(input:checked){background:var(--pri);color:#fff;border-color:var(--pri)}
+header{position:sticky;top:0;z-index:20;background:#1e3a8a;color:#fff;display:flex;align-items:center;gap:12px;padding:10px 16px}
+header .t{font-weight:800;font-size:17px;flex:1}header .r{font-size:13px;background:#ffffff22;padding:3px 10px;border-radius:20px}
+#burger{display:none;background:none;border:0;color:#fff;font-size:24px;cursor:pointer}
+.wrap{display:flex;min-height:calc(100vh - 52px)}
+nav{width:250px;background:#fff;border-right:1px solid var(--bd);padding:10px 0;flex-shrink:0}
+nav .g{font-size:12px;color:var(--mut);padding:12px 18px 4px;font-weight:800;text-transform:uppercase}
+nav a{display:block;padding:9px 18px;color:#0f172a;text-decoration:none;cursor:pointer;border-left:3px solid transparent}
+nav a:hover{background:#f8fafc}nav a.on{background:var(--pri2);border-left-color:var(--pri);font-weight:700;color:var(--pri)}
+main{flex:1;padding:20px;min-width:0;max-width:1200px}
+@media(max-width:900px){#burger{display:block}nav{position:fixed;top:52px;bottom:0;left:0;z-index:15;transform:translateX(-100%);transition:.2s;overflow:auto;box-shadow:2px 0 10px #0002}nav.open{transform:none}main{padding:12px}}
+/* search */
+.search{display:flex;gap:8px;margin-bottom:14px}.search input{flex:1;min-width:0;font-size:20px;padding:12px 14px}.search .btn{font-size:17px}
+/* person */
+.person{display:flex;gap:14px;align-items:flex-start}
+.ph{object-fit:cover;border-radius:8px;border:1px solid var(--bd);background:#f8fafc;flex-shrink:0}
+.ph.xl{width:150px;height:190px}.ph.lg{width:110px;height:140px}.ph.md{width:72px;height:90px}.ph.sm{width:44px;height:55px;border-radius:5px}
+.nophoto{display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px;text-align:center;border-style:dashed}
+.kv{border-collapse:collapse}.kv th{text-align:left;color:var(--mut);font-weight:600;padding:3px 12px 3px 0;white-space:nowrap;vertical-align:top}.kv td{padding:3px 0;font-weight:600}
+.block{border:1px solid var(--bd);border-radius:10px;padding:12px;background:#fff;break-inside:avoid}
+.plist{display:flex;flex-direction:column;gap:10px}
+.pitem{display:flex;gap:10px;align-items:flex-start}.pitem .n{font-weight:700}.pitem .s{font-size:13px;color:var(--mut)}
+/* tables */
+.scroll{overflow:auto}
+table.t{border-collapse:collapse;width:100%;background:#fff}
+table.t th,table.t td{border:1px solid var(--bd);padding:6px 8px;text-align:left;vertical-align:middle}
+table.t th{background:#f8fafc;font-size:13px;white-space:nowrap}
+table.t td.c,table.t th.c{text-align:center}table.t td.r,table.t th.r{text-align:right}
+table.t tr.sub td{background:#fafafa;font-size:13px}table.t tr.grp td{border-top:2px solid #94a3b8}
+table.t tfoot td{font-weight:800;background:#f8fafc}
+.pos h4{color:var(--ok)}.neg h4{color:var(--bad)}
+.pos table.t th{background:var(--ok2)}.neg table.t th{background:var(--bad2)}
+.big-num{font-size:26px;font-weight:800}
+/* banners */
+.banner{border-radius:10px;padding:12px 14px;font-weight:700;margin-bottom:12px;font-size:17px}
+.banner.ok{background:var(--ok2);color:var(--ok)}.banner.bad{background:var(--bad2);color:var(--bad)}.banner.warn{background:var(--warn2);color:var(--warn)}.banner.info{background:var(--pri2);color:var(--pri)}
+.chip{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.chip.ok{background:var(--ok2);color:var(--ok)}.chip.bad{background:var(--bad2);color:var(--bad)}.chip.info{background:var(--pri2);color:var(--pri)}.chip.warn{background:var(--warn2);color:var(--warn)}
+/* topics buttons */
+.tbtns{display:flex;flex-wrap:wrap;gap:8px}
+.tbtn{border:2px solid;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700;background:#fff;text-align:left}
+.tbtn.p{border-color:#86efac;color:var(--ok)}.tbtn.p:hover{background:var(--ok2)}
+.tbtn.n{border-color:#fca5a5;color:var(--bad)}.tbtn.n:hover{background:var(--bad2)}
+.tbtn b{display:block;font-size:18px}
+/* tabs */
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--bd);margin-bottom:14px}
+.tabs button{background:none;border:0;padding:10px 16px;cursor:pointer;font-weight:700;color:var(--mut);border-bottom:3px solid transparent;margin-bottom:-2px}
+.tabs button.on{color:var(--pri);border-bottom-color:var(--pri)}
+/* mapping */
+.mapgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-bottom:12px}
+.mapgrid label select{width:100%}
+.pgroup{border:1px dashed #93c5fd;border-radius:10px;padding:10px;margin-bottom:10px;background:#f8fbff}
+.pgroup .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-weight:700}
+/* report */
+.rep{background:#fff;padding:18px;border-radius:12px;border:1px solid var(--bd)}
+.rhead{text-align:center;margin-bottom:14px;border-bottom:2px solid #0f172a;padding-bottom:8px}
+.rhead .s1{font-size:18px;font-weight:800}.rhead .s2{font-size:16px;font-weight:700}.rhead .s3{font-size:12px;color:var(--mut)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.sumbox{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.sumbox div{flex:1;min-width:140px;border-radius:10px;padding:10px;text-align:center;font-weight:700}
+/* late card 5.6 x 8.8 cm */
+.lcard{width:56mm;height:87.6mm;box-sizing:border-box;border:1px solid #334155;padding:2mm 2.4mm;font-size:6.8pt;line-height:1.22;background:#fff;color:#000;overflow:hidden;display:flex;flex-direction:column;gap:.9mm;font-family:'Sarabun',sans-serif}
+.lc-head{text-align:center;border-bottom:1px solid #94a3b8;padding-bottom:.8mm}
+.lc-school{font-size:6.8pt;font-weight:700}.lc-title{font-size:10pt;font-weight:800;color:#b91c1c;line-height:1.1}.lc-date{font-size:6.6pt}
+.lc-top{display:flex;gap:2mm;align-items:flex-start}
+.lc-photo{width:17mm;height:21.5mm;object-fit:cover;border:1px solid #94a3b8;border-radius:1mm;flex-shrink:0}
+.lc-photo.nophoto{font-size:6pt}
+.lc-st{font-size:6.8pt}.lc-st b{font-size:7.6pt;display:block}
+.lc-time{border:1.6px solid #dc2626;border-radius:1.6mm;text-align:center;color:#dc2626;padding:.4mm 0 .6mm}
+.lc-time span{font-size:6.6pt;font-weight:700}.lc-time b{display:block;font-size:19pt;line-height:1;font-weight:800}
+.lc-sec{font-size:6.3pt}.lc-sec i{font-style:normal;font-weight:700}
+.lc-sign{margin-top:auto;text-align:center;font-size:6.2pt;line-height:1.15}
+.lc-sign img{height:8.5mm;max-width:32mm;object-fit:contain;display:block;margin:0 auto}
+.lc-nosign{height:8.5mm;display:flex;align-items:flex-end;justify-content:center;color:#64748b}
+.cardwrap{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+/* overlays */
+#loading{position:fixed;inset:0;background:#0f172a55;z-index:100;display:flex;align-items:center;justify-content:center}
+#loading div{background:#fff;padding:16px 26px;border-radius:12px;font-weight:700}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:110;display:flex;flex-direction:column;gap:6px;align-items:center}
+#toast div{background:#0f172a;color:#fff;padding:10px 18px;border-radius:10px;font-weight:600;box-shadow:0 4px 14px #0003}
+#toast div.err{background:var(--bad)}#toast div.ok{background:var(--ok)}
+#modal{position:fixed;inset:0;background:#0f172a77;z-index:90;display:flex;align-items:flex-start;justify-content:center;padding:40px 12px;overflow:auto}
+.mbox{background:#fff;border-radius:14px;padding:20px;width:100%;max-width:460px;position:relative}
+.mbox.wide{max-width:760px}
+.mclose{position:absolute;top:8px;right:10px;background:none;border:0;font-size:26px;cursor:pointer;color:var(--mut)}
+.mmsg{white-space:pre-wrap;font-size:16px}
+.lbox{position:relative}
+.bellmsg{text-align:center;font-size:13px;font-weight:700;color:var(--bad);background:var(--bad2);border-radius:20px;padding:4px 12px;align-self:center;cursor:pointer}
+.bell{background:none;border:0;font-size:26px;cursor:pointer;position:absolute;top:12px;right:14px;line-height:1}
+.bell.hd{position:relative;top:auto;right:auto;font-size:22px}
+.bell .badge{position:absolute;top:-6px;right:-10px;background:#dc2626;color:#fff;border-radius:20px;font-size:12px;font-weight:800;padding:1px 6px;min-width:20px;text-align:center}
+.bell.ring{animation:ring 1.2s ease-in-out infinite}
+@keyframes ring{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(-14deg)}20%,40%{transform:rotate(14deg)}}
+.upslot{flex-direction:column;gap:4px;padding:4px}
+.upslot .btn{padding:4px 8px;font-size:12px;margin:2px}
+.ph.sm.upslot .btn{padding:2px 6px;font-size:15px;margin:0}
+.lc-pending{color:#dc2626;font-weight:800;font-size:8pt}
+[hidden]{display:none!important}
+#printArea{display:none}
+@media print{
+  body.printing>*:not(#printArea){display:none!important}
+  body.printing #printArea{display:block!important}
+  body{background:#fff}
+  .noprint,.actions{display:none!important}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .rep{border:0;padding:0}
+  .lcard{border:1px solid #334155}
+}
+</style>
+</head>
+<body>
+
+<div id="loginView" class="login">
+  <div class="lbox">
+    <button class="bell" id="lgBell" title="คำขอทำบัตรที่รออนุมัติ" hidden>🔔<span class="badge" id="lgBellN">0</span></button>
+    <div style="text-align:center;font-size:44px">🏫</div>
+    <h1 id="lgSchool">ระบบพฤติกรรมและการมาสาย</h1>
+    <div id="lgBellMsg" class="bellmsg" hidden></div>
+    <div><div class="muted" style="margin-bottom:6px">เข้าใช้งานในฐานะ</div>
+      <div class="roles">
+        <label><input type="radio" name="role" value="admin">แอดมิน</label>
+        <label><input type="radio" name="role" value="teacher" checked>ครู</label>
+        <label><input type="radio" name="role" value="public">บุคคลทั่วไป</label>
+      </div></div>
+    <label id="lgUserW"><span id="lgUserL">เบอร์โทร</span><input id="lgUser" autocomplete="username"></label>
+    <label id="lgPwW">รหัสผ่าน<input type="password" id="lgPw" autocomplete="current-password"></label>
+    <p class="muted" id="lgHint" style="margin:0;text-align:center"></p>
+    <button class="btn full" id="lgBtn">เข้าสู่ระบบ</button>
+  </div>
+</div>
+
+<div id="appView" hidden>
+  <header><button id="burger">☰</button><div class="t" id="hdSchool"></div><button class="bell hd" id="hdBell" title="คำขอทำบัตรที่รออนุมัติ" hidden>🔔<span class="badge" id="hdBellN">0</span></button><span class="r" id="hdRole"></span><button class="btn ghost sm" id="logoutBtn">ออกจากระบบ</button></header>
+  <div class="wrap"><nav id="nav"></nav><main id="main"></main></div>
+</div>
+
+<div id="printArea"></div>
+<div id="loading" hidden><div>⏳ กำลังดำเนินการ...</div></div>
+<div id="toast"></div>
+<div id="modal" hidden></div>
+
+<script>
+/* =================== ลิงก์ Apps Script (/exec) — เปลี่ยนตรงนี้ถ้า Deploy ใหม่แล้วได้ลิงก์ใหม่ =================== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
+
+/* =================== พื้นฐาน =================== */
+const S = { token: null, role: null, roleName: '', school: '', topics: [], today: '' };
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+const thDate = d => { if (!d) return ''; const [y, m, dd] = d.split('-'); return `${+dd} ${TH_M[+m - 1]} ${+y + 543}`; };
+const hm = t => String(t || '').slice(0, 5);
+const localStamp = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const nowHM = () => { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const fullName = o => o ? `${o.prefix || ''}${o.firstName || ''} ${o.lastName || ''}`.trim() : '';
+const classRoom = s => `ชั้น ${s.grade || '-'} ห้อง ${s.room || '-'}`;
+const img = (src, cls) => src ? `<img class="ph ${cls}" src="${src}">` : `<div class="ph ${cls} nophoto">ไม่มีรูป</div>`;
+const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) { } } };
+
+let loadingN = 0;
+function loading(on) { loadingN = Math.max(0, loadingN + (on ? 1 : -1)); $('#loading').hidden = loadingN === 0; }
+function toast(msg, type = '') { const d = document.createElement('div'); d.className = type; d.textContent = msg; $('#toast').appendChild(d); setTimeout(() => d.remove(), 3200); }
+
+/* เรียก Apps Script ผ่าน fetch (ใช้ text/plain เพื่อไม่ให้ติด CORS) */
+async function rpc(fn, args, token) {
+  let r;
+  try {
+    r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args, token }) });
+  } catch (e) { throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต'); }
+  let j;
+  try { j = await r.json(); } catch (e) { throw new Error('เซิร์ฟเวอร์ตอบกลับผิดรูปแบบ (ตรวจสอบว่า Deploy เว็บแอปเป็น "ทุกคน" แล้ว)'); }
+  if (!j.ok) throw new Error(String(j.error || 'เกิดข้อผิดพลาด').replace(/^(Error|Exception):\s*/, ''));
+  return j.result;
+}
+async function api(fn, ...args) {
+  loading(true);
+  try { return await rpc(fn, args, S.token); }
+  catch (e) {
+    if (String(e.message).indexOf('SESSION_EXPIRED') >= 0) { toast('หมดเวลาการเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่', 'err'); doLogout(true); }
+    throw e;
+  } finally { loading(false); }
+}
+async function safe(fn) { try { await fn(); } catch (e) { if (e && String(e.message).indexOf('SESSION_EXPIRED') < 0) alertBox(e.message || String(e)); } }
+
+function openModal(html, wide) {
+  const m = $('#modal');
+  m.innerHTML = `<div class="mbox ${wide ? 'wide' : ''}"><button class="mclose" onclick="closeModal()">×</button>${html}</div>`;
+  m.hidden = false; return m.firstChild;
+}
+let MODAL_CLEANUP = null;
+function closeModal() { if (MODAL_CLEANUP) { try { MODAL_CLEANUP(); } catch (e) { } MODAL_CLEANUP = null; } const m = $('#modal'); m.hidden = true; m.innerHTML = ''; }
+function alertBox(msg, title = 'แจ้งเตือน') { openModal(`<h3>${esc(title)}</h3><p class="mmsg">${esc(msg)}</p><div class="row end"><button class="btn" onclick="closeModal()">ตกลง</button></div>`); }
+function confirmBox(msg, okText = 'ยืนยัน', danger = false) {
+  return new Promise(res => {
+    openModal(`<p class="mmsg">${msg}</p><div class="row end"><button class="btn ghost" id="mNo">ยกเลิก</button><button class="btn ${danger ? 'red' : ''}" id="mYes">${esc(okText)}</button></div>`);
+    $('#mNo').onclick = () => { closeModal(); res(false); };
+    $('#mYes').onclick = () => { closeModal(); res(true); };
+  });
+}
+
+/* ย่อรูปให้กว้างประมาณ 400px ตามสัดส่วนเดิม */
+function resizeImage(file, width = 400, keepPng = false) {
+  return new Promise((res, rej) => {
+    if (!file || !/^image\//.test(file.type)) return rej(new Error('กรุณาเลือกไฟล์รูปภาพ'));
+    const r = new FileReader();
+    r.onload = () => {
+      const im = new Image();
+      im.onload = () => {
+        const w = width, h = Math.round(im.height * width / im.width);
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        if (!keepPng) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); }
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(im, 0, 0, w, h);
+        res(c.toDataURL(keepPng ? 'image/png' : 'image/jpeg', 0.85));
+      };
+      im.onerror = () => rej(new Error('เปิดไฟล์รูปไม่ได้'));
+      im.src = r.result;
+    };
+    r.onerror = () => rej(new Error('อ่านไฟล์ไม่ได้'));
+    r.readAsDataURL(file);
+  });
+}
+function pickImage(cb, opts = {}) {
+  const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*';
+  if (opts.capture) i.capture = 'environment';
+  i.onchange = () => i.files[0] && safe(async () => cb(await resizeImage(i.files[0], 400, opts.png)));
+  i.click();
+}
+/* ถ่ายรูปด้วยกล้อง (เว็บแคม/กล้องมือถือ) ถ้าเปิดกล้องไม่ได้จะใช้แอปกล้องของเครื่องแทน */
+function takePhoto(cb) {
+  const fallback = () => pickImage(cb, { capture: true });
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return fallback();
+  let stream = null, facing = 'environment';
+  openModal(`<h3>ถ่ายรูป</h3><video id="camV" autoplay playsinline muted style="width:100%;max-height:60vh;border-radius:10px;background:#000"></video>
+    <div class="row end"><button class="btn ghost" id="camSw">🔄 สลับกล้อง</button><button class="btn ghost" id="camFile">📁 เลือกไฟล์แทน</button><button class="btn" id="camShot">📸 ถ่าย</button></div>`);
+  const stop = () => { if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; };
+  MODAL_CLEANUP = stop;
+  const start = async () => { stop(); stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 1280 } }, audio: false }); $('#camV').srcObject = stream; };
+  start().catch(() => { closeModal(); fallback(); });
+  $('#camSw').onclick = () => { facing = facing === 'user' ? 'environment' : 'user'; start().catch(() => toast('สลับกล้องไม่ได้', 'err')); };
+  $('#camFile').onclick = () => { closeModal(); pickImage(cb); };
+  $('#camShot').onclick = () => {
+    const v = $('#camV'); if (!v.videoWidth) return toast('กล้องยังไม่พร้อม', 'err');
+    const w = 400, h = Math.round(v.videoHeight * w / v.videoWidth);
+    const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(v, 0, 0, w, h);
+    const d = c.toDataURL('image/jpeg', 0.85); closeModal(); safe(() => cb(d));
+  };
+}
+/* ช่องรูปนักเรียน: ถ้าไม่มีรูป แสดงปุ่มถ่ายรูป/อัปโหลดทันที (ทุกบทบาท) */
+let ON_PHOTO = null;
+function stuPhoto(s, size) {
+  if (s.photo) return `<img class="ph ${size}" src="${s.photo}">`;
+  if (!s.studentId || s.firstName === '(ไม่พบข้อมูล)') return img('', size);
+  const sid = esc(s.studentId);
+  if (size === 'sm' || size === 'md') return `<div class="ph ${size} nophoto upslot" data-sid="${sid}" data-size="${size}"><button class="btn sm" data-phmenu="${sid}" data-html2canvas-ignore="true" title="เพิ่มรูปนักเรียน">📷</button></div>`;
+  return `<div class="ph ${size} nophoto upslot" data-sid="${sid}" data-size="${size}"><div>ยังไม่มีรูป</div><div data-html2canvas-ignore="true" class="noprint"><button class="btn sm" data-cam="${sid}">📷 ถ่ายรูป</button><br><button class="btn sm ghost" data-upl="${sid}">📁 อัปโหลด</button></div></div>`;
+}
+function applyPhoto(sid, photo) {
+  $$('.upslot').filter(el => el.dataset.sid === sid).forEach(el => { el.outerHTML = `<img class="ph ${el.dataset.size}" src="${photo}">`; });
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-upl],[data-cam],[data-phmenu]'); if (!b) return;
+  e.preventDefault();
+  const sid = b.dataset.upl || b.dataset.cam || b.dataset.phmenu;
+  if (b.dataset.phmenu) {
+    openModal(`<h3>เพิ่มรูปนักเรียน รหัส ${esc(sid)}</h3><p class="muted">ระบบย่อรูปให้กว้าง 400px และบันทึกชื่อไฟล์เป็นรหัสนักเรียน</p><div class="row"><button class="btn" data-cam="${esc(sid)}">📷 ถ่ายรูป</button><button class="btn ghost" data-upl="${esc(sid)}">📁 อัปโหลดไฟล์</button></div>`);
+    return;
+  }
+  const done = async d => {
+    closeModal();
+    const r = await api('uploadStudentPhoto', sid, d);
+    applyPhoto(sid, r.photo); toast('บันทึกรูปนักเรียนแล้ว', 'ok');
+    if (ON_PHOTO) ON_PHOTO(sid);
+  };
+  if (b.dataset.cam) takePhoto(done); else pickImage(done);
+});
+
+/* =================== พิมพ์ / PDF / Excel / แชร์ =================== */
+function doPrint(el, card) {
+  const pa = $('#printArea'); pa.innerHTML = ''; pa.appendChild(el.cloneNode(true));
+  $('#pageStyle').textContent = card ? '@page{size:56mm 88mm;margin:0}' : '@page{size:A4 portrait;margin:10mm}';
+  document.body.classList.add('printing');
+  setTimeout(() => { window.print(); document.body.classList.remove('printing'); pa.innerHTML = ''; }, 350);
+}
+function pdfOpts(name, card) {
+  return {
+    margin: card ? 0 : 8, filename: name + '.pdf', image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: card ? 4 : 2, useCORS: true, backgroundColor: '#ffffff' },
+    jsPDF: { unit: 'mm', format: card ? [56, 88] : 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.block', '.lcard'] }
+  };
+}
+async function doPdf(el, name, card) { loading(true); try { await html2pdf().set(pdfOpts(name, card)).from(el).save(); } finally { loading(false); } }
+function doExcel(aoa, name) {
+  const ws = XLSX.utils.aoa_to_sheet(aoa); const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'รายงาน'); XLSX.writeFile(wb, name + '.xlsx');
+}
+async function doShare(el, name, card) {
+  loading(true);
+  let uri;
+  try { uri = await html2pdf().set(pdfOpts(name, card)).from(el).outputPdf('datauristring'); } finally { loading(false); }
+  try {
+    const blob = await (await fetch(uri)).blob();
+    const file = new File([blob], name + '.pdf', { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  const r = await api('createShareLink', uri, name);
+  const u = encodeURIComponent(r.url);
+  openModal(`<h3>แชร์รายงาน</h3><p class="muted">สร้างไฟล์ PDF ไว้ใน Google Drive แล้ว ส่งลิงก์นี้ให้ผู้รับได้เลย</p>
+    <input id="shUrl" value="${esc(r.url)}" readonly style="width:100%">
+    ${r.warn ? `<p class="muted" style="color:var(--warn)">${esc(r.warn)}</p>` : ''}
+    <div class="row"><button class="btn" id="shCopy">คัดลอกลิงก์</button>
+    <a class="btn green" target="_blank" href="https://social-plugins.line.me/lineit/share?url=${u}" style="text-decoration:none">แชร์ทาง LINE</a>
+    <a class="btn ghost" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=${u}" style="text-decoration:none">Facebook</a>
+    <a class="btn ghost" target="_blank" href="mailto:?subject=${encodeURIComponent(name)}&body=${u}" style="text-decoration:none">อีเมล</a>
+    <a class="btn ghost" target="_blank" href="${esc(r.url)}" style="text-decoration:none">เปิดไฟล์</a></div>`);
+  $('#shCopy').onclick = () => { const i = $('#shUrl'); i.select(); try { navigator.clipboard.writeText(i.value).then(() => toast('คัดลอกแล้ว', 'ok'), () => { document.execCommand('copy'); toast('คัดลอกแล้ว', 'ok'); }); } catch (e) { document.execCommand('copy'); toast('คัดลอกแล้ว', 'ok'); } };
+}
+/** opts: { el: ()=>Element, name, card, excel: ()=>aoa, printLabel } */
+function actionBar(opts) {
+  const id = 'ab' + Math.random().toString(36).slice(2);
+  setTimeout(() => {
+    const b = $('#' + id); if (!b) return;
+    $('.a-print', b).onclick = () => doPrint(opts.el(), opts.card);
+    $('.a-pdf', b).onclick = () => safe(() => doPdf(opts.el(), opts.name, opts.card));
+    $('.a-share', b).onclick = () => safe(() => doShare(opts.el(), opts.name, opts.card));
+    if (opts.excel) $('.a-xls', b).onclick = () => doExcel(opts.excel(), opts.name);
+  }, 0);
+  return `<div class="actions noprint" id="${id}"><button class="btn ghost a-print">🖨 ${opts.printLabel || 'พิมพ์'}</button><button class="btn ghost a-pdf">⬇ ดาวน์โหลด PDF</button>${opts.excel ? '<button class="btn ghost a-xls">⬇ ดาวน์โหลด Excel</button>' : ''}<button class="btn ghost a-share">🔗 แชร์</button></div>`;
+}
+const reportHead = (title, sub, printedAt) => `<div class="rhead"><div class="s1">${esc(S.school)}</div><div class="s2">${esc(title)}</div>${sub ? `<div>${sub}</div>` : ''}<div class="s3">พิมพ์เมื่อ ${esc(printedAt ? thDate(printedAt.slice(0, 10)) + ' ' + printedAt.slice(11, 16) + ' น.' : '')}</div></div>`;
+
+/* =================== บล็อกแสดงข้อมูล =================== */
+function studentBlock(s, size = 'lg', title = 'ข้อมูลนักเรียน') {
+  return `<div class="block"><h4>${title}</h4><div class="person">${stuPhoto(s, size)}<table class="kv">
+    <tr><th>รหัสนักเรียน</th><td>${esc(s.studentId)}</td></tr>
+    <tr><th>ชื่อ-สกุล</th><td>${esc(fullName(s))}</td></tr>
+    <tr><th>ชั้น / ห้อง</th><td>${esc(classRoom(s))}</td></tr>
+    <tr><th>เบอร์โทร</th><td>${esc(s.phone || '-')}</td></tr></table></div></div>`;
+}
+function parentsBlock(ps, photos = true) {
+  return `<div class="block"><h4>ผู้ปกครอง (${ps.length} คน)</h4><div class="plist">${ps.length ? ps.map(p => `<div class="pitem">${photos ? img(p.photo, 'md') : ''}<div><div class="n">${esc(fullName(p) || '-')}</div><div class="s">สถานะ: ${esc(p.relation || '-')}</div><div class="s">โทร: ${esc(p.phone || '-')}</div></div></div>`).join('') : '<div class="muted">ยังไม่มีข้อมูลผู้ปกครอง</div>'}</div></div>`;
+}
+function teachersBlock(ts, photos = true) {
+  return `<div class="block"><h4>ครูที่ปรึกษา</h4><div class="plist">${ts.length ? ts.map(t => `<div class="pitem">${photos ? img(t.photo, 'md') : ''}<div><div class="n">${esc(fullName(t))}</div><div class="s">${esc(classRoom(t))}</div><div class="s">โทร: ${esc(t.phone || '-')}</div></div></div>`).join('') : '<div class="muted">ยังไม่มีครูที่ปรึกษาของชั้น/ห้องนี้</div>'}</div></div>`;
+}
+function searchBar(id, ph = 'พิมพ์รหัสนักเรียนแล้วกด Enter', btn = 'ค้นหา') {
+  return `<div class="search noprint"><input id="${id}" placeholder="${ph}" autocomplete="off"><button class="btn" id="${id}Btn">${btn}</button></div>`;
+}
+function bindSearch(id, fn) {
+  const i = $('#' + id);
+  const go = () => { const v = i.value.trim(); if (!v) return toast('กรุณาพิมพ์รหัสนักเรียน', 'err'); safe(() => fn(v)); };
+  i.onkeydown = e => { if (e.key === 'Enter') go(); };
+  $('#' + id + 'Btn').onclick = go;
+  setTimeout(() => i.focus(), 50);
+}
+
+/* =================== แยกชื่อ / คำนำหน้า =================== */
+const PREFIXES = ['ว่าที่ร้อยตรีหญิง', 'ว่าที่ร้อยตรี', 'ว่าที่ ร.ต.', 'ว่าที่ร.ต.', 'เด็กชาย', 'เด็กหญิง', 'นางสาว', 'ด.ช.', 'ด.ญ.', 'น.ส.', 'ดร.', 'นาย', 'นาง', 'Mrs.', 'Mr.', 'Ms.', 'Miss'];
+function splitName(s) {
+  s = String(s || '').trim().replace(/\s+/g, ' ');
+  let prefix = '';
+  for (const p of PREFIXES) if (s.startsWith(p)) { prefix = p; s = s.slice(p.length).trim(); break; }
+  const parts = s.split(' ');
+  return { prefix, firstName: parts[0] || '', lastName: parts.slice(1).join(' ') };
+}
+
+/* =================== ตัวจับคู่คอลัมน์ (ใช้ร่วม นักเรียน/ครู) =================== */
+const PW = /(ผู้ปกครอง|ผปค|บิดา|มารดา|พ่อ|แม่|parent|guardian)/;
+const GUESS = {
+  studentId: { inc: ['รหัส', 'เลขประจำตัว', 'studentid', 'id'] },
+  fullName: { all: ['ชื่อ', 'สกุล'] },
+  prefix: { inc: ['คำนำ', 'prefix', 'title'] },
+  firstName: { inc: ['ชื่อ', 'first', 'name'], exc: ['สกุล', 'last', 'คำนำ', 'sur'] },
+  lastName: { inc: ['สกุล', 'last', 'surname'], exc: ['ชื่อ-', 'ชื่อ–'] },
+  classRoom: { all: ['ชั้น', 'ห้อง'] },
+  grade: { inc: ['ชั้น', 'grade', 'class', 'ระดับ'], exc: ['ห้อง'] },
+  room: { inc: ['ห้อง', 'room'], exc: ['ชั้น'] },
+  phone: { inc: ['โทร', 'phone', 'tel', 'มือถือ', 'mobile'] },
+  relation: { inc: ['สถานะ', 'ความสัมพันธ์', 'เกี่ยวข้อง', 'relation'], any: true }
+};
+function guessCol(headers, key, used, pg) {
+  const g = GUESS[key]; if (!g) return -1;
+  for (let i = 0; i < headers.length; i++) {
+    if (used.has(i)) continue;
+    const h = String(headers[i] || '').toLowerCase().replace(/\s+/g, ''); if (!h) continue;
+    const isP = PW.test(h);
+    if (pg === null) { if (isP && !g.anyStudent) { /* คอลัมน์ผู้ปกครอง ข้าม */ continue; } }
+    else if (pg >= 0) {
+      if (!isP && !g.any) continue;
+      const num = h.match(/\d+/);
+      if (num ? (+num[0] !== pg + 1) : pg > 0) continue;
+    }
+    if (g.all && !g.all.every(k => h.includes(k))) continue;
+    if (g.inc && !g.inc.some(k => h.includes(k))) continue;
+    if (g.exc && g.exc.some(k => h.includes(k))) continue;
+    return i;
+  }
+  return -1;
+}
+/** cfg: { fields:[[key,label]], parentFields?:[[key,label]], onImport: async rows=>html, extraHtml, noHeaderGuess } */
+function Importer(root, cfg) {
+  let headers = [], data = [];
+  root.innerHTML = `<h4>จับคู่หัวคอลัมน์ (คอลัมน์จาก Excel → ช่องข้อมูลในระบบ)</h4>
+    <p class="muted">ระบบเดาให้อัตโนมัติ ตรวจสอบและแก้ไขได้ ช่องที่ไม่มีข้อมูลเลือก "ไม่นำเข้า" ข้อมูลไม่ครบก็นำเข้าได้</p>
+    <div class="mapgrid" data-main></div>
+    ${cfg.parentFields ? '<div data-pgs></div><button class="btn ghost sm" data-addp>+ เพิ่มชุดคอลัมน์ผู้ปกครองอีกคน</button>' : ''}
+    <h4 style="margin-top:16px">ตัวอย่างข้อมูลที่จะนำเข้า (10 แถวแรก)</h4><div class="scroll" data-prev></div>
+    <div class="row">${cfg.extraHtml || ''}<button class="btn" data-go>นำเข้าข้อมูล</button></div><div data-res></div>`;
+  const colSel = (key, label, sel) => `<label>${esc(label)}<select data-k="${key}"><option value="-1">— ไม่นำเข้า —</option>${headers.map((h, i) => `<option value="${i}" ${i === sel ? 'selected' : ''}>${esc(h || ('คอลัมน์ ' + (i + 1)))}${data[0] && data[0][i] !== undefined && String(data[0][i]).trim() ? ' · เช่น ' + esc(String(data[0][i]).slice(0, 18)) : ''}</option>`).join('')}</select></label>`;
+  function renderGroup(container, fields, pg) {
+    const used = new Set($$('select[data-k]', root).map(s => +s.value).filter(v => v >= 0));
+    const order = ['fullName', 'classRoom'];
+    const sel = {};
+    order.concat(fields.map(f => f[0]).filter(k => order.indexOf(k) < 0)).forEach(k => {
+      if (!fields.some(f => f[0] === k)) return;
+      if ((k === 'firstName' || k === 'prefix' || k === 'lastName') && sel.fullName >= 0 && k !== 'lastName') { sel[k] = -1; return; }
+      if ((k === 'grade' || k === 'room') && sel.classRoom >= 0) { sel[k] = -1; return; }
+      const i = guessCol(headers, k, used, pg); sel[k] = i; if (i >= 0) used.add(i);
+    });
+    if (cfg.guessNoHeader && (pg === null || pg === -1)) Object.assign(sel, cfg.guessNoHeader(data, sel));
+    container.innerHTML = fields.map(f => colSel(f[0], f[1], sel[f[0]])).join('');
+  }
+  function addParentGroup(idx) {
+    const g = document.createElement('div'); g.className = 'pgroup';
+    g.innerHTML = `<div class="hd"><span>ผู้ปกครองคนที่ <span class="no"></span></span><button class="btn ghost sm" data-del>ลบชุดนี้</button></div><div class="mapgrid"></div>`;
+    $('[data-pgs]', root).appendChild(g);
+    renderGroup($('.mapgrid', g), cfg.parentFields, idx);
+    $('[data-del]', g).onclick = () => { g.remove(); renumber(); preview(); };
+    renumber();
+  }
+  function renumber() { $$('.pgroup', root).forEach((g, i) => $('.no', g).textContent = i + 1); }
+  const readMap = el => { const m = {}; $$('select[data-k]', el).forEach(s => { if (+s.value >= 0) m[s.dataset.k] = +s.value; }); return m; };
+  const pick = (r, m) => { const o = {}; for (const k in m) o[k] = String(r[m[k]] == null ? '' : r[m[k]]).trim(); return o; };
+  const applyFull = o => { if (o.fullName) { const n = splitName(o.fullName); ['prefix', 'firstName', 'lastName'].forEach(k => { if (!o[k]) o[k] = n[k]; }); } delete o.fullName; return o; };
+  const applyCR = o => { if (o.classRoom) { const m = o.classRoom.split(/[\/\-]/); if (!o.grade) o.grade = (m[0] || '').trim(); if (!o.room) o.room = (m[1] || '').trim(); } delete o.classRoom; return o; };
+  function build() {
+    const mm = readMap($('[data-main]', root));
+    const pgs = $$('.pgroup', root).map(g => readMap(g));
+    return data.map(r => {
+      const main = applyCR(applyFull(pick(r, mm)));
+      if (!cfg.parentFields) return main;
+      return { student: main, parents: pgs.map(m => applyFull(pick(r, m))) };
+    });
+  }
+  function preview() {
+    const rows = build().slice(0, 10);
+    const keys = cfg.fields.map(f => f[0]).filter(k => k !== 'fullName' && k !== 'classRoom');
+    const lab = Object.fromEntries(cfg.fields);
+    const pc = cfg.parentFields ? $$('.pgroup', root).length : 0;
+    $('[data-prev]', root).innerHTML = `<table class="t"><thead><tr>${keys.map(k => `<th>${esc(lab[k].replace(' *', ''))}</th>`).join('')}${pc ? Array.from({ length: pc }, (_, i) => `<th>ผู้ปกครอง ${i + 1}</th>`).join('') : ''}</tr></thead><tbody>${rows.map(r => {
+      const m = cfg.parentFields ? r.student : r;
+      return `<tr>${keys.map(k => `<td>${esc(m[k] || '')}</td>`).join('')}${cfg.parentFields ? r.parents.map(p => `<td>${esc([fullName(p), p.relation ? '(' + p.relation + ')' : '', p.phone].filter(Boolean).join(' '))}</td>`).join('') : ''}</tr>`;
+    }).join('')}</tbody></table><p class="muted">ทั้งหมด ${data.length} แถว</p>`;
+  }
+  root.addEventListener('change', e => { if (e.target.matches('select[data-k]')) preview(); });
+  if (cfg.parentFields) $('[data-addp]', root).onclick = () => { addParentGroup($$('.pgroup', root).length); preview(); };
+  $('[data-go]', root).onclick = () => safe(async () => {
+    const rows = build();
+    $('[data-res]', root).innerHTML = await cfg.onImport(rows);
+  });
+  return {
+    load(aoa, headerRow) {
+      const width = Math.max(0, ...aoa.map(r => r.length));
+      if (headerRow === null) { headers = Array.from({ length: width }, (_, i) => 'คอลัมน์ ' + (i + 1)); data = aoa; }
+      else { headers = (aoa[headerRow] || []).map(v => String(v).trim()); while (headers.length < width) headers.push(''); data = aoa.slice(headerRow + 1); }
+      data = data.filter(r => r.some(c => String(c).trim()));
+      root.hidden = false;
+      $('[data-main]', root).innerHTML = '';
+      if (cfg.parentFields) $('[data-pgs]', root).innerHTML = '';
+      renderGroup($('[data-main]', root), cfg.fields, cfg.parentFields ? null : -1);
+      if (cfg.parentFields) {
+        const nums = new Set(); headers.forEach(h => { if (PW.test(h)) { const m = h.match(/\d+/); nums.add(m ? +m[0] : 1); } });
+        const n = Math.max(1, nums.size);
+        for (let i = 0; i < n; i++) addParentGroup(i);
+      }
+      preview();
+    }
+  };
+}
+function excelPicker(prefix) {
+  return `<div class="row"><label>ไฟล์ Excel / CSV<input type="file" id="${prefix}File" accept=".xlsx,.xls,.csv"></label>
+    <label>ชีต<select id="${prefix}Sheet" disabled></select></label>
+    <label>หัวคอลัมน์อยู่แถวที่<input type="number" id="${prefix}Head" value="1" min="1" style="width:90px"></label></div>`;
+}
+function bindExcelPicker(prefix, onAoa) {
+  let wb = null;
+  const load = () => { if (!wb) return; const ws = wb.Sheets[$('#' + prefix + 'Sheet').value]; const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: false, blankrows: false }); onAoa(aoa, Math.max(1, +$('#' + prefix + 'Head').value || 1) - 1); };
+  $('#' + prefix + 'File').onchange = e => safe(async () => {
+    const f = e.target.files[0]; if (!f) return;
+    wb = XLSX.read(await f.arrayBuffer(), { type: 'array' });
+    const s = $('#' + prefix + 'Sheet'); s.disabled = false;
+    s.innerHTML = wb.SheetNames.map(n => `<option>${esc(n)}</option>`).join(''); load();
+  });
+  $('#' + prefix + 'Sheet').onchange = load; $('#' + prefix + 'Head').onchange = load;
+}
+
+/* =================== เมนู / หน้า =================== */
+const A = ['admin'], ST = ['admin', 'teacher'], AL = ['admin', 'teacher', 'public'];
+const MENU = [
+  ['ข้อมูลพื้นฐาน', [['importStudents', '1. นำเข้าข้อมูลนักเรียน', A], ['students', '1.1 จัดการข้อมูล/รูปนักเรียน', A], ['teachers', '2. ครูที่ปรึกษา', A], ['topics', '3. หัวข้อพฤติกรรม', A]]],
+  ['พฤติกรรม', [['behavior', '4.1 บันทึกพฤติกรรม', ST], ['behaviorReport', '4.2 รายงานพฤติกรรม', ST], ['report', '5. รายงานผลรายบุคคล', ST]]],
+  ['การมาสาย', [['approvals', '🔔 อนุมัติบัตรเข้าสาย', A], ['pass', '6.1 ออกบัตรอนุญาตเข้าสาย', ST], ['request', '6.2 ครูรับเรื่องขอเข้าสาย', ST], ['status', '7. ตรวจสอบสถานะ / บันทึกเข้า', AL], ['late', '8.1 บันทึกมาสาย (ไม่ขออนุญาต)', AL], ['lateReport', '8.2 รายงานนักเรียนเข้าสาย', ST]]],
+  ['ระบบ', [['settings', 'ตั้งค่า', A]]]
+];
+const PAGES = {};
+let CUR = '';
+function renderNav() {
+  $('#nav').innerHTML = MENU.map(([g, items]) => {
+    const its = items.filter(i => i[2].includes(S.role)); if (!its.length) return '';
+    return `<div class="g">${g}</div>` + its.map(i => `<a data-p="${i[0]}">${i[1]}</a>`).join('');
+  }).join('');
+  $$('#nav a').forEach(a => a.onclick = () => { showPage(a.dataset.p); $('#nav').classList.remove('open'); });
+}
+function showPage(id) {
+  const item = MENU.flatMap(m => m[1]).find(i => i[0] === id);
+  if (!item || !item[2].includes(S.role)) return;
+  CUR = id; ON_PHOTO = null;
+  $$('#nav a').forEach(a => a.classList.toggle('on', a.dataset.p === id));
+  $('#main').innerHTML = `<h2>${item[1]}</h2><div id="pg"></div>`;
+  window.scrollTo(0, 0);
+  safe(() => PAGES[id]($('#pg')));
+}
+
+/* ---------- 1. นำเข้านักเรียน ---------- */
+const S_FIELDS = [['studentId', 'รหัสนักเรียน *'], ['fullName', 'ชื่อ-สกุลรวมคอลัมน์เดียว (ถ้ามี)'], ['prefix', 'คำนำหน้านักเรียน'], ['firstName', 'ชื่อนักเรียน'], ['lastName', 'นามสกุลนักเรียน'], ['classRoom', 'ชั้น/ห้องรวมคอลัมน์เดียว เช่น ม.1/2 (ถ้ามี)'], ['grade', 'ชั้น'], ['room', 'ห้อง'], ['phone', 'เบอร์โทรนักเรียน']];
+const P_FIELDS = [['fullName', 'ชื่อ-สกุลผู้ปกครองรวม (ถ้ามี)'], ['prefix', 'คำนำหน้าผู้ปกครอง'], ['firstName', 'ชื่อผู้ปกครอง'], ['lastName', 'นามสกุลผู้ปกครอง'], ['phone', 'เบอร์โทรผู้ปกครอง'], ['relation', 'สถานะกับนักเรียน']];
+PAGES.importStudents = pg => {
+  pg.innerHTML = `<div class="card"><h3>ขั้นที่ 1 เลือกไฟล์</h3>${excelPicker('is')}<p class="muted">หัวคอลัมน์เป็นแบบไหนก็ได้ ถ้ามีผู้ปกครองหลายคนในแถวเดียว ให้เพิ่มชุดคอลัมน์ผู้ปกครอง หรือแยกเป็นหลายแถวที่รหัสนักเรียนซ้ำกันก็ได้ (ระบบจะเพิ่มผู้ปกครองให้ ไม่จำกัดจำนวน)</p></div>
+    <div class="card" id="isMap" hidden></div>`;
+  const imp = Importer($('#isMap'), {
+    fields: S_FIELDS, parentFields: P_FIELDS,
+    onImport: async rows => {
+      const ok = rows.filter(r => r.student.studentId);
+      if (!ok.length) throw new Error('ไม่พบแถวที่มีรหัสนักเรียน กรุณาจับคู่คอลัมน์ "รหัสนักเรียน"');
+      const tot = { added: 0, updated: 0, parentsAdded: 0, parentsUpdated: 0, skipped: rows.length - ok.length };
+      for (let i = 0; i < ok.length; i += 400) {
+        const r = await api('importStudents', ok.slice(i, i + 400));
+        for (const k in r) tot[k] += r[k];
+      }
+      toast('นำเข้าเรียบร้อย', 'ok');
+      return `<div class="banner ok">นำเข้าเรียบร้อย · นักเรียนใหม่ ${tot.added} · อัปเดต ${tot.updated} · ผู้ปกครองใหม่ ${tot.parentsAdded} · อัปเดตผู้ปกครอง ${tot.parentsUpdated} · ข้าม (ไม่มีรหัส) ${tot.skipped}</div><p class="muted">อัปโหลดรูปนักเรียน/ผู้ปกครองได้ที่เมนู 1.1</p>`;
+    }
+  });
+  bindExcelPicker('is', (aoa, hr) => imp.load(aoa, hr));
+};
+
+/* ---------- 1.1 จัดการข้อมูลนักเรียน ---------- */
+PAGES.students = pg => {
+  pg.innerHTML = `<div class="card"><div class="search"><input id="stQ" placeholder="ค้นหารหัส / ชื่อ / ชั้น เช่น ม.1/2"><button class="btn" id="stQBtn">ค้นหา</button><button class="btn ghost" id="stNew">+ เพิ่มนักเรียน</button></div><div id="stList" class="scroll"></div></div>
+  <div id="stEdit"></div>
+  <div class="card"><h3>อัปโหลดรูปนักเรียนทีละหลายรูป</h3><p class="muted">ตั้งชื่อไฟล์เป็นรหัสนักเรียน เช่น 12345.jpg แล้วเลือกพร้อมกันหลายไฟล์ ระบบจะย่อรูปให้กว้าง 400px และบันทึกชื่อเป็นรหัสนักเรียน</p>
+  <div class="row"><input type="file" id="stBulk" accept="image/*" multiple><button class="btn" id="stBulkGo">อัปโหลด</button></div><div id="stBulkRes" class="muted"></div></div>`;
+  const search = () => safe(async () => {
+    const r = await api('searchStudents', $('#stQ').value);
+    $('#stList').innerHTML = `<p class="muted">พบ ${r.total} คน${r.total > r.items.length ? ' (แสดง ' + r.items.length + ' คนแรก)' : ''}</p><table class="t"><thead><tr><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>ห้อง</th><th>เบอร์โทร</th><th class="c">รูป</th><th></th></tr></thead><tbody>${r.items.map(s => `<tr><td>${esc(s.studentId)}</td><td>${esc(fullName(s))}</td><td>${esc(s.grade)}</td><td>${esc(s.room)}</td><td>${esc(s.phone)}</td><td class="c">${s.hasPhoto ? '<span class="chip ok">มี</span>' : '<span class="chip bad">ไม่มี</span>'}</td><td><button class="btn sm ghost" data-ed="${esc(s.studentId)}">แก้ไข</button></td></tr>`).join('')}</tbody></table>`;
+    $$('[data-ed]', $('#stList')).forEach(b => b.onclick = () => openStudent(b.dataset.ed));
+  });
+  $('#stQBtn').onclick = search; $('#stQ').onkeydown = e => { if (e.key === 'Enter') search(); };
+  $('#stNew').onclick = () => renderStudentEditor(null);
+  $('#stBulkGo').onclick = () => safe(async () => {
+    const files = Array.from($('#stBulk').files || []); if (!files.length) return toast('เลือกไฟล์ก่อน', 'err');
+    const out = $('#stBulkRes'); let ok = 0; const bad = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i], sid = f.name.replace(/\.[^.]+$/, '').trim();
+      out.textContent = `กำลังอัปโหลด ${i + 1}/${files.length} : ${f.name}`;
+      try { await api('uploadStudentPhoto', sid, await resizeImage(f)); ok++; } catch (e) { bad.push(f.name + ' — ' + e.message); }
+    }
+    out.innerHTML = `<div class="banner ${bad.length ? 'warn' : 'ok'}">สำเร็จ ${ok} รูป${bad.length ? ' · ไม่สำเร็จ ' + bad.length + ' รูป' : ''}</div>${bad.map(esc).join('<br>')}`;
+  });
+  search();
+};
+async function openStudent(sid) { renderStudentEditor(await api('getStudent', sid)); }
+function renderStudentEditor(b) {
+  const box = $('#stEdit'); const s = b ? b.student : {}; const isNew = !b;
+  const f = (k, l, ro) => `<label>${l}<input data-f="${k}" value="${esc(s[k] || '')}" ${ro ? 'readonly style="background:#f1f5f9"' : ''}></label>`;
+  box.innerHTML = `<div class="card"><h3>${isNew ? 'เพิ่มนักเรียนใหม่' : 'แก้ไขข้อมูลนักเรียน'}</h3>
+    <div class="person">${isNew ? '' : `<div style="text-align:center">${img(s.photo, 'lg')}<br><button class="btn sm ghost" id="seUp" style="margin-top:6px">อัปโหลดรูป</button></div>`}
+    <div style="flex:1"><div class="row" id="seForm">${f('studentId', 'รหัสนักเรียน *', !isNew)}${f('prefix', 'คำนำหน้า')}${f('firstName', 'ชื่อ')}${f('lastName', 'นามสกุล')}${f('grade', 'ชั้น')}${f('room', 'ห้อง')}${f('phone', 'เบอร์โทร')}</div>
+    <div class="row"><button class="btn" id="seSave">บันทึกข้อมูลนักเรียน</button>${isNew ? '' : '<button class="btn red" id="seDel">ลบนักเรียน</button>'}<button class="btn ghost" id="seClose">ปิด</button></div></div></div>
+    ${isNew ? '' : `<h3 style="margin-top:18px">ผู้ปกครอง</h3><div id="sePar" class="grid2"></div><button class="btn ghost" id="seAddP" style="margin-top:10px">+ เพิ่มผู้ปกครอง</button>`}</div>`;
+  box.scrollIntoView({ behavior: 'smooth' });
+  $('#seClose').onclick = () => box.innerHTML = '';
+  $('#seSave').onclick = () => safe(async () => {
+    const o = {}; $$('#seForm [data-f]').forEach(i => o[i.dataset.f] = i.value);
+    renderStudentEditor(await api('saveStudent', o, isNew)); toast('บันทึกแล้ว', 'ok');
+  });
+  if (isNew) return;
+  $('#seUp').onclick = () => pickImage(async d => { await api('uploadStudentPhoto', s.studentId, d); await openStudent(s.studentId); toast('อัปโหลดรูปแล้ว', 'ok'); });
+  $('#seDel').onclick = () => safe(async () => { if (await confirmBox(`ลบนักเรียน ${esc(fullName(s))} และผู้ปกครองทั้งหมด?`, 'ลบ', true)) { await api('deleteStudent', s.studentId); box.innerHTML = ''; toast('ลบแล้ว', 'ok'); } });
+  const parCard = p => {
+    const g = (k, l) => `<label>${l}<input data-f="${k}" value="${esc(p[k] || '')}"></label>`;
+    return `<div class="block" data-pid="${esc(p.parentId || '')}"><div class="person">${p.parentId ? `<div style="text-align:center">${img(p.photo, 'md')}<br><button class="btn sm ghost" data-up style="margin-top:6px">รูป</button></div>` : ''}<div style="flex:1"><div class="row">${g('prefix', 'คำนำหน้า')}${g('firstName', 'ชื่อ')}${g('lastName', 'นามสกุล')}${g('phone', 'เบอร์โทร')}${g('relation', 'สถานะกับนักเรียน')}</div>
+      <div class="row"><button class="btn sm" data-sv>บันทึก</button>${p.parentId ? '<button class="btn sm red" data-dl>ลบ</button>' : '<button class="btn sm ghost" data-cn>ยกเลิก</button>'}</div></div></div></div>`;
+  };
+  const wire = () => $$('#sePar [data-pid]').forEach(el => {
+    const pid = el.dataset.pid;
+    const read = () => { const o = { parentId: pid, studentId: s.studentId }; $$('[data-f]', el).forEach(i => o[i.dataset.f] = i.value); return o; };
+    $('[data-sv]', el).onclick = () => safe(async () => { renderStudentEditor(await api('saveParent', read())); toast('บันทึกแล้ว', 'ok'); });
+    if ($('[data-dl]', el)) $('[data-dl]', el).onclick = () => safe(async () => { if (await confirmBox('ลบผู้ปกครองคนนี้?', 'ลบ', true)) renderStudentEditor(await api('deleteParent', pid)); });
+    if ($('[data-cn]', el)) $('[data-cn]', el).onclick = () => el.remove();
+    if ($('[data-up]', el)) $('[data-up]', el).onclick = () => pickImage(async d => { const r = await api('uploadParentPhoto', pid, d); $('.ph', el).outerHTML = img(r.photo, 'md'); toast('อัปโหลดรูปแล้ว', 'ok'); });
+  });
+  $('#sePar').innerHTML = b.parents.map(parCard).join('') || '<p class="muted">ยังไม่มีผู้ปกครอง</p>';
+  wire();
+  $('#seAddP').onclick = () => { const p = $('#sePar > p'); if (p) p.remove(); $('#sePar').insertAdjacentHTML('beforeend', parCard({})); wire(); };
+}
+
+/* ---------- 2. ครูที่ปรึกษา ---------- */
+const T_FIELDS = [['fullName', 'ชื่อ-สกุลรวมคอลัมน์เดียว (ถ้ามี)'], ['prefix', 'คำนำหน้าครู'], ['firstName', 'ชื่อครู'], ['lastName', 'นามสกุลครู'], ['phone', 'เบอร์โทรครู'], ['classRoom', 'ชั้น/ห้องรวม เช่น ม.1/2 (ถ้ามี)'], ['grade', 'ชั้นที่ดูแล'], ['room', 'ห้องที่ดูแล']];
+function guessTeacherNoHeader(data, sel) {
+  const out = {}; const n = Math.max(0, ...data.map(r => r.length)); const used = new Set(Object.values(sel).filter(v => v >= 0));
+  const test = (i, re) => { const v = data.slice(0, 20).map(r => String(r[i] || '').trim()).filter(Boolean); return v.length && v.filter(x => re.test(x)).length / v.length > 0.6; };
+  const textCols = [];
+  for (let i = 0; i < n; i++) {
+    if (used.has(i)) continue;
+    if (test(i, /^0?\d[\d\- ]{7,11}$/)) { out.phone = i; continue; }
+    if (test(i, /^[^\s]*\d+\s*[\/\-]\s*\d+$/)) { out.classRoom = i; out.grade = -1; out.room = -1; continue; }
+    if (test(i, /^(ม|ป|อ)\.?\s*\d+$/)) { out.grade = i; continue; }
+    if (test(i, /^\d{1,2}$/) && out.grade !== undefined) { out.room = i; continue; }
+    if (test(i, /[ก-๙A-Za-z]/)) textCols.push(i);
+  }
+  if (textCols.length) { out.fullName = textCols[0]; out.prefix = -1; out.firstName = -1; }
+  if (textCols.length > 1) out.lastName = textCols[1];
+  return out;
+}
+PAGES.teachers = pg => {
+  pg.innerHTML = `<div class="tabs"><button class="on" data-t="list">รายชื่อครูที่ปรึกษา</button><button data-t="imp">นำเข้าจาก Excel / ข้อความ</button></div>
+  <div id="tList"></div><div id="tImp" hidden>
+   <div class="card"><div class="row"><label class="chk"><input type="radio" name="tsrc" value="x" checked> จากไฟล์ Excel</label><label class="chk"><input type="radio" name="tsrc" value="t"> วางข้อความ</label></div>
+    <div id="tSrcX">${excelPicker('ti')}</div>
+    <div id="tSrcT" hidden><textarea id="tText" rows="6" placeholder="วางรายชื่อ 1 บรรทัดต่อ 1 คน คั่นด้วยแท็บ จุลภาค หรือเว้นวรรค เช่น&#10;นายสมชาย ใจดี 0812345678 ม.1/1&#10;นางสาวสมหญิง รักเรียน 0898765432 ม.1/2"></textarea>
+     <div class="row"><label class="chk"><input type="checkbox" id="tHasHead"> บรรทัดแรกเป็นหัวคอลัมน์</label><button class="btn ghost" id="tRead">อ่านข้อความ</button></div></div>
+    <p class="muted">ครูที่ปรึกษาผูกกับนักเรียนด้วย "ชั้น + ห้อง" ให้เขียนชั้น/ห้องรูปแบบเดียวกับข้อมูลนักเรียน (เช่น ม.1 กับ ม.1) ครู 1 คนดูแลหลายห้องได้ โดยใส่หลายแถว</p></div>
+   <div class="card" id="tMap" hidden></div></div>`;
+  $$('.tabs button', pg).forEach(b => b.onclick = () => { $$('.tabs button', pg).forEach(x => x.classList.toggle('on', x === b)); $('#tList').hidden = b.dataset.t !== 'list'; $('#tImp').hidden = b.dataset.t !== 'imp'; if (b.dataset.t === 'list') loadTeachers(); });
+  $$('[name=tsrc]').forEach(r => r.onchange = () => { const t = $('[name=tsrc]:checked').value; $('#tSrcX').hidden = t !== 'x'; $('#tSrcT').hidden = t !== 't'; });
+  let noHeader = false;
+  const imp = Importer($('#tMap'), {
+    fields: T_FIELDS,
+    extraHtml: '<label class="chk"><input type="checkbox" id="tReplace"> ลบรายชื่อครูเดิมทั้งหมดก่อนนำเข้า</label>',
+    guessNoHeader: (data, sel) => noHeader ? guessTeacherNoHeader(data, sel) : {},
+    onImport: async rows => {
+      const r = await api('importTeachers', rows, $('#tReplace').checked);
+      toast('นำเข้าครูเรียบร้อย', 'ok');
+      return `<div class="banner ok">เพิ่มใหม่ ${r.added} · อัปเดต ${r.updated} · ข้าม ${r.skipped}</div><p class="muted">อัปโหลดรูปครูได้ที่แท็บ "รายชื่อครูที่ปรึกษา"</p>`;
+    }
+  });
+  bindExcelPicker('ti', (aoa, hr) => { noHeader = false; imp.load(aoa, hr); });
+  $('#tRead').onclick = () => {
+    const lines = $('#tText').value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return toast('ยังไม่มีข้อความ', 'err');
+    const tab = lines.some(l => l.includes('\t')), comma = !tab && lines.some(l => l.includes(','));
+    const aoa = lines.map(l => (tab ? l.split('\t') : comma ? l.split(',') : l.split(/\s+/)).map(c => c.trim()));
+    noHeader = !$('#tHasHead').checked;
+    imp.load(aoa, noHeader ? null : 0);
+  };
+  loadTeachers();
+};
+async function loadTeachers() {
+  const box = $('#tList'); if (!box) return;
+  const list = await api('listTeachers');
+  list.sort((a, b) => String(a.grade).localeCompare(String(b.grade), 'th', { numeric: true }) || String(a.room).localeCompare(String(b.room), 'th', { numeric: true }));
+  box.innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><span class="muted">ทั้งหมด ${list.length} รายการ</span><button class="btn" id="tAdd">+ เพิ่มครูที่ปรึกษา</button></div>
+   <div class="scroll"><table class="t"><thead><tr><th>รูป</th><th>ชื่อ-สกุล</th><th>เบอร์โทร</th><th>ชั้น</th><th>ห้อง</th><th></th></tr></thead><tbody>${list.map(t => `<tr><td>${img(t.photo, 'sm')}</td><td>${esc(fullName(t))}</td><td>${esc(t.phone)}</td><td>${esc(t.grade)}</td><td>${esc(t.room)}</td><td style="white-space:nowrap"><button class="btn sm ghost" data-up="${t.teacherId}">รูป</button> <button class="btn sm ghost" data-ed="${t.teacherId}">แก้ไข</button> <button class="btn sm red" data-dl="${t.teacherId}">ลบ</button></td></tr>`).join('')}</tbody></table></div>
+   <p class="muted">รูปครูบันทึกชื่อไฟล์เป็น "ครู+เบอร์โทร" และใช้ร่วมกันทุกห้องที่ครูคนนั้นดูแล</p></div>`;
+  const byId = Object.fromEntries(list.map(t => [t.teacherId, t]));
+  $('#tAdd').onclick = () => teacherForm({});
+  $$('[data-ed]', box).forEach(b => b.onclick = () => teacherForm(byId[b.dataset.ed]));
+  $$('[data-up]', box).forEach(b => b.onclick = () => pickImage(async d => { await api('uploadTeacherPhoto', b.dataset.up, d); toast('อัปโหลดรูปแล้ว', 'ok'); loadTeachers(); }));
+  $$('[data-dl]', box).forEach(b => b.onclick = () => safe(async () => { if (await confirmBox('ลบครูที่ปรึกษารายการนี้?', 'ลบ', true)) { await api('deleteTeacher', b.dataset.dl); loadTeachers(); } }));
+}
+function teacherForm(t) {
+  const f = (k, l) => `<label>${l}<input data-f="${k}" value="${esc(t[k] || '')}"></label>`;
+  openModal(`<h3>${t.teacherId ? 'แก้ไข' : 'เพิ่ม'}ครูที่ปรึกษา</h3><div class="row" id="tf">${f('prefix', 'คำนำหน้า')}${f('firstName', 'ชื่อ')}${f('lastName', 'นามสกุล')}${f('phone', 'เบอร์โทร')}${f('grade', 'ชั้นที่ดูแล')}${f('room', 'ห้องที่ดูแล')}</div><div class="row end"><button class="btn" id="tfSave">บันทึก</button></div>`);
+  $('#tfSave').onclick = () => safe(async () => { const o = { teacherId: t.teacherId || '' }; $$('#tf [data-f]').forEach(i => o[i.dataset.f] = i.value); await api('saveTeacher', o); closeModal(); toast('บันทึกแล้ว', 'ok'); loadTeachers(); });
+}
+
+/* ---------- 3. หัวข้อพฤติกรรม ---------- */
+PAGES.topics = async pg => {
+  pg.innerHTML = `<div class="card"><h3 id="tpTitle">เพิ่มหัวข้อพฤติกรรม</h3><input type="hidden" id="tpId">
+   <div class="row"><label style="flex:1;min-width:220px">ชื่อหัวข้อพฤติกรรม<input id="tpName"></label>
+   <label>ประเภท<select id="tpType"><option value="pos">พฤติกรรมทางบวก (+)</option><option value="neg">พฤติกรรมทางลบ (−)</option></select></label>
+   <label>คะแนน<input type="number" id="tpPts" min="1" value="5" style="width:100px"></label>
+   <label class="chk" id="tpActW" hidden><input type="checkbox" id="tpAct" checked> ใช้งาน</label>
+   <button class="btn" id="tpSave">บันทึก</button><button class="btn ghost" id="tpReset">ล้าง</button></div></div><div id="tpList" class="grid2"></div>`;
+  const reset = () => { $('#tpId').value = ''; $('#tpName').value = ''; $('#tpPts').value = 5; $('#tpType').value = 'pos'; $('#tpType').disabled = false; $('#tpTitle').textContent = 'เพิ่มหัวข้อพฤติกรรม'; $('#tpActW').hidden = true; };
+  const render = list => {
+    S.topics = list.filter(t => t.active !== 'FALSE');
+    const tbl = (arr, cls, title) => `<div class="card ${cls}"><h4>${title}</h4><table class="t"><thead><tr><th>หัวข้อ</th><th class="c">คะแนน</th><th class="c">สถานะ</th><th></th></tr></thead><tbody>${arr.map(t => `<tr><td>${esc(t.name)} ${t.system ? '<span class="chip warn">หัวข้อระบบ: หักอัตโนมัติเมื่อมาสาย</span>' : ''}</td><td class="c"><b>${+t.points > 0 ? '+' : ''}${esc(t.points)}</b></td><td class="c">${t.active === 'FALSE' ? '<span class="chip">ปิด</span>' : '<span class="chip ok">ใช้งาน</span>'}</td><td style="white-space:nowrap"><button class="btn sm ghost" data-ed="${t.topicId}">แก้ไข</button>${t.system ? '' : ` <button class="btn sm red" data-dl="${t.topicId}">ลบ</button>`}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">ยังไม่มี</td></tr>'}</tbody></table></div>`;
+    $('#tpList').innerHTML = tbl(list.filter(t => +t.points >= 0), 'pos', 'พฤติกรรมทางบวก') + tbl(list.filter(t => +t.points < 0), 'neg', 'พฤติกรรมทางลบ');
+    const byId = Object.fromEntries(list.map(t => [t.topicId, t]));
+    $$('[data-ed]', $('#tpList')).forEach(b => b.onclick = () => { const t = byId[b.dataset.ed]; $('#tpId').value = t.topicId; $('#tpName').value = t.name; $('#tpPts').value = Math.abs(+t.points); $('#tpType').value = +t.points < 0 ? 'neg' : 'pos'; $('#tpType').disabled = !!t.system; $('#tpAct').checked = t.active !== 'FALSE'; $('#tpActW').hidden = false; $('#tpTitle').textContent = 'แก้ไขหัวข้อพฤติกรรม'; window.scrollTo(0, 0); });
+    $$('[data-dl]', $('#tpList')).forEach(b => b.onclick = () => safe(async () => { if (await confirmBox('ลบหัวข้อนี้? (ประวัติที่บันทึกไปแล้วยังอยู่)', 'ลบ', true)) render(await api('deleteTopic', b.dataset.dl)); }));
+  };
+  $('#tpReset').onclick = reset;
+  $('#tpSave').onclick = () => safe(async () => { render(await api('saveTopic', { topicId: $('#tpId').value, name: $('#tpName').value, type: $('#tpType').value, points: $('#tpPts').value, active: $('#tpActW').hidden ? true : $('#tpAct').checked })); reset(); toast('บันทึกแล้ว', 'ok'); });
+  render(await api('listTopics'));
+};
+
+/* ---------- 4.1 บันทึกพฤติกรรม ---------- */
+PAGES.behavior = pg => {
+  pg.innerHTML = searchBar('bhQ') + '<div id="bhOut"></div>';
+  bindSearch('bhQ', async sid => {
+    const r = await api('behaviorContext', sid);
+    S.topics = r.topics;
+    const btn = t => `<button class="tbtn ${+t.points >= 0 ? 'p' : 'n'}" data-t="${t.topicId}">${esc(t.name)}<b>${+t.points > 0 ? '+' : ''}${esc(t.points)}</b></button>`;
+    $('#bhOut').innerHTML = `<div class="grid2"><div>${studentBlock(r.student, 'xl')}</div>
+      <div class="card"><label style="width:100%">หมายเหตุ (ถ้ามี)<input id="bhNote" style="width:100%"></label>
+       <h4 style="margin-top:12px;color:var(--ok)">พฤติกรรมทางบวก</h4><div class="tbtns">${r.topics.filter(t => +t.points >= 0).map(btn).join('') || '<span class="muted">-</span>'}</div>
+       <h4 style="margin-top:12px;color:var(--bad)">พฤติกรรมทางลบ</h4><div class="tbtns">${r.topics.filter(t => +t.points < 0).map(btn).join('') || '<span class="muted">-</span>'}</div></div></div>
+      <div class="card"><h4>บันทึกวันนี้ของนักเรียนคนนี้</h4><div id="bhToday"></div></div>`;
+    const drawToday = logs => {
+      const sum = logs.reduce((a, l) => a + (+l.points || 0), 0);
+      $('#bhToday').innerHTML = logs.length ? `<table class="t"><thead><tr><th>เวลา</th><th>หัวข้อ</th><th class="c">คะแนน</th><th>หมายเหตุ</th><th>ผู้บันทึก</th><th></th></tr></thead><tbody>${logs.map(l => `<tr><td>${esc(hm(l.time))}</td><td>${esc(l.topicName)}</td><td class="c" style="color:${+l.points < 0 ? 'var(--bad)' : 'var(--ok)'};font-weight:800">${+l.points > 0 ? '+' : ''}${esc(l.points)}</td><td>${esc(l.note)}</td><td>${esc(l.recordedBy)}</td><td><button class="btn sm ghost" data-del="${l.logId}">ยกเลิก</button></td></tr>`).join('')}</tbody><tfoot><tr><td colspan="2" class="r">รวมวันนี้</td><td class="c">${sum > 0 ? '+' : ''}${sum}</td><td colspan="3"></td></tr></tfoot></table>` : '<p class="muted">ยังไม่มีการบันทึกวันนี้</p>';
+      $$('[data-del]', $('#bhToday')).forEach(b => b.onclick = () => safe(async () => { if (await confirmBox('ยกเลิกรายการนี้?', 'ยกเลิกรายการ', true)) drawToday(await api('deleteBehaviorLog', b.dataset.del)); }));
+    };
+    drawToday(r.todayLogs);
+    $$('[data-t]', $('#bhOut')).forEach(b => b.onclick = () => safe(async () => {
+      const logs = await api('recordBehavior', r.student.studentId, b.dataset.t, $('#bhNote').value);
+      $('#bhNote').value = ''; drawToday(logs); toast('บันทึกพฤติกรรมแล้ว', 'ok');
+    }));
+  });
+};
+
+/* ---------- 4.2 รายงานพฤติกรรม ---------- */
+function aggTable(arr, total, cnt, cls, title) {
+  return `<div class="block ${cls}"><h4>${title}</h4><table class="t"><thead><tr><th class="c">ที่</th><th>รายการพฤติกรรม</th><th class="c">จำนวน (ครั้ง)</th><th class="c">คะแนน</th></tr></thead><tbody>${arr.map((g, i) => `<tr><td class="c">${i + 1}</td><td>${esc(g.name)}</td><td class="c">${g.count}</td><td class="c">${g.points > 0 ? '+' : ''}${g.points}</td></tr>`).join('') || '<tr><td colspan="4" class="c muted">ไม่มีรายการ</td></tr>'}</tbody><tfoot><tr><td colspan="2" class="r">รวม</td><td class="c">${cnt}</td><td class="c">${total > 0 ? '+' : ''}${total}</td></tr></tfoot></table></div>`;
+}
+const sumBox = a => `<div class="sumbox"><div style="background:var(--ok2);color:var(--ok)">คะแนนรวมทางบวก<div class="big-num">+${a.totalPositive}</div></div><div style="background:var(--bad2);color:var(--bad)">คะแนนรวมทางลบ<div class="big-num">${a.totalNegative}</div></div><div style="background:var(--pri2);color:var(--pri)">คะแนนสุทธิ<div class="big-num">${a.net > 0 ? '+' : ''}${a.net}</div></div></div>`;
+const aggAoa = (a, s) => [['รหัสนักเรียน', s.studentId, 'ชื่อ-สกุล', fullName(s), 'ชั้น', s.grade, 'ห้อง', s.room], [], ['พฤติกรรมทางบวก'], ['ที่', 'รายการ', 'จำนวน', 'คะแนน'], ...a.positive.map((g, i) => [i + 1, g.name, g.count, g.points]), ['', 'รวม', a.countPositive, a.totalPositive], [], ['พฤติกรรมทางลบ'], ['ที่', 'รายการ', 'จำนวน', 'คะแนน'], ...a.negative.map((g, i) => [i + 1, g.name, g.count, g.points]), ['', 'รวม', a.countNegative, a.totalNegative], [], ['คะแนนสุทธิ', a.net]];
+PAGES.behaviorReport = pg => {
+  pg.innerHTML = `${searchBar('brQ')}<div class="row noprint"><label>ตั้งแต่วันที่ (ไม่ใส่ = ทั้งหมด)<input type="date" id="brFrom"></label><label>ถึงวันที่<input type="date" id="brTo"></label></div><div id="brOut"></div>`;
+  bindSearch('brQ', async sid => {
+    const r = await api('behaviorReport', sid, $('#brFrom').value, $('#brTo').value);
+    const s = r.student, a = r.agg;
+    const range = r.from || r.to ? `ช่วงวันที่ ${r.from ? thDate(r.from) : 'เริ่มต้น'} – ${r.to ? thDate(r.to) : 'ปัจจุบัน'}` : 'ทั้งหมด';
+    $('#brOut').innerHTML = actionBar({ el: () => $('#brRep'), name: 'รายงานพฤติกรรม_' + s.studentId, excel: () => aggAoa(a, s) }) +
+      `<div class="rep" id="brRep">${reportHead('รายงานพฤติกรรมนักเรียน', esc(range), r.printedAt)}${studentBlock(s, 'md')}
+      <div class="grid2" style="margin-top:12px">${aggTable(a.positive, a.totalPositive, a.countPositive, 'pos', 'พฤติกรรมทางบวก')}${aggTable(a.negative, a.totalNegative, a.countNegative, 'neg', 'พฤติกรรมทางลบ')}</div>${sumBox(a)}</div>`;
+  });
+};
+
+/* ---------- 5. รายงานผล ---------- */
+PAGES.report = pg => {
+  pg.innerHTML = searchBar('rpQ') + '<div id="rpOut"></div>';
+  bindSearch('rpQ', async sid => {
+    const r = await api('fullReport', sid);
+    const s = r.student, a = r.agg;
+    $('#rpOut').innerHTML = actionBar({ el: () => $('#rpRep'), name: 'รายงานผล_' + s.studentId, excel: () => aggAoa(a, s) }) +
+      `<div class="rep" id="rpRep">${reportHead('รายงานผลนักเรียนรายบุคคล', '', r.printedAt)}
+      ${studentBlock(s, 'lg')}<div class="grid2" style="margin-top:12px">${parentsBlock(r.parents)}${teachersBlock(r.teachers)}</div>
+      <div style="margin-top:12px">${aggTable(a.positive, a.totalPositive, a.countPositive, 'pos', 'พฤติกรรมทางบวก')}</div>
+      <div style="margin-top:12px">${aggTable(a.negative, a.totalNegative, a.countNegative, 'neg', 'พฤติกรรมทางลบ')}</div>
+      ${sumBox(a)}<p class="muted" style="margin-top:10px">จำนวนครั้งที่มาสายทั้งหมด: <b>${r.lateCount}</b> ครั้ง</p></div>`;
+  });
+};
+
+/* ---------- บัตรอนุญาตเข้าสาย ---------- */
+function cardHTML(d) {
+  const s = d.student, p = d.pass;
+  return `<div class="lcard">
+   <div class="lc-head"><div class="lc-school">${esc(d.schoolName)}</div><div class="lc-title">บัตรอนุญาตเข้าสาย</div><div class="lc-date">วันที่ ${esc(thDate(p.date))}</div></div>
+   <div class="lc-top">${s.photo ? `<img class="lc-photo" src="${s.photo}">` : '<div class="lc-photo nophoto">ไม่มีรูป</div>'}<div class="lc-st"><b>${esc(fullName(s))}</b>รหัส ${esc(s.studentId)}<br>${esc(classRoom(s))}${s.phone ? '<br>โทร ' + esc(s.phone) : ''}</div></div>
+   <div class="lc-time"><span>อนุญาตเข้าโรงเรียนเวลา</span><b>${esc(hm(p.entryTime))} น.</b></div>
+   <div class="lc-sec"><i>เหตุผล:</i> ${esc(p.reason)}</div>
+   <div class="lc-sec"><i>ผู้ปกครอง:</i> ${d.parents.length ? d.parents.slice(0, 2).map(x => `${esc(fullName(x))}${x.relation ? ' (' + esc(x.relation) + ')' : ''} ${esc(x.phone || '')}`).join('<br>') : '-'}</div>
+   <div class="lc-sec"><i>ครูที่ปรึกษา:</i> ${d.teachers.length ? d.teachers.slice(0, 2).map(x => `${esc(fullName(x))} ${esc(x.phone || '')}`).join('<br>') : '-'}</div>
+   <div class="lc-sign">${d.signature ? `<img src="${d.signature}">` : p.status === 'pending' ? '<div class="lc-nosign lc-pending">รอแอดมินอนุมัติ</div>' : p.status === 'rejected' ? '<div class="lc-nosign lc-pending">ไม่อนุมัติ</div>' : '<div class="lc-nosign">(ไม่มีลายเซ็น)</div>'}<div>${d.signerName ? '(' + esc(d.signerName) + ')' : '(..............................)'}</div><div>${esc(d.signerPosition || 'ผู้ออกบัตร')}</div></div>
+  </div>`;
+}
+function cardWithActions(d) {
+  const id = 'cw' + Math.random().toString(36).slice(2), p = d.pass;
+  const meta = `<div class="muted">ออกโดย ${esc(p.issuedBy)} · ${esc(p.createdAt)}${p.approvedBy ? ' · ' + (p.status === 'rejected' ? 'ไม่อนุมัติโดย ' : 'อนุมัติโดย ') + esc(p.approvedBy) : ''}</div>`;
+  if (p.status === 'pending') {
+    const adminBox = S.role === 'admin' ? `<div class="block" style="margin-top:8px"><h4>อนุมัติบัตรใบนี้</h4><div class="row"><input type="password" placeholder="รหัสลายเซ็น (ไม่ใส่ก็ได้)" data-apcode="${esc(p.passId)}" style="width:200px"><button class="btn green" data-approve="${esc(p.passId)}">✔ อนุญาตออกบัตร</button><button class="btn red" data-reject="${esc(p.passId)}">✖ ไม่อนุญาต</button></div><p class="muted">กดอนุญาตแล้วลายเซ็นจะปรากฏบนบัตรเอง</p></div>` : '';
+    return `<div class="cardwrap"><div id="${id}">${cardHTML(d)}</div><div style="flex:1;min-width:240px"><div class="banner warn">⏳ รอแอดมินอนุมัติ — ยังพิมพ์บัตรไม่ได้</div>${meta}${adminBox}</div></div>`;
+  }
+  if (p.status === 'rejected') return `<div class="cardwrap"><div style="flex:1"><div class="banner bad">✖ แอดมินไม่อนุมัติบัตรวันที่ ${esc(thDate(p.date))} (เวลา ${esc(hm(p.entryTime))} น.)</div>${meta}</div></div>`;
+  return `<div class="cardwrap"><div id="${id}">${cardHTML(d)}</div><div>
+    <div>${p.signed === 'TRUE' ? '<span class="chip ok">อนุมัติแล้ว · มีลายเซ็น</span>' : '<span class="chip warn">อนุมัติแล้ว · ไม่มีลายเซ็น (ยังไม่ได้อัปโหลดลายเซ็น)</span>'}</div>${meta}
+    ${actionBar({ el: () => $('#' + id + ' .lcard'), name: 'บัตรเข้าสาย_' + d.student.studentId + '_' + p.date, card: true, printLabel: 'พิมพ์บัตร' })}
+  </div></div>`;
+}
+function wireApprove(root, after) {
+  $$('[data-approve]', root).forEach(b => b.onclick = () => safe(async () => {
+    const code = $(`[data-apcode="${b.dataset.approve}"]`, root).value;
+    const d = await api('approvePass', b.dataset.approve, code); toast('อนุมัติแล้ว ลายเซ็นปรากฏบนบัตร', 'ok'); refreshBell(); after(d);
+  }));
+  $$('[data-reject]', root).forEach(b => b.onclick = () => safe(async () => {
+    if (!await confirmBox('ไม่อนุญาตออกบัตรใบนี้?', 'ไม่อนุญาต', true)) return;
+    await api('rejectPass', b.dataset.reject); toast('บันทึกไม่อนุมัติแล้ว', 'ok'); refreshBell(); after(null);
+  }));
+}
+
+/* ---------- อนุมัติบัตร (แอดมิน) ---------- */
+PAGES.approvals = async pg => {
+  const list = await api('pendingPasses');
+  updateBell(list.length);
+  pg.innerHTML = list.length ? `<p class="muted">มีคำขอทำบัตรรออนุมัติ ${list.length} รายการ</p>` + list.map(d => `<div class="card" data-item>${studentBlock(d.student, 'md')}<div class="row" style="margin:10px 0"><div class="block" style="flex:1"><b>เหตุผล:</b> ${esc(d.pass.reason)}<br><b>วันที่:</b> ${esc(thDate(d.pass.date))} · <b>เวลาเข้า:</b> <span style="color:var(--bad);font-weight:800">${esc(hm(d.pass.entryTime))} น.</span></div></div>${cardWithActions(d)}</div>`).join('')
+    : '<div class="banner ok">ไม่มีคำขอทำบัตรที่รออนุมัติ</div>';
+  $$('[data-item]', pg).forEach(item => wireApprove(item, d => {
+    item.innerHTML = d ? `<div class="banner ok">อนุมัติแล้ว</div>${cardWithActions(d)}` : '<div class="banner bad">ไม่อนุมัติแล้ว</div>';
+  }));
+};
+
+/* ---------- 6.1 ออกบัตรอนุญาตเข้าสาย ---------- */
+PAGES.pass = pg => {
+  pg.innerHTML = searchBar('psQ') + '<div id="psOut"></div>';
+  const load = async sid => {
+    const r = await api('passContext', sid);
+    const b = r.bundle, s = b.student; S.today = r.today;
+    const noPhoto = !s.photo;
+    ON_PHOTO = () => load(s.studentId);
+    $('#psOut').innerHTML = `${noPhoto ? '<div class="banner bad">⚠ นักเรียนคนนี้ยังไม่มีรูปในระบบ — ยังออกบัตรไม่ได้ กดถ่ายรูปหรืออัปโหลดรูปในช่องรูปด้านล่างก่อน</div>' : ''}
+      <div class="grid3">${studentBlock(s, 'lg')}${parentsBlock(b.parents)}${teachersBlock(b.teachers)}</div>
+      ${r.passes.length ? `<div class="card" style="margin-top:14px"><h3>บัตรที่ออกแล้ว (วันนี้เป็นต้นไป)</h3><div id="psOld">${r.passes.map(cardWithActions).join('<hr>')}</div></div>` : ''}
+      <div class="card" style="margin-top:14px"><h3>ออกบัตรอนุญาตเข้าสาย</h3>
+       <div class="row"><label class="chk" style="font-size:17px"><input type="checkbox" id="psAllow"> อนุญาตให้เข้าสาย</label></div>
+       <div class="row"><label>วันที่อนุญาต<input type="date" id="psDate" value="${r.today}"></label><label>เวลาที่จะเข้าโรงเรียน<input type="time" id="psTime"></label></div>
+       <label style="width:100%">เหตุผล<textarea id="psReason"></textarea></label>
+       <p class="muted">${S.role === 'admin' ? 'แอดมินออกบัตร: อนุมัติทันทีและลายเซ็นขึ้นบนบัตรอัตโนมัติ' : 'บัตรที่ครูออกจะส่งไปให้แอดมินอนุมัติก่อน (มีกระดิ่งแจ้งเตือน) เมื่ออนุมัติแล้วลายเซ็นจะปรากฏและพิมพ์บัตรได้'}</p>
+       <button class="btn" id="psGo" ${noPhoto ? 'disabled' : ''}>${S.role === 'admin' ? 'ออกบัตร' : 'ส่งคำขอทำบัตร'}</button></div><div id="psCard" class="card" hidden></div>`;
+    if ($('#psOld')) wireApprove($('#psOld'), () => load(s.studentId));
+    $('#psGo').onclick = () => safe(async () => {
+      if (noPhoto) return alertBox('นักเรียนยังไม่มีรูปในระบบ ยังออกบัตรไม่ได้');
+      try {
+        const d = await api('issueLatePass', { studentId: s.studentId, allowed: $('#psAllow').checked, date: $('#psDate').value, entryTime: $('#psTime').value, reason: $('#psReason').value });
+        const box = $('#psCard'); box.hidden = false;
+        box.innerHTML = `<div class="banner ${d.pass.status === 'pending' ? 'warn' : 'ok'}">${d.pass.status === 'pending' ? 'ส่งคำขอทำบัตรแล้ว รอแอดมินอนุมัติ' : 'ออกบัตรเรียบร้อย'}</div>${cardWithActions(d)}`;
+        wireApprove(box, () => load(s.studentId));
+        $('#psGo').disabled = true; box.scrollIntoView({ behavior: 'smooth' }); refreshBell();
+      } catch (e) { if (e.message === 'NO_PHOTO') throw new Error('นักเรียนยังไม่มีรูปในระบบ ยังออกบัตรไม่ได้ กรุณาเพิ่มรูปก่อน'); throw e; }
+    });
+  };
+  bindSearch('psQ', load);
+};
+
+/* ---------- 6.2 ครูรับเรื่องขอเข้าสาย ---------- */
+PAGES.request = pg => {
+  pg.innerHTML = searchBar('rqQ') + '<div id="rqOut"></div>';
+  bindSearch('rqQ', async sid => {
+    const b = await api('requestContext', sid); const s = b.student; S.today = b.today;
+    let photo = '';
+    $('#rqOut').innerHTML = `<div class="grid3">${studentBlock(s, 'lg')}${parentsBlock(b.parents)}${teachersBlock(b.teachers)}</div>
+      ${b.requests.length ? `<div class="card" style="margin-top:14px"><h4>เรื่องขอเข้าสายที่บันทึกไว้แล้ว</h4><table class="t"><thead><tr><th>วันที่</th><th>เวลารับเรื่อง</th><th>เวลาที่ขอเข้า</th><th>เหตุผล</th><th>ผู้บันทึก</th></tr></thead><tbody>${b.requests.map(q => `<tr><td>${esc(thDate(q.date))}</td><td>${esc(hm(q.receivedTime))}</td><td><b style="color:var(--bad)">${esc(hm(q.entryTime))}</b></td><td>${esc(q.reason)}</td><td>${esc(q.recordedBy)}</td></tr>`).join('')}</tbody></table></div>` : ''}
+      <div class="card" style="margin-top:14px"><h3>บันทึกการขอเข้าสาย</h3>
+       <div class="row"><label class="chk" style="font-size:17px"><input type="checkbox" id="rqOk"> รับเรื่องขอเข้าสาย</label></div>
+       <div class="row"><label>วันที่ขอเข้าสาย<input type="date" id="rqDate" value="${b.today}"></label><label>เวลาที่รับเรื่อง<input type="time" id="rqRecv" value="${nowHM()}"></label><label>เวลาที่ขอเข้า<input type="time" id="rqTime"></label></div>
+       <label style="width:100%">เหตุผล<textarea id="rqReason"></textarea></label>
+       <div class="row"><div><div style="font-weight:600;font-size:14px;margin-bottom:4px">รูปเหตุการณ์ (บังคับ)</div><button class="btn" id="rqCam">📷 ถ่ายรูป</button> <button class="btn ghost" id="rqPick">📁 เลือกไฟล์</button></div><div id="rqPrev"></div></div>
+       <p class="muted" id="rqHint">ต้องแนบรูปเหตุการณ์ก่อน จึงจะกดบันทึกได้</p>
+       <button class="btn" id="rqGo" disabled>บันทึก</button></div>`;
+    const check = () => { $('#rqGo').disabled = !(photo && $('#rqOk').checked); $('#rqHint').hidden = !!photo; };
+    $('#rqOk').onchange = check;
+    const setPhoto = d => { photo = d; $('#rqPrev').innerHTML = `<img src="${d}" style="max-width:200px;border-radius:8px;border:1px solid var(--bd)">`; check(); };
+    $('#rqPick').onclick = () => pickImage(setPhoto);
+    $('#rqCam').onclick = () => takePhoto(setPhoto);
+    $('#rqGo').onclick = () => safe(async () => {
+      if (!photo) return alertBox('ต้องแนบรูปเหตุการณ์ก่อน จึงจะบันทึกได้');
+      const q = await api('submitLateRequest', { studentId: s.studentId, accepted: $('#rqOk').checked, date: $('#rqDate').value, receivedTime: $('#rqRecv').value, entryTime: $('#rqTime').value, reason: $('#rqReason').value, photo });
+      $('#rqOut').innerHTML = `<div class="banner ok">บันทึกเรียบร้อย: ${esc(fullName(s))} (${esc(classRoom(s))}) ขอเข้าสายวันที่ ${esc(thDate(q.date))} เวลา ${esc(hm(q.entryTime))} น.</div>`;
+      $('#rqQ').value = ''; $('#rqQ').focus();
+    });
+  });
+};
+
+/* ---------- 7. ตรวจสอบสถานะ ---------- */
+function entriesTableHTML(rows) {
+  if (!rows.length) return '<p class="muted">ยังไม่มีนักเรียนเข้าสายในวันนี้</p>';
+  const typeChip = t => `<span class="chip ${t === 'ไม่ขออนุญาต' ? 'bad' : t === 'มีบัตรอนุญาต' ? 'ok' : 'info'}">${esc(t)}</span>`;
+  return `<table class="t"><thead><tr><th>รูป</th><th>รหัส / บทบาท</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>ชั้น</th><th>ห้อง</th><th>เบอร์โทร</th><th>ประเภท</th><th>เวลาเข้า</th></tr></thead><tbody>${rows.map((r, i) => {
+    const s = r.student, rs = 1 + r.parents.length + r.teachers.length;
+    const sub = (lab, p) => `<tr class="sub"><td>${lab}</td><td>${esc(p.prefix)}</td><td>${esc(p.firstName)}</td><td>${esc(p.lastName)}</td><td colspan="2"></td><td>${esc(p.phone)}</td><td colspan="2"></td></tr>`;
+    return `<tr class="grp"><td rowspan="${rs}">${stuPhoto(s, 'sm')}</td><td><b>${esc(s.studentId)}</b></td><td>${esc(s.prefix)}</td><td>${esc(s.firstName)}</td><td>${esc(s.lastName)}</td><td>${esc(s.grade)}</td><td>${esc(s.room)}</td><td>${esc(s.phone)}</td><td>${typeChip(r.entry.type)}</td><td><b>${esc(hm(r.entry.time))}</b></td></tr>` +
+      r.parents.map(p => sub('ผู้ปกครอง' + (p.relation ? ' (' + esc(p.relation) + ')' : ''), p)).join('') +
+      r.teachers.map(t => sub('ครูที่ปรึกษา', t)).join('');
+  }).join('')}</tbody></table>`;
+}
+function entriesAoa(d) {
+  const a = [['รายการนักเรียนเข้าสาย วันที่ ' + thDate(d.date)], ['รหัส/บทบาท', 'คำนำหน้า', 'ชื่อ', 'นามสกุล', 'ชั้น', 'ห้อง', 'เบอร์โทร', 'ประเภท', 'เวลาเข้า']];
+  d.rows.forEach(r => {
+    const s = r.student; a.push([s.studentId, s.prefix, s.firstName, s.lastName, s.grade, s.room, s.phone, r.entry.type, hm(r.entry.time)]);
+    r.parents.forEach(p => a.push(['ผู้ปกครอง' + (p.relation ? ' (' + p.relation + ')' : ''), p.prefix, p.firstName, p.lastName, '', '', p.phone]));
+    r.teachers.forEach(t => a.push(['ครูที่ปรึกษา', t.prefix, t.firstName, t.lastName, '', '', t.phone]));
+  });
+  return a;
+}
+PAGES.status = pg => {
+  pg.innerHTML = `${searchBar('scQ', 'พิมพ์รหัสนักเรียนเพื่อตรวจสอบสถานะ', 'ตรวจสอบ')}<div id="scOut"></div>
+   <div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">รายการนักเรียนเข้าสาย</h3><div class="row" style="margin:0"><input type="date" id="scDate" value="${S.today}"><button class="btn ghost" id="scRef">โหลด</button></div></div><div id="scTbl"></div></div>`;
+  const lateTopic = () => (S.topics.find(t => t.system === 'LATE') || { points: '-5' }).points;
+  const loadTable = async () => {
+    const d = await api('entriesOfDay', $('#scDate').value);
+    $('#scTbl').innerHTML = actionBar({ el: () => $('#scRep'), name: 'นักเรียนเข้าสาย_' + d.date, excel: () => entriesAoa(d) }) +
+      `<div class="rep" id="scRep" style="padding:0;border:0">${reportHead('รายการนักเรียนเข้าสาย', 'วันที่ ' + esc(thDate(d.date)) + ' · ' + d.rows.length + ' คน', localStamp())}<div class="scroll">${entriesTableHTML(d.rows)}</div></div>`;
+  };
+  $('#scRef').onclick = () => safe(loadTable);
+  bindSearch('scQ', async sid => {
+    const r = await api('checkStatus', sid); S.today = r.today;
+    const b = r.bundle, s = b.student;
+    const entered = r.entries.length ? `<div class="banner info">วันนี้บันทึกเข้าแล้ว ${r.entries.length} ครั้ง: ${r.entries.map(e => esc(hm(e.time)) + ' (' + esc(e.type) + ')').join(', ')}</div>` : '';
+    let html = '';
+    if (r.mode === 'pass') {
+      html = `<div class="banner ok">✅ มีบัตรอนุญาตเข้าสายวันนี้ · เวลาเข้า ${esc(hm(r.card.pass.entryTime))} น.</div>${entered}
+        <div class="cardwrap"><div>${cardHTML(r.card)}</div><div style="flex:1;min-width:260px"><div class="block"><h4>เหตุผลขอเข้าสาย</h4><p style="font-size:17px">${esc(r.card.pass.reason)}</p>
+        <p>${r.card.pass.signed === 'TRUE' ? '<span class="chip ok">บัตรมีลายเซ็น</span>' : '<span class="chip warn">บัตรไม่มีลายเซ็น</span>'}</p></div>
+        <button class="btn green" id="scIn" style="font-size:18px;padding:14px 24px;margin-top:12px">✔ บันทึกเข้าโรงเรียน</button></div></div>`;
+    } else if (r.mode === 'request') {
+      const q = r.request;
+      html = `<div class="banner ok">✅ ขอเข้าสายกับครูที่ปรึกษาแล้ว · เวลาที่ขอเข้า <span style="color:var(--bad);font-size:22px">${esc(hm(q.entryTime))} น.</span></div>${entered}
+        <div class="grid3">${studentBlock(s, 'lg')}${parentsBlock(b.parents)}${teachersBlock(b.teachers)}</div>
+        <div class="block" style="margin-top:12px"><h4>รายละเอียดการขอเข้าสาย</h4><div class="person">${q.photo ? `<img src="${q.photo}" style="max-width:180px;border-radius:8px">` : ''}<table class="kv"><tr><th>วันที่</th><td>${esc(thDate(q.date))}</td></tr><tr><th>เวลารับเรื่อง</th><td>${esc(hm(q.receivedTime))} น.</td></tr><tr><th>เวลาที่ขอเข้า</th><td>${esc(hm(q.entryTime))} น.</td></tr><tr><th>เหตุผล</th><td>${esc(q.reason)}</td></tr><tr><th>ผู้บันทึก</th><td>${esc(q.recordedBy)}</td></tr></table></div></div>
+        <button class="btn green" id="scIn" style="font-size:18px;padding:14px 24px;margin-top:12px">✔ บันทึกเข้าโรงเรียน</button>`;
+    } else {
+      html = `<div class="banner bad">✖ ไม่พบบัตรอนุญาตหรือการขอเข้าสายของวันนี้ (${esc(thDate(r.today))})${r.pendingPass ? '<div style="font-size:14px;font-weight:600">มีคำขอทำบัตรของวันนี้ แต่แอดมินยังไม่อนุมัติ</div>' : ''}${r.otherDates && r.otherDates.length ? `<div style="font-size:14px;font-weight:600">พบรายการของวันที่ ${r.otherDates.map(thDate).join(', ')} ซึ่งไม่ตรงกับวันนี้</div>` : ''}</div>${entered}
+        <div class="grid2">${studentBlock(s, 'lg')}<div class="block"><h4>มาสายโดยไม่ขออนุญาต</h4><p>บันทึกวันเวลาเข้าสาย และหักคะแนนพฤติกรรม <b style="color:var(--bad)">${esc(lateTopic())} คะแนน</b> ทันที</p><button class="btn red" id="scUn">บันทึกมาสายไม่ขออนุญาต</button></div></div>`;
+    }
+    $('#scOut').innerHTML = html;
+    if ($('#scIn')) $('#scIn').onclick = () => safe(async () => {
+      let res = await api('recordEntry', s.studentId, false);
+      if (res.duplicate) { if (!await confirmBox(`วันนี้บันทึกเข้าไปแล้วเวลา ${esc(hm(res.entry.time))} น. ต้องการบันทึกซ้ำหรือไม่?`, 'บันทึกซ้ำ')) return; res = await api('recordEntry', s.studentId, true); }
+      toast(`บันทึกเข้าโรงเรียนแล้ว เวลา ${hm(res.entry.time)} น.`, 'ok');
+      $('#scOut').innerHTML = `<div class="banner ok">บันทึกเข้าโรงเรียน: ${esc(fullName(s))} (${esc(classRoom(s))}) เวลา ${esc(hm(res.entry.time))} น.</div>`;
+      $('#scQ').value = ''; $('#scQ').focus(); $('#scDate').value = res.entry.date; loadTable();
+    });
+    if ($('#scUn')) $('#scUn').onclick = () => safe(async () => {
+      if (!await confirmBox(`ยืนยันบันทึก ${esc(fullName(s))} มาสายโดยไม่ขออนุญาต และหักคะแนน ${esc(lateTopic())}?`, 'บันทึกและหักคะแนน', true)) return;
+      await unauthorized(s, $('#scOut'));
+      $('#scQ').value = ''; $('#scQ').focus(); loadTable();
+    });
+  });
+  loadTable();
+};
+async function unauthorized(s, outEl) {
+  let r = await api('recordUnauthorizedLate', s.studentId, false);
+  if (r.hasPermission) { if (!await confirmBox(`นักเรียนคนนี้${r.hasPass ? 'มีบัตรอนุญาต' : 'แจ้งครูที่ปรึกษา'}สำหรับวันนี้แล้ว ควรใช้เมนู 7 บันทึกเข้า\nยังต้องการบันทึกเป็น "ไม่ขออนุญาต" และหักคะแนนหรือไม่?`, 'บันทึกและหักคะแนน', true)) return false; r = await api('recordUnauthorizedLate', s.studentId, true); }
+  else if (r.duplicate) { if (!await confirmBox(`วันนี้บันทึกมาสายไม่ขออนุญาตไปแล้วเวลา ${esc(hm(r.entry.time))} น. ต้องการบันทึกซ้ำ (หักคะแนนอีกครั้ง) หรือไม่?`, 'บันทึกซ้ำ', true)) return false; r = await api('recordUnauthorizedLate', s.studentId, true); }
+  outEl.innerHTML = `<div class="banner bad">บันทึกแล้ว: ${esc(fullName(s))} (${esc(classRoom(s))}) มาสายโดยไม่ขออนุญาต วันที่ ${esc(thDate(r.entry.date))} เวลา ${esc(hm(r.entry.time))} น. · หักคะแนน ${esc(r.points)}</div>`;
+  toast('บันทึกและหักคะแนนแล้ว', 'ok');
+  return true;
+}
+
+/* ---------- 8.1 บันทึกมาสายไม่ขออนุญาต ---------- */
+PAGES.late = pg => {
+  pg.innerHTML = searchBar('ltQ') + '<div id="ltOut"></div>';
+  bindSearch('ltQ', async sid => {
+    const r = await api('lateContext', sid); const s = r.student;
+    $('#ltOut').innerHTML = `${r.hasPass || r.hasRequest ? `<div class="banner warn">นักเรียนคนนี้${r.hasPass ? 'มีบัตรอนุญาตเข้าสาย' : 'แจ้งขอเข้าสายกับครูที่ปรึกษา'}สำหรับวันนี้แล้ว ควรบันทึกที่เมนู 7</div>` : ''}
+      ${r.todayEntries.length ? `<div class="banner info">วันนี้มีบันทึกเข้าสายแล้ว: ${r.todayEntries.map(e => esc(hm(e.time)) + ' (' + esc(e.type) + ')').join(', ')}</div>` : ''}
+      <div class="grid2">${studentBlock(s, 'xl')}<div class="card"><h3>บันทึกมาสายโดยไม่ขออนุญาต / ไม่มีบัตร</h3>
+       <p>ระบบจะบันทึกวันที่และเวลาปัจจุบัน และหักคะแนนพฤติกรรม <b style="color:var(--bad);font-size:18px">${esc(r.penalty)} คะแนน</b> ทันที</p>
+       <label class="chk" style="font-size:17px"><input type="checkbox" id="ltChk"> ยืนยันบันทึกมาสาย</label><br><button class="btn red" id="ltGo" disabled style="margin-top:10px;font-size:17px">บันทึก</button></div></div>`;
+    $('#ltChk').onchange = () => $('#ltGo').disabled = !$('#ltChk').checked;
+    $('#ltGo').onclick = () => safe(async () => { if (await unauthorized(s, $('#ltOut'))) { $('#ltQ').value = ''; $('#ltQ').focus(); } });
+  });
+};
+
+/* ---------- 8.2 รายงานเข้าสาย ---------- */
+PAGES.lateReport = pg => {
+  const t = S.today || new Date().toISOString().slice(0, 10);
+  pg.innerHTML = `<div class="tabs noprint"><button class="on" data-t="one">แบบที่ 1 รายบุคคล</button><button data-t="all">แบบที่ 2 ทั้งหมดตามช่วงเวลา</button></div>
+   <div id="lr1">${searchBar('lrQ')}<div id="lr1Out"></div></div>
+   <div id="lr2" hidden><div class="card noprint"><div class="row"><label>ตั้งแต่วันที่<input type="date" id="lrFrom" value="${t.slice(0, 8)}01"></label><label>ถึงวันที่<input type="date" id="lrTo" value="${t}"></label>
+    <label>ประเภท<select id="lrType"><option value="">ทั้งหมด</option><option>ไม่ขออนุญาต</option><option>มีบัตรอนุญาต</option><option>แจ้งครูที่ปรึกษา</option></select></label><button class="btn" id="lrGo">ค้นหา</button></div></div><div id="lr2Out"></div></div>`;
+  $$('.tabs button', pg).forEach(b => b.onclick = () => { $$('.tabs button', pg).forEach(x => x.classList.toggle('on', x === b)); $('#lr1').hidden = b.dataset.t !== 'one'; $('#lr2').hidden = b.dataset.t !== 'all'; });
+  bindSearch('lrQ', async sid => {
+    const r = await api('lateReportStudent', sid); const s = r.student;
+    const byT = Object.entries(r.byType).map(([k, v]) => `${esc(k)} ${v} ครั้ง`).join(' · ');
+    $('#lr1Out').innerHTML = actionBar({ el: () => $('#lr1Rep'), name: 'ประวัติเข้าสาย_' + s.studentId, excel: () => [['รหัสนักเรียน', s.studentId, 'ชื่อ-สกุล', fullName(s), 'ชั้น', s.grade, 'ห้อง', s.room], ['รวมเข้าสาย', r.count, 'ครั้ง'], [], ['ที่', 'วันที่', 'เวลา', 'ประเภท'], ...r.entries.map((e, i) => [i + 1, thDate(e.date), hm(e.time), e.type])] }) +
+      `<div class="rep" id="lr1Rep">${reportHead('รายงานการเข้าสายรายบุคคล', '', r.printedAt)}<div class="grid2">${studentBlock(s, 'lg')}${parentsBlock(r.parents)}</div>
+       <div class="sumbox"><div style="background:var(--bad2);color:var(--bad)">รวมจำนวนครั้งที่เข้าสาย<div class="big-num">${r.count} ครั้ง</div><div style="font-size:13px">${byT}</div></div></div>
+       <table class="t" style="margin-top:12px"><thead><tr><th class="c">ที่</th><th>วันที่</th><th>เวลา</th><th>ประเภท</th></tr></thead><tbody>${r.entries.map((e, i) => `<tr><td class="c">${i + 1}</td><td>${esc(thDate(e.date))}</td><td>${esc(hm(e.time))} น.</td><td>${esc(e.type)}</td></tr>`).join('') || '<tr><td colspan="4" class="c muted">ไม่เคยเข้าสาย</td></tr>'}</tbody></table></div>`;
+  });
+  $('#lrGo').onclick = () => safe(async () => {
+    const r = await api('lateReportRange', $('#lrFrom').value, $('#lrTo').value, $('#lrType').value);
+    const sub = `ช่วงวันที่ ${esc(thDate(r.from) || 'เริ่มต้น')} – ${esc(thDate(r.to) || 'ปัจจุบัน')}${r.type ? ' · ประเภท: ' + esc(r.type) : ''} · ${r.rows.length} คน รวม ${r.total} ครั้ง`;
+    $('#lr2Out').innerHTML = actionBar({ el: () => $('#lr2Rep'), name: 'รายงานมาสาย_' + r.from + '_' + r.to, excel: () => [['รายงานนักเรียนมาสาย ' + sub.replace(/<[^>]+>/g, '')], ['ที่', 'รหัสนักเรียน', 'คำนำหน้า', 'ชื่อ', 'สกุล', 'ชั้น', 'ห้อง', 'จำนวนครั้งที่เข้าสาย'], ...r.rows.map((x, i) => [i + 1, x.student.studentId, x.student.prefix, x.student.firstName, x.student.lastName, x.student.grade, x.student.room, x.count])] }) +
+      `<div class="rep" id="lr2Rep">${reportHead('รายงานนักเรียนมาสาย', sub, r.printedAt)}<table class="t"><thead><tr><th class="c">ที่</th><th>รูป</th><th>รหัสนักเรียน</th><th>ชื่อ</th><th>สกุล</th><th class="c">ชั้น</th><th class="c">ห้อง</th><th class="c">จำนวนครั้งที่เข้าสาย</th></tr></thead><tbody>${r.rows.map((x, i) => `<tr><td class="c">${i + 1}</td><td>${stuPhoto(x.student, 'sm')}</td><td>${esc(x.student.studentId)}</td><td>${esc((x.student.prefix || '') + x.student.firstName)}</td><td>${esc(x.student.lastName)}</td><td class="c">${esc(x.student.grade)}</td><td class="c">${esc(x.student.room)}</td><td class="c"><b>${x.count}</b></td></tr>`).join('') || '<tr><td colspan="8" class="c muted">ไม่พบข้อมูล</td></tr>'}</tbody></table></div>`;
+  });
+};
+
+/* ---------- ตั้งค่า ---------- */
+PAGES.settings = async pg => {
+  const s = await api('getAdminSettings');
+  const f = (k, l, type = 'text') => `<label>${l}<input type="${type}" data-f="${k}" value="${esc(s[k] || '')}"></label>`;
+  pg.innerHTML = `<div class="card"><h3>ข้อมูลโรงเรียน / บัตร</h3><div class="row" id="sf1">${f('schoolName', 'ชื่อโรงเรียน')}${f('signerName', 'ชื่อผู้ลงนามในบัตร')}${f('signerPosition', 'ตำแหน่งใต้ลายเซ็น')}</div></div>
+   <div class="card"><h3>บัญชีแอดมิน / รหัสลายเซ็น</h3><div class="row" id="sf2">${f('adminUser', 'ชื่อผู้ใช้แอดมิน')}${f('adminPassword', 'รหัสผ่านแอดมิน')}${f('signatureCode', 'รหัสลายเซ็นบนบัตร (ใช้ตอนอนุมัติ)')}</div>
+    <p class="muted">ครูเข้าระบบด้วยเบอร์โทรที่อยู่ในรายชื่อครูที่ปรึกษา (เบอร์เป็นทั้งชื่อผู้ใช้และรหัสผ่าน) · บุคคลทั่วไปเข้าได้โดยไม่ต้องใส่รหัส</p></div>
+   <div class="row"><button class="btn" id="sfSave">บันทึกการตั้งค่า</button></div>
+   <div class="card"><h3>ภาพลายเซ็นผู้ออกบัตร</h3><p class="muted">แนะนำไฟล์ PNG พื้นโปร่งใส ระบบย่อให้กว้าง 400px ลายเซ็นจะขึ้นบนบัตรเฉพาะเมื่อใส่รหัสลายเซ็นถูกต้อง</p>
+    <div class="row"><div id="sigPrev" style="border:1px dashed #cbd5e1;padding:8px;border-radius:8px;min-width:200px;min-height:60px">${s.signature ? `<img src="${s.signature}" style="max-height:90px">` : '<span class="muted">ยังไม่มีลายเซ็น</span>'}</div><button class="btn ghost" id="sigUp">อัปโหลดลายเซ็น</button></div></div>
+   <div class="card"><h3>คะแนนหักเมื่อมาสายโดยไม่ขออนุญาต</h3><p>ปัจจุบัน <b style="color:var(--bad)">${esc(s.latePoints)}</b> คะแนน — แก้ไขได้ที่เมนู "3. หัวข้อพฤติกรรม"</p></div>`;
+  $('#sfSave').onclick = () => safe(async () => {
+    const o = {}; $$('[data-f]', pg).forEach(i => o[i.dataset.f] = i.value);
+    S.school = await api('saveSettings', o); $('#hdSchool').textContent = S.school; toast('บันทึกแล้ว', 'ok');
+  });
+  $('#sigUp').onclick = () => pickImage(async d => { const u = await api('uploadSignature', d); $('#sigPrev').innerHTML = `<img src="${u}" style="max-height:90px">`; toast('อัปโหลดลายเซ็นแล้ว', 'ok'); }, { png: true });
+};
+
+/* =================== กระดิ่งแจ้งเตือนคำขอทำบัตร =================== */
+function updateBell(n) {
+  [['#lgBell', '#lgBellN'], ['#hdBell', '#hdBellN']].forEach(([b, c]) => { $(c).textContent = n; $(b).classList.toggle('ring', n > 0); });
+  $('#lgBell').hidden = !(n > 0);
+  $('#hdBell').hidden = !(S.role === 'admin' && n > 0);
+  const m = $('#lgBellMsg'); m.hidden = !(n > 0);
+  m.textContent = `🔔 มีคำขอทำบัตร ${n} รายการ รออนุมัติ`;
+  const a = $('#nav a[data-p="approvals"]'); if (a) a.textContent = '🔔 อนุมัติบัตรเข้าสาย' + (n > 0 ? ` (${n})` : '');
+}
+async function refreshBell() {
+  try { const r = await rpc('publicInfo', [], null); updateBell(r.pendingCount); if (!S.token) $('#lgSchool').textContent = r.schoolName; } catch (e) { }
+}
+
+/* =================== เข้าสู่ระบบ =================== */
+async function startApp() {
+  const b = await api('getBootstrap');
+  Object.assign(S, { role: b.role, roleName: b.roleName, school: b.schoolName, topics: b.topics, today: b.today });
+  $('#loginView').hidden = true; $('#appView').hidden = false;
+  $('#hdSchool').textContent = S.school; $('#hdRole').textContent = S.roleName;
+  renderNav(); updateBell(b.pendingCount);
+  showPage(S.role === 'admin' ? (b.pendingCount > 0 ? 'approvals' : 'importStudents') : S.role === 'teacher' ? 'behavior' : 'status');
+}
+function lgRole() { return $('[name=role]:checked').value; }
+function setLoginRole() {
+  const r = lgRole();
+  $('#lgUserW').hidden = $('#lgPwW').hidden = r === 'public';
+  $('#lgUserL').textContent = r === 'admin' ? 'ชื่อผู้ใช้' : 'เบอร์โทร';
+  $('#lgUser').placeholder = r === 'admin' ? 'admin' : 'เช่น 0812345678';
+  $('#lgUser').inputMode = r === 'teacher' ? 'tel' : 'text';
+  $('#lgPw').placeholder = r === 'teacher' ? 'ใช้เบอร์โทรเดียวกัน' : '';
+  $('#lgHint').textContent = r === 'public' ? 'ไม่ต้องใส่รหัส · ตรวจสอบสถานะเข้าสาย / บันทึกมาสายโดยไม่ขออนุญาต' : r === 'teacher' ? 'ครูใช้เบอร์โทรเป็นทั้งชื่อผู้ใช้และรหัสผ่าน' : '';
+  $('#lgHint').hidden = !$('#lgHint').textContent;
+  $('#lgBtn').textContent = r === 'public' ? 'เข้าใช้งาน' : 'เข้าสู่ระบบ';
+}
+async function doLogin(isPublic) {
+  isPublic = isPublic || lgRole() === 'public';
+  const user = $('#lgUser').value.trim(), pw = $('#lgPw').value;
+  if (!isPublic && (!user || !pw)) return toast('กรุณาใส่ชื่อผู้ใช้และรหัสผ่าน', 'err');
+  loading(true);
+  try {
+    const r = isPublic ? await rpc('loginPublic', [], null) : await rpc('login', [user, pw], null);
+    S.token = r.token; store.set('tok', r.token); $('#lgPw').value = '';
+  } catch (e) { return alertBox(e.message); }
+  finally { loading(false); }
+  safe(startApp);
+}
+function doLogout(silent) {
+  if (!silent && S.token) rpc('logout', [], S.token).catch(() => { });
+  S.token = null; S.role = null; store.set('tok', null); $('#lgUser').value = '';
+  $('#appView').hidden = true; $('#loginView').hidden = false; $('#main').innerHTML = '';
+  refreshBell();
+}
+$('#lgBtn').onclick = () => doLogin(false);
+$$('[name=role]').forEach(r => r.onchange = setLoginRole); setLoginRole();
+$('#lgBellMsg').onclick = () => { $('label:has(input[value=admin])').click(); $('#lgUser').focus(); };
+$('#lgPw').onkeydown = e => { if (e.key === 'Enter') doLogin(false); };
+$('#lgUser').onkeydown = e => { if (e.key === 'Enter') $('#lgPw').focus(); };
+$('#lgBell').onclick = () => $('#lgBellMsg').click();
+$('#hdBell').onclick = () => showPage('approvals');
+$('#logoutBtn').onclick = () => doLogout(false);
+$('#burger').onclick = () => $('#nav').classList.toggle('open');
+setInterval(refreshBell, 60000);
+(function init() {
+  refreshBell();
+  const t = store.get('tok');
+  if (t) { S.token = t; startApp().catch(() => doLogout(true)); }
+})();
+</script>
+</body>
+</html>
