@@ -143,6 +143,12 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 .updbar{position:fixed;top:0;left:0;right:0;z-index:120;background:#0f172a;color:#fff;padding:10px 16px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font-weight:600;box-shadow:0 2px 10px #0004}
 .updbar .btn{padding:5px 12px}
 .srvwarn{background:var(--warn2);color:var(--warn);font-weight:700;padding:8px 16px;font-size:14px;text-align:center}
+.acwrap{position:relative;flex:1;min-width:0;display:flex}.acwrap input{flex:1;min-width:0}
+.acl{position:absolute;top:100%;left:0;right:0;z-index:30;background:#fff;border:1px solid #cbd5e1;border-radius:10px;margin-top:4px;box-shadow:0 10px 30px #0f172a26;max-height:min(420px,60vh);overflow:auto}
+.aci{display:flex;gap:10px;align-items:center;padding:9px 14px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:15px}
+.aci:hover,.aci.on{background:var(--pri2)}
+.acid{font-weight:800;min-width:70px}.acnm{flex:1}.accr{color:var(--mut);font-size:13px;white-space:nowrap}
+.acn{padding:8px 14px;font-size:12px;color:var(--mut);background:#f8fafc}
 .lc-pending{color:#dc2626;font-weight:800;font-size:8pt}
 [hidden]{display:none!important}
 #printArea{display:none}
@@ -195,9 +201,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '2.3.0';
-const MIN_SERVER_VERSION = '2.3.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '2.4.0';
+const MIN_SERVER_VERSION = '2.4.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '2.4.0': ['ค้นหานักเรียนด้วยรหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง (เช่น ม.3/2) แล้วเลือกจากรายชื่อ', 'ชื่อเมนูไม่มีเลขนำหน้า'],
   '2.3.0': ['แสดงเวอร์ชันและอัปเดตหน้าเว็บอัตโนมัติ', 'รายชื่อนักเรียนแบ่งเป็นหน้า 1 2 3 … เลือกจำนวนต่อหน้าได้', 'ติ๊กเลือกข้ามหน้า / เลือกทั้งหมดตามเงื่อนไข'],
   '2.2.0': ['จัดการนักเรียน: กรองชั้น/ห้อง เลื่อนชั้น ย้ายห้อง ลบที่เลือก ลบทั้งหมด'],
   '2.1.0': ['หน้าเข้าสู่ระบบแบบเลือกบทบาท', 'ครูทำบัตร → แอดมินอนุมัติ (มีกระดิ่งแจ้งเตือน)', 'ถ่าย/อัปโหลดรูปนักเรียนได้ทุกหน้าที่ไม่มีรูป']
@@ -407,13 +414,56 @@ function parentsBlock(ps, photos = true) {
 function teachersBlock(ts, photos = true) {
   return `<div class="block"><h4>ครูที่ปรึกษา</h4><div class="plist">${ts.length ? ts.map(t => `<div class="pitem">${photos ? img(t.photo, 'md') : ''}<div><div class="n">${esc(fullName(t))}</div><div class="s">${esc(classRoom(t))}</div><div class="s">โทร: ${esc(t.phone || '-')}</div></div></div>`).join('') : '<div class="muted">ยังไม่มีครูที่ปรึกษาของชั้น/ห้องนี้</div>'}</div></div>`;
 }
-function searchBar(id, ph = 'พิมพ์รหัสนักเรียนแล้วกด Enter', btn = 'ค้นหา') {
-  return `<div class="search noprint"><input id="${id}" placeholder="${ph}" autocomplete="off"><button class="btn" id="${id}Btn">${btn}</button></div>`;
+function searchBar(id, ph = 'พิมพ์รหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง เช่น ม.3/2', btn = 'ค้นหา') {
+  return `<div class="search noprint"><div class="acwrap"><input id="${id}" placeholder="${ph}" autocomplete="off"><div class="acl" id="${id}Ac" hidden></div></div><button class="btn" id="${id}Btn">${btn}</button></div>`;
 }
+/* ค้นหานักเรียน: พิมพ์แล้วมีรายชื่อขึ้นให้เลือก (รหัส / ชื่อ / นามสกุล / ชั้น/ห้อง) */
 function bindSearch(id, fn) {
-  const i = $('#' + id);
-  const go = () => { const v = i.value.trim(); if (!v) return toast('กรุณาพิมพ์รหัสนักเรียน', 'err'); safe(() => fn(v)); };
-  i.onkeydown = e => { if (e.key === 'Enter') go(); };
+  const i = $('#' + id), box = $('#' + id + 'Ac');
+  let list = [], total = 0, hi = -1, seq = 0, timer = null, navigated = false;
+  const choose = s => { box.hidden = true; i.value = s.studentId; safe(() => fn(s.studentId)); };
+  const render = q => {
+    if (!list.length) { box.innerHTML = `<div class="acn">ไม่พบนักเรียนที่ตรงกับ "${esc(q)}"</div>`; box.hidden = false; return; }
+    box.innerHTML = list.map((s, k) => `<div class="aci ${k === hi ? 'on' : ''}" data-k="${k}"><span class="acid">${esc(s.studentId)}</span><span class="acnm">${esc(fullName(s))}</span><span class="accr">${esc(classRoom(s))}</span>${s.hasPhoto ? '' : '<span class="chip bad" style="font-size:11px">ไม่มีรูป</span>'}</div>`).join('') +
+      (total > list.length ? `<div class="acn">แสดง ${list.length} จาก ${total} คน — พิมพ์เพิ่มเพื่อให้แคบลง</div>` : `<div class="acn">${total} คน · ใช้ ↑ ↓ แล้วกด Enter หรือคลิกเลือก</div>`);
+    box.hidden = false;
+    $$('.aci', box).forEach(el => el.onmousedown = e => { e.preventDefault(); choose(list[+el.dataset.k]); });
+    const on = $('.aci.on', box); if (on) on.scrollIntoView({ block: 'nearest' });
+  };
+  const lookup = async q => {
+    const my = ++seq;
+    const r = await rpc('findStudents', [q], S.token);
+    if (my !== seq) return false;
+    list = r.items; total = r.total; hi = list.length ? 0 : -1; navigated = false;
+    return true;
+  };
+  const go = async () => {
+    const q = i.value.trim(); if (!q) return toast('พิมพ์รหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง', 'err');
+    clearTimeout(timer);
+    if (!box.hidden && navigated && list[hi]) return choose(list[hi]);
+    loading(true);
+    let ok; try { ok = await lookup(q); } catch (e) { loading(false); return safe(() => { throw e; }); }
+    loading(false); if (!ok) return;
+    const exact = list.find(s => s.studentId === q);
+    if (exact) return choose(exact);
+    if (list.length === 1) return choose(list[0]);
+    render(q);
+  };
+  i.oninput = () => {
+    clearTimeout(timer);
+    const q = i.value.trim(); if (!q) { box.hidden = true; return; }
+    timer = setTimeout(async () => { try { if (await lookup(q)) render(q); } catch (e) { } }, 250);
+  };
+  i.onkeydown = e => {
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !box.hidden && list.length) {
+      e.preventDefault(); navigated = true;
+      hi = (hi + (e.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length; render(i.value.trim()); return;
+    }
+    if (e.key === 'Escape') { box.hidden = true; return; }
+    if (e.key === 'Enter') { e.preventDefault(); go(); }
+  };
+  i.onblur = () => setTimeout(() => { box.hidden = true; }, 150);
+  i.onfocus = () => { if (list.length && i.value.trim()) render(i.value.trim()); };
   $('#' + id + 'Btn').onclick = go;
   setTimeout(() => i.focus(), 50);
 }
@@ -561,9 +611,9 @@ function bindExcelPicker(prefix, onAoa) {
 /* =================== เมนู / หน้า =================== */
 const A = ['admin'], ST = ['admin', 'teacher'], AL = ['admin', 'teacher', 'public'];
 const MENU = [
-  ['ข้อมูลพื้นฐาน', [['importStudents', '1. นำเข้าข้อมูลนักเรียน', A], ['students', '1.1 จัดการข้อมูล/รูปนักเรียน', A], ['teachers', '2. ครูที่ปรึกษา', A], ['topics', '3. หัวข้อพฤติกรรม', A]]],
-  ['พฤติกรรม', [['behavior', '4.1 บันทึกพฤติกรรม', ST], ['behaviorReport', '4.2 รายงานพฤติกรรม', ST], ['report', '5. รายงานผลรายบุคคล', ST]]],
-  ['การมาสาย', [['approvals', '🔔 อนุมัติบัตรเข้าสาย', A], ['pass', '6.1 ออกบัตรอนุญาตเข้าสาย', ST], ['request', '6.2 ครูรับเรื่องขอเข้าสาย', ST], ['status', '7. ตรวจสอบสถานะ / บันทึกเข้า', AL], ['late', '8.1 บันทึกมาสาย (ไม่ขออนุญาต)', AL], ['lateReport', '8.2 รายงานนักเรียนเข้าสาย', ST]]],
+  ['ข้อมูลพื้นฐาน', [['importStudents', 'นำเข้าข้อมูลนักเรียน', A], ['students', 'จัดการข้อมูล/รูปนักเรียน', A], ['teachers', 'ครูที่ปรึกษา', A], ['topics', 'หัวข้อพฤติกรรม', A]]],
+  ['พฤติกรรม', [['behavior', 'บันทึกพฤติกรรม', ST], ['behaviorReport', 'รายงานพฤติกรรม', ST], ['report', 'รายงานผลรายบุคคล', ST]]],
+  ['การมาสาย', [['approvals', '🔔 อนุมัติบัตรเข้าสาย', A], ['pass', 'ออกบัตรอนุญาตเข้าสาย', ST], ['request', 'ครูรับเรื่องขอเข้าสาย', ST], ['status', 'ตรวจสอบสถานะ / บันทึกเข้า', AL], ['late', 'บันทึกมาสาย (ไม่ขออนุญาต)', AL], ['lateReport', 'รายงานนักเรียนเข้าสาย', ST]]],
   ['ระบบ', [['settings', 'ตั้งค่า', A]]]
 ];
 const PAGES = {};
@@ -603,7 +653,7 @@ PAGES.importStudents = pg => {
         for (const k in r) tot[k] += r[k];
       }
       toast('นำเข้าเรียบร้อย', 'ok');
-      return `<div class="banner ok">นำเข้าเรียบร้อย · นักเรียนใหม่ ${tot.added} · อัปเดต ${tot.updated} · ผู้ปกครองใหม่ ${tot.parentsAdded} · อัปเดตผู้ปกครอง ${tot.parentsUpdated} · ข้าม (ไม่มีรหัส) ${tot.skipped}</div><p class="muted">อัปโหลดรูปนักเรียน/ผู้ปกครองได้ที่เมนู 1.1</p>`;
+      return `<div class="banner ok">นำเข้าเรียบร้อย · นักเรียนใหม่ ${tot.added} · อัปเดต ${tot.updated} · ผู้ปกครองใหม่ ${tot.parentsAdded} · อัปเดตผู้ปกครอง ${tot.parentsUpdated} · ข้าม (ไม่มีรหัส) ${tot.skipped}</div><p class="muted">อัปโหลดรูปนักเรียน/ผู้ปกครองได้ที่เมนู "จัดการข้อมูล/รูปนักเรียน"</p>`;
     }
   });
   bindExcelPicker('is', (aoa, hr) => imp.load(aoa, hr));
@@ -1047,7 +1097,7 @@ function entriesAoa(d) {
   return a;
 }
 PAGES.status = pg => {
-  pg.innerHTML = `${searchBar('scQ', 'พิมพ์รหัสนักเรียนเพื่อตรวจสอบสถานะ', 'ตรวจสอบ')}<div id="scOut"></div>
+  pg.innerHTML = `${searchBar('scQ', 'พิมพ์รหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง เพื่อตรวจสอบสถานะ', 'ตรวจสอบ')}<div id="scOut"></div>
    <div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">รายการนักเรียนเข้าสาย</h3><div class="row" style="margin:0"><input type="date" id="scDate" value="${S.today}"><button class="btn ghost" id="scRef">โหลด</button></div></div><div id="scTbl"></div></div>`;
   const lateTopic = () => (S.topics.find(t => t.system === 'LATE') || { points: '-5' }).points;
   const loadTable = async () => {
@@ -1094,7 +1144,7 @@ PAGES.status = pg => {
 };
 async function unauthorized(s, outEl) {
   let r = await api('recordUnauthorizedLate', s.studentId, false);
-  if (r.hasPermission) { if (!await confirmBox(`นักเรียนคนนี้${r.hasPass ? 'มีบัตรอนุญาต' : 'แจ้งครูที่ปรึกษา'}สำหรับวันนี้แล้ว ควรใช้เมนู 7 บันทึกเข้า\nยังต้องการบันทึกเป็น "ไม่ขออนุญาต" และหักคะแนนหรือไม่?`, 'บันทึกและหักคะแนน', true)) return false; r = await api('recordUnauthorizedLate', s.studentId, true); }
+  if (r.hasPermission) { if (!await confirmBox(`นักเรียนคนนี้${r.hasPass ? 'มีบัตรอนุญาต' : 'แจ้งครูที่ปรึกษา'}สำหรับวันนี้แล้ว ควรใช้เมนู "ตรวจสอบสถานะ / บันทึกเข้า"\nยังต้องการบันทึกเป็น "ไม่ขออนุญาต" และหักคะแนนหรือไม่?`, 'บันทึกและหักคะแนน', true)) return false; r = await api('recordUnauthorizedLate', s.studentId, true); }
   else if (r.duplicate) { if (!await confirmBox(`วันนี้บันทึกมาสายไม่ขออนุญาตไปแล้วเวลา ${esc(hm(r.entry.time))} น. ต้องการบันทึกซ้ำ (หักคะแนนอีกครั้ง) หรือไม่?`, 'บันทึกซ้ำ', true)) return false; r = await api('recordUnauthorizedLate', s.studentId, true); }
   outEl.innerHTML = `<div class="banner bad">บันทึกแล้ว: ${esc(fullName(s))} (${esc(classRoom(s))}) มาสายโดยไม่ขออนุญาต วันที่ ${esc(thDate(r.entry.date))} เวลา ${esc(hm(r.entry.time))} น. · หักคะแนน ${esc(r.points)}</div>`;
   toast('บันทึกและหักคะแนนแล้ว', 'ok');
@@ -1106,7 +1156,7 @@ PAGES.late = pg => {
   pg.innerHTML = searchBar('ltQ') + '<div id="ltOut"></div>';
   bindSearch('ltQ', async sid => {
     const r = await api('lateContext', sid); const s = r.student;
-    $('#ltOut').innerHTML = `${r.hasPass || r.hasRequest ? `<div class="banner warn">นักเรียนคนนี้${r.hasPass ? 'มีบัตรอนุญาตเข้าสาย' : 'แจ้งขอเข้าสายกับครูที่ปรึกษา'}สำหรับวันนี้แล้ว ควรบันทึกที่เมนู 7</div>` : ''}
+    $('#ltOut').innerHTML = `${r.hasPass || r.hasRequest ? `<div class="banner warn">นักเรียนคนนี้${r.hasPass ? 'มีบัตรอนุญาตเข้าสาย' : 'แจ้งขอเข้าสายกับครูที่ปรึกษา'}สำหรับวันนี้แล้ว ควรบันทึกที่เมนู "ตรวจสอบสถานะ / บันทึกเข้า"</div>` : ''}
       ${r.todayEntries.length ? `<div class="banner info">วันนี้มีบันทึกเข้าสายแล้ว: ${r.todayEntries.map(e => esc(hm(e.time)) + ' (' + esc(e.type) + ')').join(', ')}</div>` : ''}
       <div class="grid2">${studentBlock(s, 'xl')}<div class="card"><h3>บันทึกมาสายโดยไม่ขออนุญาต / ไม่มีบัตร</h3>
        <p>ระบบจะบันทึกวันที่และเวลาปัจจุบัน และหักคะแนนพฤติกรรม <b style="color:var(--bad);font-size:18px">${esc(r.penalty)} คะแนน</b> ทันที</p>
@@ -1150,7 +1200,7 @@ PAGES.settings = async pg => {
    <div class="row"><button class="btn" id="sfSave">บันทึกการตั้งค่า</button></div>
    <div class="card"><h3>ภาพลายเซ็นผู้ออกบัตร</h3><p class="muted">แนะนำไฟล์ PNG พื้นโปร่งใส ระบบย่อให้กว้าง 400px ลายเซ็นจะขึ้นบนบัตรเฉพาะเมื่อใส่รหัสลายเซ็นถูกต้อง</p>
     <div class="row"><div id="sigPrev" style="border:1px dashed #cbd5e1;padding:8px;border-radius:8px;min-width:200px;min-height:60px">${s.signature ? `<img src="${s.signature}" style="max-height:90px">` : '<span class="muted">ยังไม่มีลายเซ็น</span>'}</div><button class="btn ghost" id="sigUp">อัปโหลดลายเซ็น</button></div></div>
-   <div class="card"><h3>คะแนนหักเมื่อมาสายโดยไม่ขออนุญาต</h3><p>ปัจจุบัน <b style="color:var(--bad)">${esc(s.latePoints)}</b> คะแนน — แก้ไขได้ที่เมนู "3. หัวข้อพฤติกรรม"</p></div>`;
+   <div class="card"><h3>คะแนนหักเมื่อมาสายโดยไม่ขออนุญาต</h3><p>ปัจจุบัน <b style="color:var(--bad)">${esc(s.latePoints)}</b> คะแนน — แก้ไขได้ที่เมนู "หัวข้อพฤติกรรม"</p></div>`;
   $('#sfSave').onclick = () => safe(async () => {
     const o = {}; $$('[data-f]', pg).forEach(i => o[i.dataset.f] = i.value);
     S.school = await api('saveSettings', o); $('#hdSchool').textContent = S.school; toast('บันทึกแล้ว', 'ok');
