@@ -221,9 +221,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '2.8.1';
-const MIN_SERVER_VERSION = '2.8.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '2.9.0';
+const MIN_SERVER_VERSION = '2.9.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '2.9.0': ['รายงานพฤติกรรม: รายงานรวมตามช่วงวันที่ และ/หรือ ชั้น/ห้อง (เว้นช่องพิมพ์ว่างแล้วกดค้นหา)'],
   '2.8.1': ['เอาเมนู "บันทึกมาสาย (ไม่ขออนุญาต)" ออก — หน้าตรวจสอบสถานะบันทึกให้อัตโนมัติอยู่แล้ว'],
   '2.8.0': ['ครูลงทะเบียนเป็นครูที่ปรึกษาเองได้ (รหัสลงทะเบียน) พร้อมรูป', 'ตั้งค่าชื่อโรงเรียน/ผู้ลงนาม กด Enter ขึ้นบรรทัดใหม่ได้'],
   '2.7.0': ['ตอนระบบบังคับรูป (ออกบัตร / รับเรื่องขอเข้าสาย) มีปุ่ม "ขอเลื่อน" ส่งรูปภายหลังได้'],
@@ -456,7 +457,7 @@ function fillClassDropdowns(gSel, rSel) {
 }
 async function reloadClasses() { try { S.classes = await rpc('listClasses', [], S.token); } catch (e) { } }
 /* ค้นหานักเรียน: เลือกชั้น/ห้อง = ค้นหาทันที | พิมพ์รหัส/ชื่อ/นามสกุล/ชั้น/ห้อง แล้วหยุด 1 วินาที = ค้นหาเลย */
-function bindSearch(id, fn) {
+function bindSearch(id, fn, opts = {}) {
   const i = $('#' + id), box = $('#' + id + 'Ac'), gSel = $('#' + id + 'G'), rSel = $('#' + id + 'R'), wrap = $('#' + id + 'Wrap');
   let list = [], total = 0, hi = -1, seq = 0, timer = null, navigated = false, lastKey = '';
   fillClassDropdowns(gSel, rSel);
@@ -482,6 +483,8 @@ function bindSearch(id, fn) {
   const run = async auto => {
     clearTimeout(timer);
     const q = i.value.trim();
+    // โหมดรายงานกลุ่ม: ไม่พิมพ์อะไร แล้วกดค้นหา → รายงานตามดรอปดาวน์/ช่วงวันที่
+    if (!auto && !q && opts.onGroup) { seq++; box.hidden = true; return safe(() => opts.onGroup(gSel.value, rSel.value)); }
     if (!q && !gSel.value && !rSel.value) { seq++; lastKey = ''; box.hidden = true; if (!auto) toast('พิมพ์รหัส ชื่อ นามสกุล หรือเลือกชั้น/ห้อง', 'err'); return; }
     if (!auto && !box.hidden && navigated && list[hi]) return choose(list[hi]);
     if (auto && keyNow() === lastKey) return;      // ค้นหาเดิมไปแล้ว
@@ -497,8 +500,8 @@ function bindSearch(id, fn) {
     if (!auto && list.length === 1) return choose(list[0]);
     render();
   };
-  gSel.onchange = () => { fillClassDropdowns(gSel, rSel); i.value = ''; run(true); };
-  rSel.onchange = () => { i.value = ''; run(true); };
+  gSel.onchange = () => { fillClassDropdowns(gSel, rSel); i.value = ''; if (opts.noAutoSelect) { seq++; box.hidden = true; } else run(true); };
+  rSel.onchange = () => { i.value = ''; if (opts.noAutoSelect) { seq++; box.hidden = true; } else run(true); };
   i.oninput = () => {
     clearTimeout(timer);
     if (!i.value.trim() && !gSel.value && !rSel.value) { seq++; lastKey = ''; box.hidden = true; return; }
@@ -995,15 +998,37 @@ function aggTable(arr, total, cnt, cls, title) {
 const sumBox = a => `<div class="sumbox"><div style="background:var(--ok2);color:var(--ok)">คะแนนรวมทางบวก<div class="big-num">+${a.totalPositive}</div></div><div style="background:var(--bad2);color:var(--bad)">คะแนนรวมทางลบ<div class="big-num">${a.totalNegative}</div></div><div style="background:var(--pri2);color:var(--pri)">คะแนนสุทธิ<div class="big-num">${a.net > 0 ? '+' : ''}${a.net}</div></div></div>`;
 const aggAoa = (a, s) => [['รหัสนักเรียน', s.studentId, 'ชื่อ-สกุล', fullName(s), 'ชั้น', s.grade, 'ห้อง', s.room], [], ['พฤติกรรมทางบวก'], ['ที่', 'รายการ', 'จำนวน', 'คะแนน'], ...a.positive.map((g, i) => [i + 1, g.name, g.count, g.points]), ['', 'รวม', a.countPositive, a.totalPositive], [], ['พฤติกรรมทางลบ'], ['ที่', 'รายการ', 'จำนวน', 'คะแนน'], ...a.negative.map((g, i) => [i + 1, g.name, g.count, g.points]), ['', 'รวม', a.countNegative, a.totalNegative], [], ['คะแนนสุทธิ', a.net]];
 PAGES.behaviorReport = pg => {
-  pg.innerHTML = `${searchBar('brQ')}<div class="row noprint"><label>ตั้งแต่วันที่ (ไม่ใส่ = ทั้งหมด)<input type="date" id="brFrom"></label><label>ถึงวันที่<input type="date" id="brTo"></label></div><div id="brOut"></div>`;
-  bindSearch('brQ', async sid => {
+  pg.innerHTML = `${searchBar('brQ', 'พิมพ์รหัส ชื่อ นามสกุล (เว้นว่าง = รายงานรวมตามชั้น/ห้อง หรือช่วงวันที่)')}<div class="row noprint" style="margin-top:-6px"><label>ตั้งแต่วันที่<input type="date" id="brFrom"></label><label>ถึงวันที่<input type="date" id="brTo"></label>
+    <span class="muted" style="align-self:center">เว้นช่องพิมพ์ว่างแล้วกด "ค้นหา" = รายงานรวมตามช่วงวันที่ และ/หรือ ชั้น/ห้องที่เลือก</span></div><div id="brOut"></div>`;
+  const rangeText = (f, t) => f || t ? `ช่วงวันที่ ${f ? thDate(f) : 'เริ่มต้น'} – ${t ? thDate(t) : 'ปัจจุบัน'}` : 'ทุกช่วงเวลา';
+  const showOne = async sid => {
     const r = await api('behaviorReport', sid, $('#brFrom').value, $('#brTo').value);
     const s = r.student, a = r.agg;
-    const range = r.from || r.to ? `ช่วงวันที่ ${r.from ? thDate(r.from) : 'เริ่มต้น'} – ${r.to ? thDate(r.to) : 'ปัจจุบัน'}` : 'ทั้งหมด';
     $('#brOut').innerHTML = actionBar({ el: () => $('#brRep'), name: 'รายงานพฤติกรรม_' + s.studentId, excel: () => aggAoa(a, s) }) +
-      `<div class="rep" id="brRep">${reportHead('รายงานพฤติกรรมนักเรียน', esc(range), r.printedAt)}${studentBlock(s, 'md')}
+      `<div class="rep" id="brRep">${reportHead('รายงานพฤติกรรมนักเรียน', esc(rangeText(r.from, r.to)), r.printedAt)}${studentBlock(s, 'md')}
       <div class="grid2" style="margin-top:12px">${aggTable(a.positive, a.totalPositive, a.countPositive, 'pos', 'พฤติกรรมทางบวก')}${aggTable(a.negative, a.totalNegative, a.countNegative, 'neg', 'พฤติกรรมทางลบ')}</div>${sumBox(a)}</div>`;
-  });
+  };
+  const showGroup = async (g, rm) => {
+    const f = $('#brFrom').value, t = $('#brTo').value;
+    if (!f && !t && !g && !rm) return toast('พิมพ์ชื่อ/รหัส หรือเลือกช่วงวันที่ หรือ ชั้น/ห้อง ก่อนกดค้นหา', 'err');
+    const r = await api('behaviorGroupReport', f, t, g, rm);
+    const a = r.agg;
+    const scope = [rangeText(r.from, r.to), r.grade ? 'ชั้น ' + r.grade : 'ทุกชั้น', r.room ? 'ห้อง ' + r.room : 'ทุกห้อง'].join(' · ');
+    const sign = n => (n > 0 ? '+' : '') + n;
+    const name = 'รายงานพฤติกรรมรวม_' + [r.grade, r.room, r.from, r.to].filter(Boolean).join('_');
+    $('#brOut').innerHTML = actionBar({
+      el: () => $('#brRep'), name, excel: () => [['รายงานพฤติกรรมรวม ' + scope], [], ['ที่', 'รหัส', 'คำนำหน้า', 'ชื่อ', 'นามสกุล', 'ชั้น', 'ห้อง', 'บวก (ครั้ง)', 'คะแนนบวก', 'ลบ (ครั้ง)', 'คะแนนลบ', 'สุทธิ'],
+        ...r.rows.map((x, i) => [i + 1, x.student.studentId, x.student.prefix, x.student.firstName, x.student.lastName, x.student.grade, x.student.room, x.posCount, x.posPoints, x.negCount, x.negPoints, x.net]),
+        [], ['สรุปตามหัวข้อ'], ['ประเภท', 'หัวข้อ', 'จำนวนครั้ง', 'จำนวนนักเรียน', 'คะแนนรวม'], ...a.positive.map(t => ['บวก', t.name, t.count, t.studentCount, t.points]), ...a.negative.map(t => ['ลบ', t.name, t.count, t.studentCount, t.points])]
+    }) + `<div class="rep" id="brRep">${reportHead('รายงานพฤติกรรมนักเรียน (รวม)', esc(scope) + ` · นักเรียน ${r.studentCount} คน`, r.printedAt)}
+      ${sumBox(a)}
+      <div class="grid2" style="margin-top:12px">${aggTable(a.positive, a.totalPositive, a.countPositive, 'pos', 'พฤติกรรมทางบวก (รวมทุกคน)')}${aggTable(a.negative, a.totalNegative, a.countNegative, 'neg', 'พฤติกรรมทางลบ (รวมทุกคน)')}</div>
+      <h4 style="margin-top:14px">รายชื่อนักเรียน <span class="muted noprint" style="font-weight:400">(คลิกรหัสเพื่อดูรายงานรายบุคคล)</span></h4>
+      <div class="scroll"><table class="t"><thead><tr><th class="c">ที่</th><th>รหัส</th><th>ชื่อ-สกุล</th><th class="c">ชั้น</th><th class="c">ห้อง</th><th class="c" style="background:var(--ok2)">บวก (ครั้ง)</th><th class="c" style="background:var(--ok2)">คะแนนบวก</th><th class="c" style="background:var(--bad2)">ลบ (ครั้ง)</th><th class="c" style="background:var(--bad2)">คะแนนลบ</th><th class="c">สุทธิ</th></tr></thead>
+      <tbody>${r.rows.map((x, i) => `<tr><td class="c">${i + 1}</td><td><a href="#" data-one="${esc(x.student.studentId)}">${esc(x.student.studentId)}</a></td><td>${esc(fullName(x.student))}</td><td class="c">${esc(x.student.grade)}</td><td class="c">${esc(x.student.room)}</td><td class="c">${x.posCount}</td><td class="c" style="color:var(--ok);font-weight:700">${sign(x.posPoints)}</td><td class="c">${x.negCount}</td><td class="c" style="color:var(--bad);font-weight:700">${x.negPoints}</td><td class="c"><b>${sign(x.net)}</b></td></tr>`).join('') || '<tr><td colspan="10" class="c muted">ไม่พบข้อมูลพฤติกรรมตามเงื่อนไข</td></tr>'}</tbody></table></div></div>`;
+    $$('[data-one]', $('#brOut')).forEach(el => el.onclick = e => { e.preventDefault(); $('#brQ').value = el.dataset.one; safe(() => showOne(el.dataset.one)); window.scrollTo(0, 0); });
+  };
+  bindSearch('brQ', showOne, { onGroup: showGroup, noAutoSelect: true });
 };
 
 /* ---------- 5. รายงานผล ---------- */
