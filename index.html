@@ -138,6 +138,11 @@ table.t tfoot td{font-weight:800;background:#f8fafc}
 .pg{min-width:36px;padding:6px 10px;border:1px solid #cbd5e1;background:#fff;border-radius:8px;cursor:pointer;font-weight:600;color:#334155}
 .pg.on{background:var(--pri);border-color:var(--pri);color:#fff}.pg:disabled{opacity:.4;cursor:default}.pgdots{padding:0 4px;color:var(--mut)}
 .btn.danger{color:var(--bad);border-color:#fca5a5}
+.ver{text-align:center;font-size:12px;color:#94a3b8}
+nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);margin-top:10px}
+.updbar{position:fixed;top:0;left:0;right:0;z-index:120;background:#0f172a;color:#fff;padding:10px 16px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font-weight:600;box-shadow:0 2px 10px #0004}
+.updbar .btn{padding:5px 12px}
+.srvwarn{background:var(--warn2);color:var(--warn);font-weight:700;padding:8px 16px;font-size:14px;text-align:center}
 .lc-pending{color:#dc2626;font-weight:800;font-size:8pt}
 [hidden]{display:none!important}
 #printArea{display:none}
@@ -170,6 +175,7 @@ table.t tfoot td{font-weight:800;background:#f8fafc}
     <label id="lgPwW">รหัสผ่าน<input type="password" id="lgPw" autocomplete="current-password"></label>
     <p class="muted" id="lgHint" style="margin:0;text-align:center"></p>
     <button class="btn full" id="lgBtn">เข้าสู่ระบบ</button>
+    <div class="ver" id="lgVer"></div>
   </div>
 </div>
 
@@ -178,6 +184,7 @@ table.t tfoot td{font-weight:800;background:#f8fafc}
   <div class="wrap"><nav id="nav"></nav><main id="main"></main></div>
 </div>
 
+<div id="updBar" class="updbar" hidden></div>
 <div id="printArea"></div>
 <div id="loading" hidden><div>⏳ กำลังดำเนินการ...</div></div>
 <div id="toast"></div>
@@ -186,6 +193,15 @@ table.t tfoot td{font-weight:800;background:#f8fafc}
 <script>
 /* =================== ลิงก์ Apps Script (/exec) — เปลี่ยนตรงนี้ถ้า Deploy ใหม่แล้วได้ลิงก์ใหม่ =================== */
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
+
+/* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
+const APP_VERSION = '2.3.0';
+const MIN_SERVER_VERSION = '2.3.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const CHANGELOG = {
+  '2.3.0': ['แสดงเวอร์ชันและอัปเดตหน้าเว็บอัตโนมัติ', 'รายชื่อนักเรียนแบ่งเป็นหน้า 1 2 3 … เลือกจำนวนต่อหน้าได้', 'ติ๊กเลือกข้ามหน้า / เลือกทั้งหมดตามเงื่อนไข'],
+  '2.2.0': ['จัดการนักเรียน: กรองชั้น/ห้อง เลื่อนชั้น ย้ายห้อง ลบที่เลือก ลบทั้งหมด'],
+  '2.1.0': ['หน้าเข้าสู่ระบบแบบเลือกบทบาท', 'ครูทำบัตร → แอดมินอนุมัติ (มีกระดิ่งแจ้งเตือน)', 'ถ่าย/อัปโหลดรูปนักเรียนได้ทุกหน้าที่ไม่มีรูป']
+};
 
 /* =================== พื้นฐาน =================== */
 const S = { token: null, role: null, roleName: '', school: '', topics: [], today: '' };
@@ -558,6 +574,7 @@ function renderNav() {
     return `<div class="g">${g}</div>` + its.map(i => `<a data-p="${i[0]}">${i[1]}</a>`).join('');
   }).join('');
   $$('#nav a').forEach(a => a.onclick = () => { showPage(a.dataset.p); $('#nav').classList.remove('open'); });
+  $('#nav').insertAdjacentHTML('beforeend', `<div class="ver">${verText()}</div>`);
 }
 function showPage(id) {
   const item = MENU.flatMap(m => m[1]).find(i => i[0] === id);
@@ -1151,7 +1168,65 @@ function updateBell(n) {
   const a = $('#nav a[data-p="approvals"]'); if (a) a.textContent = '🔔 อนุมัติบัตรเข้าสาย' + (n > 0 ? ` (${n})` : '');
 }
 async function refreshBell() {
-  try { const r = await rpc('publicInfo', [], null); updateBell(r.pendingCount); if (!S.token) $('#lgSchool').textContent = r.schoolName; } catch (e) { }
+  try {
+    const r = await rpc('publicInfo', [], null);
+    updateBell(r.pendingCount); if (!S.token) $('#lgSchool').textContent = r.schoolName;
+    SERVER_VER = r.serverVersion || '';
+    showVersions();
+  } catch (e) { }
+}
+
+/* =================== เวอร์ชัน / อัปเดตอัตโนมัติ =================== */
+let SERVER_VER = '', UPD_LATER = '', UPD_TIMER = null;
+const cmpVer = (a, b) => { const x = String(a || '0').split('.').map(Number), y = String(b || '0').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); } return 0; };
+const verText = () => `เวอร์ชัน ${APP_VERSION}${SERVER_VER ? ' · เซิร์ฟเวอร์ ' + SERVER_VER : ''}`;
+function showVersions() {
+  $('#lgVer').textContent = verText();
+  const nv = $('#nav .ver'); if (nv) nv.textContent = verText();
+  // แจ้งแอดมินถ้า Code.gs บนเซิร์ฟเวอร์เก่ากว่าที่หน้าเว็บต้องการ
+  let w = $('#srvWarn');
+  const old = SERVER_VER !== '' ? cmpVer(SERVER_VER, MIN_SERVER_VERSION) < 0 : false;
+  const noVer = SERVER_VER === '';
+  if (S.role === 'admin' && (old || noVer)) {
+    if (!w) { $('header').insertAdjacentHTML('afterend', '<div class="srvwarn" id="srvWarn"></div>'); w = $('#srvWarn'); }
+    w.textContent = `⚠ Code.gs บนเซิร์ฟเวอร์${noVer ? 'เป็นเวอร์ชันเก่า (ไม่มีเลขเวอร์ชัน)' : 'เป็นเวอร์ชัน ' + SERVER_VER} ต้องเป็น ${MIN_SERVER_VERSION} ขึ้นไป — วาง Code.gs ใหม่แล้ว Deploy เป็น "เวอร์ชันใหม่"`;
+  } else if (w) w.remove();
+}
+/* เช็ก index.html ล่าสุดบน GitHub ถ้าเลขเวอร์ชันเปลี่ยน → รีโหลดอัตโนมัติ (ยังอยู่ในระบบเหมือนเดิม) */
+async function checkUpdate() {
+  if (location.protocol === 'file:') return;
+  try {
+    const url = location.href.split('#')[0].split('?')[0];
+    const txt = await (await fetch(url + '?v=' + Date.now(), { cache: 'no-store' })).text();
+    const m = txt.match(/const APP_VERSION = '([^']+)'/);
+    if (!m || m[1] === APP_VERSION || m[1] === UPD_LATER) return;
+    promptUpdate(m[1]);
+  } catch (e) { }
+}
+function promptUpdate(v) {
+  const bar = $('#updBar'); if (!bar.hidden) return;
+  let sec = 15;
+  const busy = () => !$('#modal').hidden || !$('#loading').hidden;
+  bar.innerHTML = `🔄 มีเวอร์ชันใหม่ ${esc(v)} — อัปเดตอัตโนมัติใน <b id="updSec">${sec}</b> วินาที <button class="btn green" id="updNow">อัปเดตเลย</button><button class="btn ghost" id="updLater">ภายหลัง</button>`;
+  bar.hidden = false;
+  const go = () => { clearInterval(UPD_TIMER); store.set('updFrom', APP_VERSION); location.reload(); };
+  $('#updNow').onclick = go;
+  $('#updLater').onclick = () => { clearInterval(UPD_TIMER); UPD_LATER = v; bar.hidden = true; };
+  clearInterval(UPD_TIMER);
+  UPD_TIMER = setInterval(() => {
+    if (busy()) return;                       // รอให้ทำงานที่ค้างอยู่เสร็จก่อน
+    sec--; const e = $('#updSec'); if (e) e.textContent = sec;
+    if (sec <= 0) go();
+  }, 1000);
+}
+/* หลังอัปเดตเสร็จ แสดงว่ามีอะไรใหม่ */
+function showWhatsNew() {
+  const from = store.get('updFrom'), seen = store.get('seenVer');
+  store.set('seenVer', APP_VERSION); store.set('updFrom', null);
+  if (!seen || seen === APP_VERSION) return;
+  const vers = Object.keys(CHANGELOG).filter(v => cmpVer(v, seen) > 0 && cmpVer(v, APP_VERSION) <= 0).sort((a, b) => cmpVer(b, a));
+  if (!vers.length) return;
+  openModal(`<h3>✨ อัปเดตเป็นเวอร์ชัน ${esc(APP_VERSION)} แล้ว</h3>${vers.map(v => `<h4 style="margin-top:10px">เวอร์ชัน ${esc(v)}</h4><ul style="margin:0;padding-left:20px">${CHANGELOG[v].map(x => `<li>${esc(x)}</li>`).join('')}</ul>`).join('')}<div class="row end"><button class="btn" onclick="closeModal()">ตกลง</button></div>`);
 }
 
 /* =================== เข้าสู่ระบบ =================== */
@@ -1160,7 +1235,7 @@ async function startApp() {
   Object.assign(S, { role: b.role, roleName: b.roleName, school: b.schoolName, topics: b.topics, today: b.today });
   $('#loginView').hidden = true; $('#appView').hidden = false;
   $('#hdSchool').textContent = S.school; $('#hdRole').textContent = S.roleName;
-  renderNav(); updateBell(b.pendingCount);
+  renderNav(); updateBell(b.pendingCount); showVersions();
   showPage(S.role === 'admin' ? (b.pendingCount > 0 ? 'approvals' : 'importStudents') : S.role === 'teacher' ? 'behavior' : 'status');
 }
 function lgRole() { return $('[name=role]:checked').value; }
@@ -1191,7 +1266,7 @@ function doLogout(silent) {
   if (!silent && S.token) rpc('logout', [], S.token).catch(() => { });
   S.token = null; S.role = null; store.set('tok', null); $('#lgUser').value = '';
   $('#appView').hidden = true; $('#loginView').hidden = false; $('#main').innerHTML = '';
-  refreshBell();
+  showVersions(); refreshBell();
 }
 $('#lgBtn').onclick = () => doLogin(false);
 $$('[name=role]').forEach(r => r.onchange = setLoginRole); setLoginRole();
@@ -1203,7 +1278,11 @@ $('#hdBell').onclick = () => showPage('approvals');
 $('#logoutBtn').onclick = () => doLogout(false);
 $('#burger').onclick = () => $('#nav').classList.toggle('open');
 setInterval(refreshBell, 60000);
+setInterval(checkUpdate, 5 * 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { checkUpdate(); refreshBell(); } });
 (function init() {
+  showVersions(); showWhatsNew();
+  setTimeout(checkUpdate, 3000);
   refreshBell();
   const t = store.get('tok');
   if (t) { S.token = t; startApp().catch(() => doLogout(true)); }
