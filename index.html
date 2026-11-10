@@ -132,6 +132,9 @@ table.t tfoot td{font-weight:800;background:#f8fafc}
 .upslot{flex-direction:column;gap:4px;padding:4px}
 .upslot .btn{padding:4px 8px;font-size:12px;margin:2px}
 .ph.sm.upslot .btn{padding:2px 6px;font-size:15px;margin:0}
+.bulkbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#f8fafc;border:1px solid var(--bd);border-radius:10px;padding:8px 10px;margin:4px 0 10px}
+.bulkbar .grp{display:inline-flex;gap:6px;align-items:center;font-size:14px}.bulkbar input{padding:5px 8px}
+.btn.danger{color:var(--bad);border-color:#fca5a5}
 .lc-pending{color:#dc2626;font-weight:800;font-size:8pt}
 [hidden]{display:none!important}
 #printArea{display:none}
@@ -587,18 +590,84 @@ PAGES.importStudents = pg => {
 };
 
 /* ---------- 1.1 จัดการข้อมูลนักเรียน ---------- */
+let STU_REFRESH = null;
 PAGES.students = pg => {
-  pg.innerHTML = `<div class="card"><div class="search"><input id="stQ" placeholder="ค้นหารหัส / ชื่อ / ชั้น เช่น ม.1/2"><button class="btn" id="stQBtn">ค้นหา</button><button class="btn ghost" id="stNew">+ เพิ่มนักเรียน</button></div><div id="stList" class="scroll"></div></div>
+  pg.innerHTML = `<div class="card">
+    <div class="row" style="margin-top:0"><label>ชั้น<select id="stG"><option value="">ทุกชั้น</option></select></label>
+     <label>ห้อง<select id="stR"><option value="">ทุกห้อง</option></select></label>
+     <label style="flex:1;min-width:200px">ค้นหา<input id="stQ" placeholder="รหัส / ชื่อ / นามสกุล / เบอร์"></label>
+     <button class="btn" id="stQBtn">ค้นหา</button><button class="btn ghost" id="stNew">+ เพิ่มนักเรียน</button></div>
+    <div class="bulkbar" id="stBar">
+     <b id="stSel">เลือกแล้ว 0 คน</b>
+     <button class="btn sm" id="stPromote" title="เพิ่มตัวเลขชั้น เช่น ม.1 → ม.2 ห้องเดิม">⬆ เลื่อนชั้น +1</button>
+     <span class="grp">ย้ายไป ชั้น <input id="stToG" placeholder="เช่น ม.2" style="width:90px"> ห้อง <input id="stToR" placeholder="เช่น 1" style="width:70px"> <button class="btn sm ghost" id="stMove">ย้าย</button></span>
+     <button class="btn sm red" id="stDel">🗑 ลบที่เลือก</button>
+     <span style="flex:1"></span><button class="btn sm ghost danger" id="stDelAll">ลบนักเรียนทั้งหมด</button>
+    </div>
+    <div id="stList" class="scroll"></div></div>
   <div id="stEdit"></div>
   <div class="card"><h3>อัปโหลดรูปนักเรียนทีละหลายรูป</h3><p class="muted">ตั้งชื่อไฟล์เป็นรหัสนักเรียน เช่น 12345.jpg แล้วเลือกพร้อมกันหลายไฟล์ ระบบจะย่อรูปให้กว้าง 400px และบันทึกชื่อเป็นรหัสนักเรียน</p>
   <div class="row"><input type="file" id="stBulk" accept="image/*" multiple><button class="btn" id="stBulkGo">อัปโหลด</button></div><div id="stBulkRes" class="muted"></div></div>`;
+  let items = [], classes = [];
+  const selected = () => $$('#stList input[data-ck]:checked').map(c => c.dataset.ck);
+  const updSel = () => {
+    const n = selected().length;
+    $('#stSel').textContent = `เลือกแล้ว ${n} คน`;
+    ['#stPromote', '#stMove', '#stDel'].forEach(id => $(id).disabled = n === 0);
+    const all = $('#stCkAll'); if (all) { const cks = $$('#stList input[data-ck]'); all.checked = cks.length > 0 && n === cks.length; all.indeterminate = n > 0 && n < cks.length; }
+  };
+  const fillClassSelects = () => {
+    const g = $('#stG').value, r = $('#stR').value;
+    const grades = [...new Set(classes.map(c => c.grade))];
+    const cnt = k => classes.filter(c => c.grade === k).reduce((t, c) => t + c.count, 0);
+    $('#stG').innerHTML = '<option value="">ทุกชั้น</option>' + grades.map(x => `<option value="${esc(x)}" ${x === g ? 'selected' : ''}>${esc(x || '(ไม่ระบุชั้น)')} (${cnt(x)})</option>`).join('');
+    const rooms = classes.filter(c => !$('#stG').value || c.grade === $('#stG').value);
+    const ru = [...new Set(rooms.map(c => c.room))];
+    $('#stR').innerHTML = '<option value="">ทุกห้อง</option>' + ru.map(x => `<option value="${esc(x)}" ${x === r ? 'selected' : ''}>${esc(x || '(ไม่ระบุห้อง)')} (${rooms.filter(c => c.room === x).reduce((t, c) => t + c.count, 0)})</option>`).join('');
+  };
   const search = () => safe(async () => {
-    const r = await api('searchStudents', $('#stQ').value);
-    $('#stList').innerHTML = `<p class="muted">พบ ${r.total} คน${r.total > r.items.length ? ' (แสดง ' + r.items.length + ' คนแรก)' : ''}</p><table class="t"><thead><tr><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>ห้อง</th><th>เบอร์โทร</th><th class="c">รูป</th><th></th></tr></thead><tbody>${r.items.map(s => `<tr><td>${esc(s.studentId)}</td><td>${esc(fullName(s))}</td><td>${esc(s.grade)}</td><td>${esc(s.room)}</td><td>${esc(s.phone)}</td><td class="c">${s.hasPhoto ? '<span class="chip ok">มี</span>' : '<span class="chip bad">ไม่มี</span>'}</td><td><button class="btn sm ghost" data-ed="${esc(s.studentId)}">แก้ไข</button></td></tr>`).join('')}</tbody></table>`;
-    $$('[data-ed]', $('#stList')).forEach(b => b.onclick = () => openStudent(b.dataset.ed));
+    const g0 = $('#stG').value, r0 = $('#stR').value;
+    const r = await api('searchStudents', $('#stQ').value, g0, r0);
+    items = r.items; classes = r.classes; fillClassSelects();
+    if ($('#stG').value !== g0 || $('#stR').value !== r0) return search();   // ชั้น/ห้องที่เลือกไม่มีแล้ว
+    $('#stList').innerHTML = `<p class="muted">ทั้งหมด ${r.total} คน · ตามเงื่อนไข ${r.found} คน${r.found > items.length ? ' (แสดง ' + items.length + ' คนแรก)' : ''}</p>
+     <table class="t"><thead><tr><th class="c"><input type="checkbox" id="stCkAll" title="เลือกทั้งหมด"></th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>ห้อง</th><th>เบอร์โทร</th><th class="c">รูป</th><th></th></tr></thead>
+     <tbody>${items.map(s => `<tr><td class="c"><input type="checkbox" data-ck="${esc(s.studentId)}"></td><td>${esc(s.studentId)}</td><td>${esc(fullName(s))}</td><td>${esc(s.grade)}</td><td>${esc(s.room)}</td><td>${esc(s.phone)}</td><td class="c">${s.hasPhoto ? '<span class="chip ok">มี</span>' : '<span class="chip bad">ไม่มี</span>'}</td><td><button class="btn sm ghost" data-ed="${esc(s.studentId)}">แก้ไข</button></td></tr>`).join('') || '<tr><td colspan="8" class="c muted">ไม่พบนักเรียน</td></tr>'}</tbody></table>`;
+    $$('[data-ed]', $('#stList')).forEach(b => b.onclick = () => safe(() => openStudent(b.dataset.ed)));
+    $$('#stList input[data-ck]').forEach(c => c.onchange = updSel);
+    $('#stCkAll').onchange = e => { $$('#stList input[data-ck]').forEach(c => c.checked = e.target.checked); updSel(); };
+    updSel();
   });
+  STU_REFRESH = search;
+  $('#stG').onchange = () => { $('#stR').value = ''; search(); };
+  $('#stR').onchange = search;
   $('#stQBtn').onclick = search; $('#stQ').onkeydown = e => { if (e.key === 'Enter') search(); };
   $('#stNew').onclick = () => renderStudentEditor(null);
+  const byId = id => items.find(s => s.studentId === id) || {};
+  $('#stPromote').onclick = () => safe(async () => {
+    const ids = selected(), map = {};
+    ids.forEach(id => { const s = byId(id); const k = `${s.grade || '-'} → ${nextGradeUI(s.grade) || '-'}`; map[k] = (map[k] || 0) + 1; });
+    const lines = Object.entries(map).map(([k, v]) => `• ${esc(k)} (${v} คน)`).join('\n');
+    if (!await confirmBox(`เลื่อนชั้น +1 นักเรียน ${ids.length} คน (ห้องเดิม)\n${lines}`, 'เลื่อนชั้น')) return;
+    const r = await api('bulkStudents', 'promote', ids); toast(`เลื่อนชั้นแล้ว ${r.count} คน`, 'ok'); search();
+  });
+  $('#stMove').onclick = () => safe(async () => {
+    const ids = selected(), g = $('#stToG').value.trim(), rm = $('#stToR').value.trim();
+    if (!g && !rm) return toast('ระบุชั้นหรือห้องปลายทาง', 'err');
+    if (!await confirmBox(`ย้ายนักเรียน ${ids.length} คน ไป${g ? ' ชั้น ' + esc(g) : ' (ชั้นเดิม)'}${rm ? ' ห้อง ' + esc(rm) : ' (ห้องเดิม)'}?`, 'ย้าย')) return;
+    const r = await api('bulkStudents', 'move', ids, { grade: g, room: rm }); toast(`ย้ายแล้ว ${r.count} คน`, 'ok'); search();
+  });
+  $('#stDel').onclick = () => safe(async () => {
+    const ids = selected();
+    if (!await confirmBox(`ลบนักเรียน ${ids.length} คน พร้อมข้อมูลผู้ปกครอง?\n(ประวัติพฤติกรรมและการมาสายยังเก็บไว้ · ลบแล้วกู้คืนไม่ได้)`, 'ลบ', true)) return;
+    const r = await api('bulkStudents', 'delete', ids); toast(`ลบแล้ว ${r.count} คน`, 'ok'); $('#stEdit').innerHTML = ''; search();
+  });
+  $('#stDelAll').onclick = () => {
+    openModal(`<h3 style="color:var(--bad)">ลบนักเรียนทั้งหมด</h3><p class="mmsg">ลบนักเรียนทุกคนและผู้ปกครองทั้งหมดออกจากระบบ (ประวัติพฤติกรรม/มาสาย และรูปใน Drive ยังเก็บไว้) ลบแล้วกู้คืนไม่ได้</p>
+      <label style="width:100%">พิมพ์คำว่า <b>ลบทั้งหมด</b> เพื่อยืนยัน<input id="daTxt" style="width:100%"></label><div class="row end"><button class="btn ghost" onclick="closeModal()">ยกเลิก</button><button class="btn red" id="daGo" disabled>ลบทั้งหมด</button></div>`);
+    $('#daTxt').oninput = () => $('#daGo').disabled = $('#daTxt').value.trim() !== 'ลบทั้งหมด';
+    $('#daGo').onclick = () => safe(async () => { const r = await api('deleteAllStudents', $('#daTxt').value); closeModal(); toast(`ลบนักเรียนทั้งหมดแล้ว ${r.count} คน`, 'ok'); $('#stEdit').innerHTML = ''; $('#stG').value = ''; $('#stR').value = ''; search(); });
+  };
   $('#stBulkGo').onclick = () => safe(async () => {
     const files = Array.from($('#stBulk').files || []); if (!files.length) return toast('เลือกไฟล์ก่อน', 'err');
     const out = $('#stBulkRes'); let ok = 0; const bad = [];
@@ -608,9 +677,11 @@ PAGES.students = pg => {
       try { await api('uploadStudentPhoto', sid, await resizeImage(f)); ok++; } catch (e) { bad.push(f.name + ' — ' + e.message); }
     }
     out.innerHTML = `<div class="banner ${bad.length ? 'warn' : 'ok'}">สำเร็จ ${ok} รูป${bad.length ? ' · ไม่สำเร็จ ' + bad.length + ' รูป' : ''}</div>${bad.map(esc).join('<br>')}`;
+    search();
   });
   search();
 };
+function nextGradeUI(g) { const m = String(g || '').match(/^(.*?)(\d+)(\D*)$/); return m ? m[1] + (Number(m[2]) + 1) + m[3] : g; }
 async function openStudent(sid) { renderStudentEditor(await api('getStudent', sid)); }
 function renderStudentEditor(b) {
   const box = $('#stEdit'); const s = b ? b.student : {}; const isNew = !b;
@@ -624,11 +695,11 @@ function renderStudentEditor(b) {
   $('#seClose').onclick = () => box.innerHTML = '';
   $('#seSave').onclick = () => safe(async () => {
     const o = {}; $$('#seForm [data-f]').forEach(i => o[i.dataset.f] = i.value);
-    renderStudentEditor(await api('saveStudent', o, isNew)); toast('บันทึกแล้ว', 'ok');
+    renderStudentEditor(await api('saveStudent', o, isNew)); toast('บันทึกแล้ว', 'ok'); if (STU_REFRESH) STU_REFRESH();
   });
   if (isNew) return;
   $('#seUp').onclick = () => pickImage(async d => { await api('uploadStudentPhoto', s.studentId, d); await openStudent(s.studentId); toast('อัปโหลดรูปแล้ว', 'ok'); });
-  $('#seDel').onclick = () => safe(async () => { if (await confirmBox(`ลบนักเรียน ${esc(fullName(s))} และผู้ปกครองทั้งหมด?`, 'ลบ', true)) { await api('deleteStudent', s.studentId); box.innerHTML = ''; toast('ลบแล้ว', 'ok'); } });
+  $('#seDel').onclick = () => safe(async () => { if (await confirmBox(`ลบนักเรียน ${esc(fullName(s))} และผู้ปกครองทั้งหมด?`, 'ลบ', true)) { await api('deleteStudent', s.studentId); box.innerHTML = ''; toast('ลบแล้ว', 'ok'); if (STU_REFRESH) STU_REFRESH(); } });
   const parCard = p => {
     const g = (k, l) => `<label>${l}<input data-f="${k}" value="${esc(p[k] || '')}"></label>`;
     return `<div class="block" data-pid="${esc(p.parentId || '')}"><div class="person">${p.parentId ? `<div style="text-align:center">${img(p.photo, 'md')}<br><button class="btn sm ghost" data-up style="margin-top:6px">รูป</button></div>` : ''}<div style="flex:1"><div class="row">${g('prefix', 'คำนำหน้า')}${g('firstName', 'ชื่อ')}${g('lastName', 'นามสกุล')}${g('phone', 'เบอร์โทร')}${g('relation', 'สถานะกับนักเรียน')}</div>
