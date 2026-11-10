@@ -221,9 +221,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '2.8.0';
+const APP_VERSION = '2.8.1';
 const MIN_SERVER_VERSION = '2.8.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '2.8.1': ['เอาเมนู "บันทึกมาสาย (ไม่ขออนุญาต)" ออก — หน้าตรวจสอบสถานะบันทึกให้อัตโนมัติอยู่แล้ว'],
   '2.8.0': ['ครูลงทะเบียนเป็นครูที่ปรึกษาเองได้ (รหัสลงทะเบียน) พร้อมรูป', 'ตั้งค่าชื่อโรงเรียน/ผู้ลงนาม กด Enter ขึ้นบรรทัดใหม่ได้'],
   '2.7.0': ['ตอนระบบบังคับรูป (ออกบัตร / รับเรื่องขอเข้าสาย) มีปุ่ม "ขอเลื่อน" ส่งรูปภายหลังได้'],
   '2.6.0': ['ตรวจสอบสถานะ: ถ้าไม่มีบัตร/ไม่ได้ขออนุญาตครู บันทึกมาสายไม่ขออนุญาตทันที (ยกเลิกได้ใน 10 นาที)', 'แผงสถิติการมาสายแบบเรียลไทม์ด้านขวา (มีบัตร / ขออนุญาตครู / เข้าสายวันนี้)'],
@@ -663,7 +664,7 @@ const A = ['admin'], ST = ['admin', 'teacher'], AL = ['admin', 'teacher', 'publi
 const MENU = [
   ['ข้อมูลพื้นฐาน', [['importStudents', 'นำเข้าข้อมูลนักเรียน', A], ['students', 'จัดการข้อมูล/รูปนักเรียน', A], ['teachers', 'ครูที่ปรึกษา', A], ['topics', 'หัวข้อพฤติกรรม', A]]],
   ['พฤติกรรม', [['behavior', 'บันทึกพฤติกรรม', ST], ['behaviorReport', 'รายงานพฤติกรรม', ST], ['report', 'รายงานผลรายบุคคล', ST]]],
-  ['การมาสาย', [['approvals', '🔔 อนุมัติบัตรเข้าสาย', A], ['pass', 'ออกบัตรอนุญาตเข้าสาย', ST], ['request', 'ครูรับเรื่องขอเข้าสาย', ST], ['status', 'ตรวจสอบสถานะ / บันทึกเข้า', AL], ['late', 'บันทึกมาสาย (ไม่ขออนุญาต)', AL], ['lateReport', 'รายงานนักเรียนเข้าสาย', ST]]],
+  ['การมาสาย', [['approvals', '🔔 อนุมัติบัตรเข้าสาย', A], ['pass', 'ออกบัตรอนุญาตเข้าสาย', ST], ['request', 'ครูรับเรื่องขอเข้าสาย', ST], ['status', 'ตรวจสอบสถานะ / บันทึกเข้า', AL], ['lateReport', 'รายงานนักเรียนเข้าสาย', ST]]],
   ['ระบบ', [['settings', 'ตั้งค่า', A]]],
   ['ครูที่ปรึกษา', [['register', 'ลงทะเบียนครูที่ปรึกษา', ['register']]]]
 ];
@@ -1322,22 +1323,6 @@ async function unauthorized(s, outEl) {
   return true;
 }
 
-/* ---------- 8.1 บันทึกมาสายไม่ขออนุญาต ---------- */
-PAGES.late = pg => {
-  pg.innerHTML = statsLayout(searchBar('ltQ') + '<div id="ltOut"></div>');
-  startStats();
-  bindSearch('ltQ', async sid => {
-    const r = await api('lateContext', sid); const s = r.student;
-    $('#ltOut').innerHTML = `${r.hasPass || r.hasRequest ? `<div class="banner warn">นักเรียนคนนี้${r.hasPass ? 'มีบัตรอนุญาตเข้าสาย' : 'แจ้งขอเข้าสายกับครูที่ปรึกษา'}สำหรับวันนี้แล้ว ควรบันทึกที่เมนู "ตรวจสอบสถานะ / บันทึกเข้า"</div>` : ''}
-      ${r.todayEntries.length ? `<div class="banner info">วันนี้มีบันทึกเข้าสายแล้ว: ${r.todayEntries.map(e => esc(hm(e.time)) + ' (' + esc(e.type) + ')').join(', ')}</div>` : ''}
-      <div class="grid2">${studentBlock(s, 'xl')}<div class="card"><h3>บันทึกมาสายโดยไม่ขออนุญาต / ไม่มีบัตร</h3>
-       <p>ระบบจะบันทึกวันที่และเวลาปัจจุบัน และหักคะแนนพฤติกรรม <b style="color:var(--bad);font-size:18px">${esc(r.penalty)} คะแนน</b> ทันที</p>
-       <label class="chk" style="font-size:17px"><input type="checkbox" id="ltChk"> ยืนยันบันทึกมาสาย</label><br><button class="btn red" id="ltGo" disabled style="margin-top:10px;font-size:17px">บันทึก</button></div></div>`;
-    $('#ltChk').onchange = () => $('#ltGo').disabled = !$('#ltChk').checked;
-    $('#ltGo').onclick = () => safe(async () => { if (await unauthorized(s, $('#ltOut'))) { $('#ltQ').value = ''; $('#ltQ').focus(); } });
-  });
-};
-
 /* ---------- 8.2 รายงานเข้าสาย ---------- */
 PAGES.lateReport = pg => {
   const t = S.today || new Date().toISOString().slice(0, 10);
@@ -1469,7 +1454,7 @@ function setLoginRole() {
   $('#lgUser').placeholder = r === 'admin' ? 'admin' : 'เช่น 0812345678';
   $('#lgUser').inputMode = r === 'teacher' ? 'tel' : 'text';
   $('#lgPw').placeholder = r === 'teacher' ? 'ใช้เบอร์โทรเดียวกัน' : '';
-  $('#lgHint').textContent = r === 'public' ? 'ไม่ต้องใส่รหัส · ตรวจสอบสถานะเข้าสาย / บันทึกมาสายโดยไม่ขออนุญาต' : r === 'teacher' ? 'ครูใช้เบอร์โทรเป็นทั้งชื่อผู้ใช้และรหัสผ่าน · ครูใหม่ใช้รหัสลงทะเบียนจากโรงเรียน' : '';
+  $('#lgHint').textContent = r === 'public' ? 'ไม่ต้องใส่รหัส · ตรวจสอบสถานะเข้าสาย (ไม่มีบัตร/ไม่ได้ขออนุญาต ระบบบันทึกมาสายให้อัตโนมัติ)' : r === 'teacher' ? 'ครูใช้เบอร์โทรเป็นทั้งชื่อผู้ใช้และรหัสผ่าน · ครูใหม่ใช้รหัสลงทะเบียนจากโรงเรียน' : '';
   $('#lgHint').hidden = !$('#lgHint').textContent;
   $('#lgBtn').textContent = r === 'public' ? 'เข้าใช้งาน' : 'เข้าสู่ระบบ';
 }
