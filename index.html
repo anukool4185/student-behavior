@@ -240,9 +240,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.2.1';
-const MIN_SERVER_VERSION = '3.1.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '3.3.0';
+const MIN_SERVER_VERSION = '3.2.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.3.0': ['มีบัตร/แจ้งครูที่ปรึกษา = สถิติการเข้าโรงเรียน ไม่นับเป็นมาสาย', 'ยกเลิกบัตร / ยกเลิกแล้วออกใหม่', 'เพิ่มรูปให้บัตรที่ออกแล้ว รูปขึ้นทันที พิมพ์ใหม่ได้'],
   '3.2.1': ['ไอคอนแอปเป็นรูปโรงเรียน ชื่อแอป "เข้า รร.-ติดตาม"', 'เอาปุ่มติดตั้งออกจากหน้าเว็บ (เบราว์เซอร์แสดงแถบติดตั้งเอง)'],
   '3.2.0': ['ติดตั้งเป็นแอปบนหน้าจอมือถือ/คอมได้ พร้อมไอคอนใหม่'],
   '3.1.0': ['ตรวจสอบสถานะ: ตั้งวัน/เวลาบันทึกย้อนหลังได้ คงค่าไว้ใช้ต่อเนื่อง ไม่ใช้งานเกินเวลาที่แอดมินกำหนดจะกลับเป็นเวลาปัจจุบัน'],
@@ -376,6 +377,9 @@ function stuPhoto(s, size) {
 }
 function applyPhoto(sid, photo) {
   $$('.upslot').filter(el => el.dataset.sid === sid).forEach(el => { el.outerHTML = `<img class="ph ${el.dataset.size}" src="${photo}">`; });
+  // บัตรที่แสดงอยู่: ใส่รูปทันที (พิมพ์ใหม่ได้เลย)
+  $$('.lc-photo[data-cardsid]').filter(el => el.dataset.cardsid === sid).forEach(el => { el.outerHTML = `<img class="lc-photo" src="${photo}">`; });
+  $$('.cardphoto').filter(el => el.dataset.sid === sid).forEach(el => { el.innerHTML = '<span class="chip ok">✔ เพิ่มรูปแล้ว — กดพิมพ์บัตรใหม่ได้เลย</span>'; });
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-upl],[data-cam],[data-phmenu]'); if (!b) return;
@@ -1065,7 +1069,7 @@ PAGES.report = pg => {
       ${studentBlock(s, 'lg')}<div class="grid2" style="margin-top:12px">${parentsBlock(r.parents)}${teachersBlock(r.teachers)}</div>
       <div style="margin-top:12px">${aggTable(a.positive, a.totalPositive, a.countPositive, 'pos', 'พฤติกรรมทางบวก')}</div>
       <div style="margin-top:12px">${aggTable(a.negative, a.totalNegative, a.countNegative, 'neg', 'พฤติกรรมทางลบ')}</div>
-      ${sumBox(a)}<p class="muted" style="margin-top:10px">จำนวนครั้งที่มาสายทั้งหมด: <b>${r.lateCount}</b> ครั้ง</p></div>`;
+      ${sumBox(a)}<p class="muted" style="margin-top:10px">จำนวนครั้งที่มาสาย (ไม่ขออนุญาต): <b style="color:var(--bad)">${r.lateCount}</b> ครั้ง · เข้าโดยได้รับอนุญาต (มีบัตร/แจ้งครู ไม่นับมาสาย): <b>${r.authCount || 0}</b> ครั้ง</p></div>`;
   });
 };
 
@@ -1074,7 +1078,7 @@ function cardHTML(d) {
   const s = d.student, p = d.pass;
   return `<div class="lcard">
    <div class="lc-head"><div class="lc-school">${esc(d.schoolName)}</div><div class="lc-title">บัตรอนุญาตเข้าสาย</div><div class="lc-date">วันที่ ${esc(thDate(p.date))}</div></div>
-   <div class="lc-top">${s.photo ? `<img class="lc-photo" src="${s.photo}">` : `<div class="lc-photo nophoto">${p.photoPostponed === 'TRUE' ? 'รอรูป<br>(ขอเลื่อน)' : 'ไม่มีรูป'}</div>`}<div class="lc-st"><b>${esc(fullName(s))}</b>รหัส ${esc(s.studentId)}<br>${esc(classRoom(s))}${s.phone ? '<br>โทร ' + esc(s.phone) : ''}</div></div>
+   <div class="lc-top">${s.photo ? `<img class="lc-photo" src="${s.photo}">` : `<div class="lc-photo nophoto" data-cardsid="${esc(s.studentId)}">${p.photoPostponed === 'TRUE' ? 'รอรูป<br>(ขอเลื่อน)' : 'ไม่มีรูป'}</div>`}<div class="lc-st"><b>${esc(fullName(s))}</b>รหัส ${esc(s.studentId)}<br>${esc(classRoom(s))}${s.phone ? '<br>โทร ' + esc(s.phone) : ''}</div></div>
    <div class="lc-time"><span>อนุญาตเข้าโรงเรียนเวลา</span><b>${esc(hm(p.entryTime))} น.</b></div>
    <div class="lc-sec"><i>เหตุผล:</i> ${esc(p.reason)}</div>
    <div class="lc-sec"><i>ผู้ปกครอง:</i> ${d.parents.length ? d.parents.slice(0, 2).map(x => `${esc(fullName(x))}${x.relation ? ' (' + esc(x.relation) + ')' : ''} ${esc(x.phone || '')}`).join('<br>') : '-'}</div>
@@ -1083,19 +1087,34 @@ function cardHTML(d) {
   </div>`;
 }
 function cardWithActions(d) {
-  const id = 'cw' + Math.random().toString(36).slice(2), p = d.pass;
+  const id = 'cw' + Math.random().toString(36).slice(2), p = d.pass, sid = esc(d.student.studentId);
+  const photoBox = d.student.photo ? '' : `<div class="block cardphoto" data-sid="${sid}" data-html2canvas-ignore="true" style="margin-top:8px"><b>ยังไม่มีรูปนักเรียนบนบัตร</b><div class="row" style="margin:6px 0"><button class="btn sm" data-cam="${sid}">📷 ถ่ายรูป</button><button class="btn sm ghost" data-upl="${sid}">📁 อัปโหลดรูป</button></div><div class="muted">เพิ่มแล้วรูปขึ้นบนบัตรทันที พิมพ์ใหม่ได้เลย</div></div>`;
+  const cancelBox = S.role === 'admin' || S.role === 'teacher' ? `<div class="row noprint" style="margin-top:8px"><button class="btn sm ghost danger" data-cancel="${esc(p.passId)}">✖ ยกเลิกบัตร</button>${$('#psReason') || CUR === 'pass' ? `<button class="btn sm ghost" data-reissue="${esc(p.passId)}" data-rdate="${esc(p.date)}" data-rtime="${esc(p.entryTime)}" data-rreason="${esc(p.reason)}">↻ ยกเลิกแล้วออกใหม่</button>` : ''}</div>` : '';
+  if (p.status === 'cancelled') return `<div class="cardwrap"><div style="flex:1"><div class="banner" style="background:#f1f5f9;color:#475569">⊘ บัตรวันที่ ${esc(thDate(p.date))} (เวลา ${esc(hm(p.entryTime))} น.) ถูกยกเลิกแล้ว โดย ${esc(p.cancelledBy || '-')} · ${esc(p.cancelledAt || '')}</div></div></div>`;
   const meta = `${p.photoPostponed === 'TRUE' && !d.student.photo ? '<div><span class="chip warn">ขอเลื่อนส่งรูปนักเรียน</span></div>' : ''}<div class="muted">ออกโดย ${esc(p.issuedBy)} · ${esc(p.createdAt)}${p.approvedBy ? ' · ' + (p.status === 'rejected' ? 'ไม่อนุมัติโดย ' : 'อนุมัติโดย ') + esc(p.approvedBy) : ''}</div>`;
   if (p.status === 'pending') {
     const adminBox = S.role === 'admin' ? `<div class="block" style="margin-top:8px"><h4>อนุมัติบัตรใบนี้</h4><div class="row"><input type="password" placeholder="รหัสลายเซ็น (ไม่ใส่ก็ได้)" data-apcode="${esc(p.passId)}" style="width:200px"><button class="btn green" data-approve="${esc(p.passId)}">✔ อนุญาตออกบัตร</button><button class="btn red" data-reject="${esc(p.passId)}">✖ ไม่อนุญาต</button></div><p class="muted">กดอนุญาตแล้วลายเซ็นจะปรากฏบนบัตรเอง</p></div>` : '';
-    return `<div class="cardwrap"><div id="${id}">${cardHTML(d)}</div><div style="flex:1;min-width:240px"><div class="banner warn">⏳ รอแอดมินอนุมัติ — ยังพิมพ์บัตรไม่ได้</div>${meta}${adminBox}</div></div>`;
+    return `<div class="cardwrap"><div id="${id}">${cardHTML(d)}</div><div style="flex:1;min-width:240px"><div class="banner warn">⏳ รอแอดมินอนุมัติ — ยังพิมพ์บัตรไม่ได้</div>${meta}${adminBox}${photoBox}${cancelBox}</div></div>`;
   }
   if (p.status === 'rejected') return `<div class="cardwrap"><div style="flex:1"><div class="banner bad">✖ แอดมินไม่อนุมัติบัตรวันที่ ${esc(thDate(p.date))} (เวลา ${esc(hm(p.entryTime))} น.)</div>${meta}</div></div>`;
   return `<div class="cardwrap"><div id="${id}">${cardHTML(d)}</div><div>
     <div>${p.signed === 'TRUE' ? '<span class="chip ok">อนุมัติแล้ว · มีลายเซ็น</span>' : '<span class="chip warn">อนุมัติแล้ว · ไม่มีลายเซ็น (ยังไม่ได้อัปโหลดลายเซ็น)</span>'}</div>${meta}
     ${actionBar({ el: () => $('#' + id + ' .lcard'), name: 'บัตรเข้าสาย_' + d.student.studentId + '_' + p.date, card: true, printLabel: 'พิมพ์บัตร' })}
+    ${photoBox}${cancelBox}
   </div></div>`;
 }
+let REISSUE = null;
 function wireApprove(root, after) {
+  $$('[data-cancel]', root).forEach(b => b.onclick = () => safe(async () => {
+    if (!await confirmBox('ยกเลิกบัตรใบนี้? บัตรที่ยกเลิกจะใช้บันทึกเข้าโรงเรียนไม่ได้', 'ยกเลิกบัตร', true)) return;
+    const d = await api('cancelPass', b.dataset.cancel); toast('ยกเลิกบัตรแล้ว', 'ok'); refreshBell(); after(d);
+  }));
+  $$('[data-reissue]', root).forEach(b => b.onclick = () => safe(async () => {
+    if (!await confirmBox('ยกเลิกบัตรใบนี้ แล้วออกบัตรใหม่ (ใช้ข้อมูลเดิมให้แก้ไขได้)?', 'ยกเลิกแล้วออกใหม่', true)) return;
+    const d = await api('cancelPass', b.dataset.reissue);
+    REISSUE = { studentId: d.student.studentId, date: b.dataset.rdate, time: b.dataset.rtime, reason: b.dataset.rreason };
+    toast('ยกเลิกบัตรเดิมแล้ว — แก้ไขข้อมูลแล้วกดออกบัตรใหม่', 'ok'); refreshBell(); after(d);
+  }));
   $$('[data-approve]', root).forEach(b => b.onclick = () => safe(async () => {
     const code = $(`[data-apcode="${b.dataset.approve}"]`, root).value;
     const d = await api('approvePass', b.dataset.approve, code); toast('อนุมัติแล้ว ลายเซ็นปรากฏบนบัตร', 'ok'); refreshBell(); after(d);
@@ -1203,7 +1222,7 @@ PAGES.approvals = async pg => {
   pg.innerHTML = list.length ? `<p class="muted">มีคำขอทำบัตรรออนุมัติ ${list.length} รายการ</p>` + list.map(d => `<div class="card" data-item>${studentBlock(d.student, 'md')}<div class="row" style="margin:10px 0"><div class="block" style="flex:1"><b>เหตุผล:</b> ${esc(d.pass.reason)}<br><b>วันที่:</b> ${esc(thDate(d.pass.date))} · <b>เวลาเข้า:</b> <span style="color:var(--bad);font-weight:800">${esc(hm(d.pass.entryTime))} น.</span></div></div>${cardWithActions(d)}</div>`).join('')
     : '<div class="banner ok">ไม่มีคำขอทำบัตรที่รออนุมัติ</div>';
   $$('[data-item]', pg).forEach(item => wireApprove(item, d => {
-    item.innerHTML = d ? `<div class="banner ok">อนุมัติแล้ว</div>${cardWithActions(d)}` : '<div class="banner bad">ไม่อนุมัติแล้ว</div>';
+    item.innerHTML = !d ? '<div class="banner bad">ไม่อนุมัติแล้ว</div>' : d.pass.status === 'cancelled' ? cardWithActions(d) : `<div class="banner ok">อนุมัติแล้ว</div>${cardWithActions(d)}`;
   }));
 };
 
@@ -1226,6 +1245,10 @@ PAGES.pass = pg => {
        <div class="row"><button class="btn" id="psGo" ${noPhoto ? 'disabled' : ''}>${S.role === 'admin' ? 'ออกบัตร' : 'ส่งคำขอทำบัตร'}</button>${noPhoto ? `<button class="btn postpone on" id="psLater">⏳ ขอเลื่อนรูป แล้ว${S.role === 'admin' ? 'ออกบัตร' : 'ส่งคำขอทำบัตร'}</button>` : ''}</div>
        ${noPhoto ? '<p class="muted">ขอเลื่อนรูป: บัตรจะออกได้โดยช่องรูปเป็น "รอรูป" เมื่อเพิ่มรูปนักเรียนภายหลัง รูปจะขึ้นบนบัตรเองเมื่อพิมพ์ใหม่</p>' : ''}</div><div id="psCard" class="card" hidden></div>`;
     if ($('#psOld')) wireApprove($('#psOld'), () => load(s.studentId));
+    if (REISSUE && REISSUE.studentId === s.studentId) {
+      $('#psAllow').checked = true; $('#psDate').value = REISSUE.date >= r.today ? REISSUE.date : r.today; $('#psTime').value = hm(REISSUE.time); $('#psReason').value = REISSUE.reason;
+      REISSUE = null; setTimeout(() => $('#psReason').scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+    }
     const issue = postponePhoto => safe(async () => {
       if (noPhoto && !postponePhoto) return alertBox('นักเรียนยังไม่มีรูปในระบบ — เพิ่มรูป หรือกด "ขอเลื่อนรูป"');
       if (postponePhoto && !await confirmBox('ออกบัตรโดยขอเลื่อนส่งรูปนักเรียนภายหลัง?', 'ขอเลื่อนรูป')) return;
@@ -1288,7 +1311,7 @@ PAGES.request = pg => {
 /* ---------- 7. ตรวจสอบสถานะ ---------- */
 function entriesTableHTML(rows) {
   if (!rows.length) return '<p class="muted">ยังไม่มีนักเรียนเข้าสายในวันนี้</p>';
-  const typeChip = t => `<span class="chip ${t === 'ไม่ขออนุญาต' ? 'bad' : t === 'มีบัตรอนุญาต' ? 'ok' : 'info'}">${esc(t)}</span>`;
+  const typeChip = t => `<span class="chip ${t === 'ไม่ขออนุญาต' ? 'bad' : t === 'มีบัตรอนุญาต' ? 'ok' : 'info'}">${esc(t)}</span>${t === 'ไม่ขออนุญาต' ? '' : '<div class="muted" style="font-size:11px">ไม่นับมาสาย</div>'}`;
   return `<table class="t"><thead><tr><th>รูป</th><th>รหัส / บทบาท</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>ชั้น</th><th>ห้อง</th><th>เบอร์โทร</th><th>ประเภท</th><th>เวลาเข้า</th><th class="noprint" data-html2canvas-ignore="true">ลบ</th></tr></thead><tbody>${rows.map((r, i) => {
     const s = r.student, rs = 1 + r.parents.length + r.teachers.length;
     const sub = (lab, p) => `<tr class="sub"><td>${lab}</td><td>${esc(p.prefix)}</td><td>${esc(p.firstName)}</td><td>${esc(p.lastName)}</td><td colspan="2"></td><td>${esc(p.phone)}</td><td colspan="2"></td></tr>`;
@@ -1298,9 +1321,9 @@ function entriesTableHTML(rows) {
   }).join('')}</tbody></table>`;
 }
 function entriesAoa(d) {
-  const a = [['รายการนักเรียนเข้าสาย วันที่ ' + thDate(d.date)], ['รหัส/บทบาท', 'คำนำหน้า', 'ชื่อ', 'นามสกุล', 'ชั้น', 'ห้อง', 'เบอร์โทร', 'ประเภท', 'เวลาเข้า']];
+  const a = [['รายการบันทึกเข้าโรงเรียน วันที่ ' + thDate(d.date)], ['รหัส/บทบาท', 'คำนำหน้า', 'ชื่อ', 'นามสกุล', 'ชั้น', 'ห้อง', 'เบอร์โทร', 'ประเภท', 'เวลาเข้า', 'นับเป็นมาสาย']];
   d.rows.forEach(r => {
-    const s = r.student; a.push([s.studentId, s.prefix, s.firstName, s.lastName, s.grade, s.room, s.phone, r.entry.type, hm(r.entry.time)]);
+    const s = r.student; a.push([s.studentId, s.prefix, s.firstName, s.lastName, s.grade, s.room, s.phone, r.entry.type, hm(r.entry.time), r.entry.type === 'ไม่ขออนุญาต' ? 'นับ' : 'ไม่นับ']);
     r.parents.forEach(p => a.push(['ผู้ปกครอง' + (p.relation ? ' (' + p.relation + ')' : ''), p.prefix, p.firstName, p.lastName, '', '', p.phone]));
     r.teachers.forEach(t => a.push(['ครูที่ปรึกษา', t.prefix, t.firstName, t.lastName, '', '', t.phone]));
   });
@@ -1322,10 +1345,10 @@ function statsHTML(r) {
   const pct = (a, b) => b ? Math.min(100, Math.round(a * 100 / b)) : 0;
   const lab = STATS_SCOPE && STATS_SCOPE.label ? ` <span style="color:var(--bad)">${esc(STATS_SCOPE.label)}</span>` : '';
   return `<div class="sthead">📊 สถิติการมาสาย${curAt() ? '' : 'วันนี้'}${lab}<small>${curAt() ? '<b style="color:var(--warn)">⏪ ย้อนหลัง</b> ' : ''}${esc(thDate(r.date))} · อัปเดต ${esc(String(r.time).slice(0, 8))} <span class="live"></span></small></div>
-   <div class="stb st-black"><div class="stt">นักเรียนทั้งหมด${lab ? ' ' + esc(STATS_SCOPE.label) : ''}</div><div class="stn">${r.studentCount}<small> คน</small></div><div class="sts">เข้าสาย${curAt() ? 'วันนั้น' : 'วันนี้'} <b>${r.totalLate}</b> คน</div></div>
+   <div class="stb st-black"><div class="stt">นักเรียนทั้งหมด${lab ? ' ' + esc(STATS_SCOPE.label) : ''}</div><div class="stn">${r.studentCount}<small> คน</small></div><div class="sts">มาสาย <b>${r.unauthCount}</b> · ได้รับอนุญาต <b>${r.authEntered || 0}</b> คน</div></div>
    <div class="stb st-green"><div class="stt">มีบัตรอนุญาต</div><div class="stn">${r.passCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.passEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.passEntered, r.passCount)}%"></i></div></div>
    <div class="stb st-orange"><div class="stt">ขออนุญาตครูไว้</div><div class="stn">${r.reqCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.reqEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.reqEntered, r.reqCount)}%"></i></div></div>
-   <div class="stb st-pink"><div class="stt">เข้าสายวันนี้ (ไม่ขออนุญาต)</div><div class="stn">${r.unauthCount}<small> คน</small></div><div class="sts">รวมเข้าสายทุกประเภท <b>${r.totalLate}</b> คน</div></div>`;
+   <div class="stb st-pink"><div class="stt">มาสาย${curAt() ? '' : 'วันนี้'} (ไม่ขออนุญาต)</div><div class="stn">${r.unauthCount}<small> คน</small></div><div class="sts">เข้าโดยได้รับอนุญาต <b>${r.authEntered || 0}</b> คน <span style="font-size:12px">(ไม่นับมาสาย)</span></div></div>`;
 }
 async function refreshStats() {
   const el = $('#statsPanel'); if (!el) return;
@@ -1354,7 +1377,7 @@ function bdTouch() { if (!BACKDATE || bdExpired()) return; BACKDATE.last = Date.
 
 PAGES.status = pg => {
   pg.innerHTML = statsLayout(`<div id="scTime" class="timebar"></div>${searchBar('scQ', 'พิมพ์รหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง เพื่อตรวจสอบสถานะ', 'ตรวจสอบ')}<div id="scOut"></div>
-   <div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">รายการนักเรียนเข้าสาย</h3><div class="row" style="margin:0"><input type="date" id="scDate" value="${S.today}"><button class="btn ghost" id="scRef">โหลด</button></div></div><div id="scTbl"></div></div>`);
+   <div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">รายการบันทึกเข้าโรงเรียน</h3><div class="row" style="margin:0"><input type="date" id="scDate" value="${S.today}"><button class="btn ghost" id="scRef">โหลด</button></div></div><div id="scTbl"></div></div>`);
   startStats();
   const lateTopic = () => (S.topics.find(t => t.system === 'LATE') || { points: '-5' }).points;
   /* ---- แถบวันเวลา ---- */
@@ -1417,7 +1440,7 @@ PAGES.status = pg => {
     const d = await api('entriesOfDay', $('#scDate').value, sc.grade || '', sc.room || '');
     const scopeChip = STATS_SCOPE ? ` · <span style="color:var(--bad);font-weight:800">${esc(STATS_SCOPE.label)}</span> <a href="#" id="scAll" class="noprint" style="font-size:13px">✕ ดูทั้งหมด</a>` : ' · ทุกชั้น/ห้อง';
     $('#scTbl').innerHTML = actionBar({ el: () => $('#scRep'), name: 'นักเรียนเข้าสาย_' + d.date, excel: () => entriesAoa(d) }) +
-      `<div class="rep" id="scRep" style="padding:0;border:0">${reportHead('รายการนักเรียนเข้าสาย', 'วันที่ ' + esc(thDate(d.date)) + scopeChip + ' · ' + d.rows.length + ' คน', localStamp())}<div class="scroll">${entriesTableHTML(d.rows)}</div></div>`;
+      `<div class="rep" id="scRep" style="padding:0;border:0">${reportHead('รายการบันทึกเข้าโรงเรียน', 'วันที่ ' + esc(thDate(d.date)) + scopeChip + ` · มาสาย (ไม่ขออนุญาต) <b style="color:var(--bad)">${d.rows.filter(x => x.entry.type === 'ไม่ขออนุญาต').length}</b> คน · ได้รับอนุญาต (ไม่นับมาสาย) <b style="color:var(--ok)">${d.rows.filter(x => x.entry.type !== 'ไม่ขออนุญาต').length}</b> คน`, localStamp())}<div class="scroll">${entriesTableHTML(d.rows)}</div></div>`;
     if ($('#scAll')) $('#scAll').onclick = e => { e.preventDefault(); $('#scQG').value = ''; fillClassDropdowns($('#scQG'), $('#scQR')); $('#scQR').value = ''; setScope('', ''); };
     $$('[data-delent]', $('#scTbl')).forEach(b => b.onclick = () => safe(async () => {
       const unauth = b.dataset.deltype === 'ไม่ขออนุญาต';
@@ -1501,24 +1524,31 @@ async function unauthorized(s, outEl) {
 /* ---------- 8.2 รายงานเข้าสาย ---------- */
 PAGES.lateReport = pg => {
   const t = S.today || new Date().toISOString().slice(0, 10);
+  const AUTH = e => e.type !== 'ไม่ขออนุญาต';
   pg.innerHTML = `<div class="tabs noprint"><button class="on" data-t="one">แบบที่ 1 รายบุคคล</button><button data-t="all">แบบที่ 2 ทั้งหมดตามช่วงเวลา</button></div>
+   <p class="muted noprint" style="margin-top:-6px">นับเป็น "มาสาย" เฉพาะเข้าสายโดยไม่ขออนุญาต · มีบัตรอนุญาต / แจ้งครูที่ปรึกษา เป็นสถิติการเข้าโรงเรียน ไม่นับเป็นมาสาย</p>
    <div id="lr1">${searchBar('lrQ')}<div id="lr1Out"></div></div>
    <div id="lr2" hidden><div class="card noprint"><div class="row"><label>ตั้งแต่วันที่<input type="date" id="lrFrom" value="${t.slice(0, 8)}01"></label><label>ถึงวันที่<input type="date" id="lrTo" value="${t}"></label>
-    <label>ประเภท<select id="lrType"><option value="">ทั้งหมด</option><option>ไม่ขออนุญาต</option><option>มีบัตรอนุญาต</option><option>แจ้งครูที่ปรึกษา</option></select></label><button class="btn" id="lrGo">ค้นหา</button></div></div><div id="lr2Out"></div></div>`;
+    <label>แสดง<select id="lrType"><option value="late">มาสาย (ไม่ขออนุญาต)</option><option value="auth">เข้าโดยได้รับอนุญาต (สถิติ ไม่นับมาสาย)</option><option value="มีบัตรอนุญาต">เฉพาะมีบัตรอนุญาต</option><option value="แจ้งครูที่ปรึกษา">เฉพาะแจ้งครูที่ปรึกษา</option></select></label><button class="btn" id="lrGo">ค้นหา</button></div></div><div id="lr2Out"></div></div>`;
   $$('.tabs button', pg).forEach(b => b.onclick = () => { $$('.tabs button', pg).forEach(x => x.classList.toggle('on', x === b)); $('#lr1').hidden = b.dataset.t !== 'one'; $('#lr2').hidden = b.dataset.t !== 'all'; });
   bindSearch('lrQ', async sid => {
     const r = await api('lateReportStudent', sid); const s = r.student;
-    const byT = Object.entries(r.byType).map(([k, v]) => `${esc(k)} ${v} ครั้ง`).join(' · ');
-    $('#lr1Out').innerHTML = actionBar({ el: () => $('#lr1Rep'), name: 'ประวัติเข้าสาย_' + s.studentId, excel: () => [['รหัสนักเรียน', s.studentId, 'ชื่อ-สกุล', fullName(s), 'ชั้น', s.grade, 'ห้อง', s.room], ['รวมเข้าสาย', r.count, 'ครั้ง'], [], ['ที่', 'วันที่', 'เวลา', 'ประเภท'], ...r.entries.map((e, i) => [i + 1, thDate(e.date), hm(e.time), e.type])] }) +
+    const late = r.entries.filter(e => !AUTH(e));
+    $('#lr1Out').innerHTML = actionBar({ el: () => $('#lr1Rep'), name: 'ประวัติเข้าสาย_' + s.studentId, excel: () => [['รหัสนักเรียน', s.studentId, 'ชื่อ-สกุล', fullName(s), 'ชั้น', s.grade, 'ห้อง', s.room], ['มาสาย (ไม่ขออนุญาต)', r.count, 'ครั้ง'], ['เข้าโดยได้รับอนุญาต (ไม่นับมาสาย)', r.authCount, 'ครั้ง'], [], ['ที่', 'วันที่', 'เวลา', 'ประเภท', 'นับเป็นมาสาย'], ...r.entries.map((e, i) => [i + 1, thDate(e.date), hm(e.time), e.type, AUTH(e) ? 'ไม่นับ' : 'นับ'])] }) +
       `<div class="rep" id="lr1Rep">${reportHead('รายงานการเข้าสายรายบุคคล', '', r.printedAt)}<div class="grid2">${studentBlock(s, 'lg')}${parentsBlock(r.parents)}</div>
-       <div class="sumbox"><div style="background:var(--bad2);color:var(--bad)">รวมจำนวนครั้งที่เข้าสาย<div class="big-num">${r.count} ครั้ง</div><div style="font-size:13px">${byT}</div></div></div>
-       <table class="t" style="margin-top:12px"><thead><tr><th class="c">ที่</th><th>วันที่</th><th>เวลา</th><th>ประเภท</th></tr></thead><tbody>${r.entries.map((e, i) => `<tr><td class="c">${i + 1}</td><td>${esc(thDate(e.date))}</td><td>${esc(hm(e.time))} น.</td><td>${esc(e.type)}</td></tr>`).join('') || '<tr><td colspan="4" class="c muted">ไม่เคยเข้าสาย</td></tr>'}</tbody></table></div>`;
+       <div class="sumbox"><div style="background:var(--bad2);color:var(--bad)">จำนวนครั้งที่มาสาย (ไม่ขออนุญาต)<div class="big-num">${r.count} ครั้ง</div></div>
+        <div style="background:var(--ok2);color:var(--ok)">เข้าโดยได้รับอนุญาต (มีบัตร/แจ้งครู)<div class="big-num">${r.authCount} ครั้ง</div><div style="font-size:13px">สถิติ · ไม่นับเป็นมาสาย</div></div></div>
+       <table class="t" style="margin-top:12px"><thead><tr><th class="c">ที่</th><th>วันที่</th><th>เวลา</th><th>ประเภท</th><th class="c">นับเป็นมาสาย</th></tr></thead><tbody>${r.entries.map((e, i) => `<tr${AUTH(e) ? ' style="color:var(--mut)"' : ''}><td class="c">${i + 1}</td><td>${esc(thDate(e.date))}</td><td>${esc(hm(e.time))} น.</td><td>${esc(e.type)}</td><td class="c">${AUTH(e) ? '<span class="chip ok">ไม่นับ</span>' : '<span class="chip bad">นับ</span>'}</td></tr>`).join('') || '<tr><td colspan="5" class="c muted">ไม่มีประวัติการเข้าสาย</td></tr>'}</tbody></table></div>`;
   });
   $('#lrGo').onclick = () => safe(async () => {
     const r = await api('lateReportRange', $('#lrFrom').value, $('#lrTo').value, $('#lrType').value);
-    const sub = `ช่วงวันที่ ${esc(thDate(r.from) || 'เริ่มต้น')} – ${esc(thDate(r.to) || 'ปัจจุบัน')}${r.type ? ' · ประเภท: ' + esc(r.type) : ''} · ${r.rows.length} คน รวม ${r.total} ครั้ง`;
-    $('#lr2Out').innerHTML = actionBar({ el: () => $('#lr2Rep'), name: 'รายงานมาสาย_' + r.from + '_' + r.to, excel: () => [['รายงานนักเรียนมาสาย ' + sub.replace(/<[^>]+>/g, '')], ['ที่', 'รหัสนักเรียน', 'คำนำหน้า', 'ชื่อ', 'สกุล', 'ชั้น', 'ห้อง', 'จำนวนครั้งที่เข้าสาย'], ...r.rows.map((x, i) => [i + 1, x.student.studentId, x.student.prefix, x.student.firstName, x.student.lastName, x.student.grade, x.student.room, x.count])] }) +
-      `<div class="rep" id="lr2Rep">${reportHead('รายงานนักเรียนมาสาย', sub, r.printedAt)}<table class="t"><thead><tr><th class="c">ที่</th><th>รูป</th><th>รหัสนักเรียน</th><th>ชื่อ</th><th>สกุล</th><th class="c">ชั้น</th><th class="c">ห้อง</th><th class="c">จำนวนครั้งที่เข้าสาย</th></tr></thead><tbody>${r.rows.map((x, i) => `<tr><td class="c">${i + 1}</td><td>${stuPhoto(x.student, 'sm')}</td><td>${esc(x.student.studentId)}</td><td>${esc((x.student.prefix || '') + x.student.firstName)}</td><td>${esc(x.student.lastName)}</td><td class="c">${esc(x.student.grade)}</td><td class="c">${esc(x.student.room)}</td><td class="c"><b>${x.count}</b></td></tr>`).join('') || '<tr><td colspan="8" class="c muted">ไม่พบข้อมูล</td></tr>'}</tbody></table></div>`;
+    const isLate = r.type === 'late';
+    const what = isLate ? 'มาสาย (ไม่ขออนุญาต)' : r.type === 'auth' ? 'เข้าโดยได้รับอนุญาต (ไม่นับมาสาย)' : r.type + ' (ไม่นับมาสาย)';
+    const title = isLate ? 'รายงานนักเรียนมาสาย' : 'สถิติการเข้าโรงเรียนโดยได้รับอนุญาต';
+    const sub = `ช่วงวันที่ ${esc(thDate(r.from) || 'เริ่มต้น')} – ${esc(thDate(r.to) || 'ปัจจุบัน')} · ${esc(what)} · ${r.rows.length} คน รวม ${r.total} ครั้ง`;
+    const colName = isLate ? 'จำนวนครั้งที่มาสาย' : 'จำนวนครั้ง';
+    $('#lr2Out').innerHTML = actionBar({ el: () => $('#lr2Rep'), name: (isLate ? 'รายงานมาสาย_' : 'สถิติเข้าโดยได้รับอนุญาต_') + r.from + '_' + r.to, excel: () => [[title + ' ' + sub.replace(/<[^>]+>/g, '')], ['ที่', 'รหัสนักเรียน', 'คำนำหน้า', 'ชื่อ', 'สกุล', 'ชั้น', 'ห้อง', colName, isLate ? 'เข้าโดยได้รับอนุญาต (ไม่นับ)' : 'มาสาย (ไม่ขออนุญาต)'], ...r.rows.map((x, i) => [i + 1, x.student.studentId, x.student.prefix, x.student.firstName, x.student.lastName, x.student.grade, x.student.room, x.count, isLate ? x.auth : x.late])] }) +
+      `<div class="rep" id="lr2Rep">${reportHead(title, sub, r.printedAt)}<table class="t"><thead><tr><th class="c">ที่</th><th>รูป</th><th>รหัสนักเรียน</th><th>ชื่อ</th><th>สกุล</th><th class="c">ชั้น</th><th class="c">ห้อง</th><th class="c">${colName}</th><th class="c muted">${isLate ? 'ได้รับอนุญาต (ไม่นับ)' : 'มาสาย'}</th></tr></thead><tbody>${r.rows.map((x, i) => `<tr><td class="c">${i + 1}</td><td>${stuPhoto(x.student, 'sm')}</td><td>${esc(x.student.studentId)}</td><td>${esc((x.student.prefix || '') + x.student.firstName)}</td><td>${esc(x.student.lastName)}</td><td class="c">${esc(x.student.grade)}</td><td class="c">${esc(x.student.room)}</td><td class="c"><b style="color:${isLate ? 'var(--bad)' : 'var(--ok)'}">${x.count}</b></td><td class="c muted">${isLate ? x.auth : x.late}</td></tr>`).join('') || '<tr><td colspan="9" class="c muted">ไม่พบข้อมูล</td></tr>'}</tbody></table></div>`;
   });
 };
 
