@@ -56,7 +56,7 @@ nav .g{font-size:12px;color:var(--mut);padding:12px 18px 4px;font-weight:800;tex
 nav a{display:block;padding:9px 18px;color:#0f172a;text-decoration:none;cursor:pointer;border-left:3px solid transparent}
 nav a:hover{background:#f8fafc}nav a.on{background:var(--pri2);border-left-color:var(--pri);font-weight:700;color:var(--pri)}
 main{flex:1;padding:20px;min-width:0;max-width:1200px}
-@media(max-width:900px){#burger{display:block}nav{position:fixed;top:52px;bottom:0;left:0;z-index:15;transform:translateX(-100%);transition:.2s;overflow:auto;box-shadow:2px 0 10px #0002}nav.open{transform:none}main{padding:12px}}
+@media(max-width:960px),(max-height:500px) and (orientation:landscape){#burger{display:block}nav{position:fixed;top:var(--hdh,52px);bottom:0;left:0;z-index:15;transform:translateX(-100%);transition:.2s;overflow:auto;box-shadow:2px 0 10px #0002}nav.open{transform:none}main{padding:12px}}
 /* search */
 .search{display:flex;gap:8px;margin-bottom:14px}.search input{flex:1;min-width:0;font-size:20px;padding:12px 14px}.search .btn{font-size:17px}
 /* person */
@@ -157,7 +157,7 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 .acsel{display:flex;gap:6px}.acsel select{font-size:16px;padding:10px 8px;min-width:96px}
 .search{position:relative}
 .acwrap{flex:1;min-width:220px;display:flex}
-@media(max-width:600px){.acsel{width:100%}.acsel select{flex:1}.acwrap{min-width:0}
+@media(max-width:600px){.acwrap{min-width:0}
  .aci{flex-wrap:wrap;gap:2px 10px}.acid{min-width:0}.acnm{flex:1 1 calc(100% - 90px)}.accr{margin-left:auto}}.acwrap input{flex:1;min-width:0}
 .acl{position:absolute;top:100%;left:0;right:0;z-index:30;background:#fff;border:1px solid #cbd5e1;border-radius:10px;margin-top:4px;box-shadow:0 10px 30px #0f172a26;max-height:min(420px,60vh);overflow:auto}
 .aci{display:flex;gap:10px;align-items:center;padding:9px 14px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:15px}
@@ -181,13 +181,38 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 .sts{font-size:19px;font-weight:600}.sts b{font-size:30px}
 .stbar{height:7px;background:#ffffff44;border-radius:6px;margin-top:8px;overflow:hidden}.stbar i{display:block;height:100%;background:#fff;border-radius:6px}
 @media(max-width:1000px){.withstats{grid-template-columns:minmax(0,1fr)}.wsmain{min-width:0}.stats{position:static;order:-1;flex-direction:row;flex-wrap:wrap;gap:8px}.sthead{width:100%}.stb{flex:1 1 0;min-width:0;padding:10px 12px}.stn{font-size:40px}.sts b{font-size:22px}.sts{font-size:15px}}
-@media(max-width:600px){.stb{padding:8px 9px;border-radius:12px}.stt{font-size:12px;line-height:1.2;min-height:29px}.stn{font-size:32px}.stn small{font-size:13px}.sts{font-size:12px}.sts b{font-size:17px}.stbar{height:5px}}
+@media(max-width:600px){.stb{padding:8px 9px;border-radius:12px;flex:1 1 calc(50% - 8px)!important}.stt{font-size:12px;line-height:1.2;min-height:29px}.stn{font-size:32px}.stn small{font-size:13px}.sts{font-size:12px}.sts b{font-size:17px}.stbar{height:5px}}
 .btn.postpone{background:#fff;color:var(--warn);border:1px solid #fcd34d}.btn.postpone.on{background:var(--warn2);border-color:#f59e0b}
 #hdSchool,#lgSchool,.rhead .s1,.lc-school,.lc-sign div,.ml{white-space:pre-line}
 .applogo{width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 4px 8px #1e3a8a33)}
 .hdlogo{width:34px;height:34px;object-fit:contain}
 .installbox{border:1px dashed #93c5fd;background:#eff6ff;border-radius:10px;padding:10px 12px;font-size:13px;text-align:center;color:#1e3a8a}
 .installbox .btn{margin-bottom:4px}
+.toolbar{display:flex;flex-wrap:nowrap;gap:6px;align-items:center;margin-bottom:8px}
+.toolbar input[type=date]{flex:1 1 auto;min-width:0;max-width:180px}
+.toolbar .btn{flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ---------- มือถือ (แนวตั้ง/แนวนอน): ทุกแถวอยู่บรรทัดเดียว ย่อขนาดอัตโนมัติ ---------- */
+@media(max-width:960px),(max-height:500px) and (orientation:landscape){
+  header{flex-wrap:wrap;gap:6px 8px;padding:8px 10px}
+  header .hdlogo{order:1;width:30px;height:30px;flex:0 0 auto}
+  header .t{order:2;flex:1 1 calc(100% - 44px);min-width:0;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis;font-size:clamp(14px,4.2vw,19px)}
+  header #burger{order:3;padding:0 4px;font-size:22px;flex:0 0 auto}
+  header #hdBell{order:4;flex:0 0 auto}
+  header .r{order:5;margin-left:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;max-width:55vw;font-size:clamp(11px,3.3vw,13px)}
+  header #logoutBtn{order:6;flex:0 0 auto;padding:4px 10px;font-size:clamp(11px,3.3vw,13px)}
+  .search{flex-wrap:nowrap;gap:5px}
+  .acsel{flex:0 1 auto;gap:5px;min-width:0}
+  .acsel select{width:clamp(62px,17vw,110px);min-width:0;padding:8px 4px;font-size:clamp(12px,3.4vw,15px)}
+  .search input{font-size:clamp(13px,3.8vw,18px);padding:8px 10px}
+  .search .btn{flex:0 0 auto;padding:8px clamp(8px,2.4vw,14px);font-size:clamp(12px,3.6vw,16px)}
+  .actions,.toolbar{flex-wrap:nowrap;gap:5px}
+  .actions .btn,.toolbar .btn{flex:1 1 0;min-width:0;padding:7px 4px;font-size:clamp(11px,3.2vw,14px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .toolbar input[type=date]{flex:1.6 1 0;font-size:clamp(12px,3.4vw,15px);padding:6px 4px}
+}
+.toolbar .xs{display:none}
+@media(max-width:480px){.toolbar .lbl,.toolbar .xl{display:none}.toolbar .xs{display:inline}
+  .toolbar .btn{flex:0 0 auto!important;padding:7px 7px!important;font-size:12px!important}
+  .toolbar input[type=date]{flex:1 1 auto!important;font-size:12px!important;padding:6px 3px!important}}
 .lc-pending{color:#dc2626;font-weight:800;font-size:8pt}
 [hidden]{display:none!important}
 #printArea{display:none}
@@ -240,9 +265,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.3.0';
+const APP_VERSION = '3.3.1';
 const MIN_SERVER_VERSION = '3.2.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.3.1': ['ปรับหน้ามือถือ: แถบบน 2 แถว ช่องค้นหา และแถบปุ่มอยู่บรรทัดเดียว ย่อขนาดอัตโนมัติ'],
   '3.3.0': ['มีบัตร/แจ้งครูที่ปรึกษา = สถิติการเข้าโรงเรียน ไม่นับเป็นมาสาย', 'ยกเลิกบัตร / ยกเลิกแล้วออกใหม่', 'เพิ่มรูปให้บัตรที่ออกแล้ว รูปขึ้นทันที พิมพ์ใหม่ได้'],
   '3.2.1': ['ไอคอนแอปเป็นรูปโรงเรียน ชื่อแอป "เข้า รร.-ติดตาม"', 'เอาปุ่มติดตั้งออกจากหน้าเว็บ (เบราว์เซอร์แสดงแถบติดตั้งเอง)'],
   '3.2.0': ['ติดตั้งเป็นแอปบนหน้าจอมือถือ/คอมได้ พร้อมไอคอนใหม่'],
@@ -449,7 +475,7 @@ function actionBar(opts) {
     $('.a-share', b).onclick = () => safe(() => doShare(opts.el(), opts.name, opts.card));
     if (opts.excel) $('.a-xls', b).onclick = () => doExcel(opts.excel(), opts.name);
   }, 0);
-  return `<div class="actions noprint" id="${id}"><button class="btn ghost a-print">🖨 ${opts.printLabel || 'พิมพ์'}</button><button class="btn ghost a-pdf">⬇ ดาวน์โหลด PDF</button>${opts.excel ? '<button class="btn ghost a-xls">⬇ ดาวน์โหลด Excel</button>' : ''}<button class="btn ghost a-share">🔗 แชร์</button></div>`;
+  return `<div class="actions noprint" id="${id}"><button class="btn ghost a-print" title="พิมพ์">🖨 ${opts.printLabel || 'พิมพ์'}</button><button class="btn ghost a-pdf" title="ดาวน์โหลด PDF">⬇ PDF</button>${opts.excel ? '<button class="btn ghost a-xls" title="ดาวน์โหลด Excel">⬇ Excel</button>' : ''}<button class="btn ghost a-share" title="แชร์">🔗 แชร์</button></div>`;
 }
 const reportHead = (title, sub, printedAt) => `<div class="rhead"><div class="s1">${esc(S.school)}</div><div class="s2">${esc(title)}</div>${sub ? `<div>${sub}</div>` : ''}<div class="s3">พิมพ์เมื่อ ${esc(printedAt ? thDate(printedAt.slice(0, 10)) + ' ' + printedAt.slice(11, 16) + ' น.' : '')}</div></div>`;
 
@@ -1377,7 +1403,15 @@ function bdTouch() { if (!BACKDATE || bdExpired()) return; BACKDATE.last = Date.
 
 PAGES.status = pg => {
   pg.innerHTML = statsLayout(`<div id="scTime" class="timebar"></div>${searchBar('scQ', 'พิมพ์รหัส ชื่อ นามสกุล หรือ ชั้น/ห้อง เพื่อตรวจสอบสถานะ', 'ตรวจสอบ')}<div id="scOut"></div>
-   <div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h3 style="margin:0">รายการบันทึกเข้าโรงเรียน</h3><div class="row" style="margin:0"><input type="date" id="scDate" value="${S.today}"><button class="btn ghost" id="scRef">โหลด</button></div></div><div id="scTbl"></div></div>`);
+   <div class="card" style="margin-top:16px"><h3 style="margin:0 0 8px">รายการบันทึกเข้าโรงเรียน</h3>
+    <div class="toolbar noprint"><input type="date" id="scDate" value="${S.today}"><button class="btn ghost" id="scRef" title="โหลด">↻<span class="lbl"> โหลด</span></button><button class="btn ghost" id="scPrint" title="พิมพ์">🖨<span class="lbl"> พิมพ์</span></button><button class="btn ghost" id="scPdf" title="ดาวน์โหลด PDF"><span class="lbl">⬇ </span>PDF</button><button class="btn ghost" id="scXls" title="ดาวน์โหลด Excel"><span class="lbl">⬇ </span><span class="xl">Excel</span><span class="xs">XLS</span></button><button class="btn ghost" id="scShare" title="แชร์">🔗<span class="lbl"> แชร์</span></button></div>
+    <div id="scTbl"></div></div>`);
+  let lastDay = null;
+  const dayName = () => 'บันทึกเข้าโรงเรียน_' + (lastDay ? lastDay.date : '');
+  $('#scPrint').onclick = () => $('#scRep') && doPrint($('#scRep'));
+  $('#scPdf').onclick = () => $('#scRep') && safe(() => doPdf($('#scRep'), dayName()));
+  $('#scXls').onclick = () => lastDay && doExcel(entriesAoa(lastDay), dayName());
+  $('#scShare').onclick = () => $('#scRep') && safe(() => doShare($('#scRep'), dayName()));
   startStats();
   const lateTopic = () => (S.topics.find(t => t.system === 'LATE') || { points: '-5' }).points;
   /* ---- แถบวันเวลา ---- */
@@ -1439,7 +1473,8 @@ PAGES.status = pg => {
     const sc = STATS_SCOPE || {};
     const d = await api('entriesOfDay', $('#scDate').value, sc.grade || '', sc.room || '');
     const scopeChip = STATS_SCOPE ? ` · <span style="color:var(--bad);font-weight:800">${esc(STATS_SCOPE.label)}</span> <a href="#" id="scAll" class="noprint" style="font-size:13px">✕ ดูทั้งหมด</a>` : ' · ทุกชั้น/ห้อง';
-    $('#scTbl').innerHTML = actionBar({ el: () => $('#scRep'), name: 'นักเรียนเข้าสาย_' + d.date, excel: () => entriesAoa(d) }) +
+    lastDay = d;
+    $('#scTbl').innerHTML =
       `<div class="rep" id="scRep" style="padding:0;border:0">${reportHead('รายการบันทึกเข้าโรงเรียน', 'วันที่ ' + esc(thDate(d.date)) + scopeChip + ` · มาสาย (ไม่ขออนุญาต) <b style="color:var(--bad)">${d.rows.filter(x => x.entry.type === 'ไม่ขออนุญาต').length}</b> คน · ได้รับอนุญาต (ไม่นับมาสาย) <b style="color:var(--ok)">${d.rows.filter(x => x.entry.type !== 'ไม่ขออนุญาต').length}</b> คน`, localStamp())}<div class="scroll">${entriesTableHTML(d.rows)}</div></div>`;
     if ($('#scAll')) $('#scAll').onclick = e => { e.preventDefault(); $('#scQG').value = ''; fillClassDropdowns($('#scQG'), $('#scQR')); $('#scQR').value = ''; setScope('', ''); };
     $$('[data-delent]', $('#scTbl')).forEach(b => b.onclick = () => safe(async () => {
@@ -1694,6 +1729,10 @@ $('#lgBell').onclick = () => $('#lgBellMsg').click();
 $('#hdBell').onclick = () => showPage('approvals');
 $('#logoutBtn').onclick = () => doLogout(false);
 $('#burger').onclick = () => $('#nav').classList.toggle('open');
+/* ความสูงแถบบน (มือถือมี 2 แถว) → ตำแหน่งเมนูด้านข้าง */
+const setHdH = () => { const hd = $('header'); if (hd && hd.offsetHeight) document.documentElement.style.setProperty('--hdh', hd.offsetHeight + 'px'); };
+window.addEventListener('resize', setHdH); window.addEventListener('orientationchange', () => setTimeout(setHdH, 300));
+if (window.ResizeObserver) new ResizeObserver(setHdH).observe($('header'));
 /* =================== แอปบนหน้าจอ (PWA) ===================
    ไม่มีปุ่มติดตั้งบนหน้าเว็บ: Chrome/Edge จะแสดงแถบ "ติดตั้งแอป" ของเบราว์เซอร์เองเมื่อเปิดลิงก์
    iPhone/iPad (Safari) ไม่มีแถบนี้ → แสดงคำแนะนำสั้น ๆ ครั้งเดียวต่อเครื่อง */
