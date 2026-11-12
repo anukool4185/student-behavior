@@ -294,9 +294,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.4.0';
-const MIN_SERVER_VERSION = '3.3.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '3.5.0';
+const MIN_SERVER_VERSION = '3.4.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.5.0': ['นำเข้า Excel: ข้ามรหัสที่มีอยู่แล้ว นำเข้าเฉพาะรหัสใหม่', 'แสดงรายชื่อที่ไม่มีในไฟล์ให้เลือกลบ (คนที่เพิ่มผ่านหน้าเว็บมีหมายเหตุ)', 'ลบนักเรียน = ย้ายไปชีตนักเรียนที่ลบออก ประวัติยังอยู่แต่ไม่แสดง'],
   '3.4.0': ['บัตรระยะยาว (เด็กวัด/ในอุปการะพิเศษ) ตั้งครั้งเดียวใช้ทุกวันในช่วงที่กำหนด', 'แผงสถิติเพิ่มบล็อกสีเหลือง จัดเรียงใหม่: คอมไม่เกินความสูงจอ / มือถือแนวตั้ง 1-2-2 / แนวนอนแถวเดียว'],
   '3.3.1': ['ปรับหน้ามือถือ: แถบบน 2 แถว ช่องค้นหา และแถบปุ่มอยู่บรรทัดเดียว ย่อขนาดอัตโนมัติ'],
   '3.3.0': ['มีบัตร/แจ้งครูที่ปรึกษา = สถิติการเข้าโรงเรียน ไม่นับเป็นมาสาย', 'ยกเลิกบัตร / ยกเลิกแล้วออกใหม่', 'เพิ่มรูปให้บัตรที่ออกแล้ว รูปขึ้นทันที พิมพ์ใหม่ได้'],
@@ -784,17 +785,46 @@ PAGES.importStudents = pg => {
   const imp = Importer($('#isMap'), {
     fields: S_FIELDS, parentFields: P_FIELDS,
     onImport: async rows => {
-      const ok = rows.filter(r => r.student.studentId);
+      const ok = rows.filter(r => String(r.student.studentId || '').trim());
       if (!ok.length) throw new Error('ไม่พบแถวที่มีรหัสนักเรียน กรุณาจับคู่คอลัมน์ "รหัสนักเรียน"');
-      const tot = { added: 0, updated: 0, parentsAdded: 0, parentsUpdated: 0, skipped: rows.length - ok.length };
-      for (let i = 0; i < ok.length; i += 400) {
-        const r = await api('importStudents', ok.slice(i, i + 400));
-        for (const k in r) tot[k] += r[k];
-      }
-      toast('นำเข้าเรียบร้อย', 'ok'); reloadClasses();
-      return `<div class="banner ok">นำเข้าเรียบร้อย · นักเรียนใหม่ ${tot.added} · อัปเดต ${tot.updated} · ผู้ปกครองใหม่ ${tot.parentsAdded} · อัปเดตผู้ปกครอง ${tot.parentsUpdated} · ข้าม (ไม่มีรหัส) ${tot.skipped}</div><p class="muted">อัปโหลดรูปนักเรียน/ผู้ปกครองได้ที่เมนู "จัดการข้อมูล/รูปนักเรียน"</p>`;
+      // จัดกลุ่มตามรหัส (แถวรหัสเดียวกัน = ผู้ปกครองหลายคน) ให้อยู่ในชุดเดียวกัน
+      const groups = {}; ok.forEach(r => { const k = String(r.student.studentId).replace(/\s+/g, ''); (groups[k] = groups[k] || []).push(r); });
+      const ids = Object.keys(groups);
+      const tot = { added: 0, parentsAdded: 0, duplicate: 0, duplicateIds: [], skipped: rows.length - ok.length };
+      let batch = [];
+      const send = async () => { if (!batch.length) return; const r = await api('importStudents', batch); tot.added += r.added; tot.parentsAdded += r.parentsAdded; tot.duplicate += r.duplicate; tot.duplicateIds = tot.duplicateIds.concat(r.duplicateIds || []); batch = []; };
+      for (const k of ids) { batch = batch.concat(groups[k]); if (batch.length >= 400) await send(); }
+      await send();
+      reloadClasses();
+      toast('นำเข้าเรียบร้อย', 'ok');
+      const missing = await api('importMissing', ids);
+      setTimeout(() => wireMissing(missing), 0);
+      return `<div class="banner ok">นำเข้าใหม่ ${tot.added} คน (ผู้ปกครอง ${tot.parentsAdded} คน) · รหัสซ้ำกับที่มีในระบบ ไม่นำเข้า ${tot.duplicate} คน · แถวที่ไม่มีรหัส ${tot.skipped} แถว</div>
+        ${tot.duplicate ? `<details style="margin-bottom:10px"><summary class="muted" style="cursor:pointer">ดูรหัสที่ซ้ำ (ไม่นำเข้า) ${tot.duplicate} รหัส</summary><div class="muted" style="font-size:13px;margin-top:6px">${tot.duplicateIds.map(esc).join(', ')}${tot.duplicate > tot.duplicateIds.length ? ' …' : ''}</div></details>` : ''}
+        <div id="isMissing"></div><p class="muted">อัปโหลดรูปนักเรียน/ผู้ปกครองได้ที่เมนู "จัดการข้อมูล/รูปนักเรียน"</p>`;
     }
   });
+  /* รายชื่อที่อยู่ในระบบแต่ไม่มีในไฟล์ → เลือกลบ */
+  function wireMissing(list) {
+    const box = $('#isMissing'); if (!box) return;
+    if (!list.length) { box.innerHTML = '<div class="banner info">นักเรียนทุกคนในระบบมีอยู่ในไฟล์นี้ — ไม่มีรายชื่อที่ต้องพิจารณาลบ</div>'; return; }
+    const webN = list.filter(x => x.web).length;
+    box.innerHTML = `<div class="block" style="border-color:#fca5a5"><h4 style="color:var(--bad)">นักเรียนในระบบที่ไม่มีในไฟล์นี้ ${list.length} คน</h4>
+      <p class="muted" style="margin-top:0">เลือกคนที่ต้องการลบออกจากรายชื่อ — ประวัติพฤติกรรม/มาสายยังเก็บไว้ แต่จะไม่แสดงในหน้าดูข้อมูล (นำเข้ารหัสเดิมกลับมาได้)${webN ? `<br>⚠ มี ${webN} คนที่ <b>แอดมินเป็นผู้นำเข้าผ่านหน้าเว็บ</b> (เช่น นักเรียนย้ายมากลางคัน) ระบบไม่ได้ติ๊กไว้ให้ ตรวจสอบก่อนลบ` : ''}</p>
+      <div class="row" style="margin:6px 0"><label class="chk"><input type="checkbox" id="msAll"> เลือกทั้งหมด</label><span class="muted" id="msN"></span><span style="flex:1"></span><button class="btn red sm" id="msDel">🗑 ลบรายชื่อที่เลือก</button></div>
+      <div class="scroll" style="max-height:420px"><table class="t"><thead><tr><th class="c"></th><th>รหัส</th><th>ชื่อ-สกุล</th><th class="c">ชั้น</th><th class="c">ห้อง</th><th>ที่มา / หมายเหตุ</th></tr></thead><tbody>
+      ${list.map(x => `<tr><td class="c"><input type="checkbox" data-ms="${esc(x.studentId)}" ${x.web ? '' : 'checked'}></td><td>${esc(x.studentId)}</td><td>${esc(fullName(x))}</td><td class="c">${esc(x.grade)}</td><td class="c">${esc(x.room)}</td><td>${x.web ? `<span class="chip warn">แอดมินเป็นผู้นำเข้าผ่านหน้าเว็บ</span>` : esc(x.source || 'นำเข้าจาก Excel (เดิม)')}${x.createdAt ? ` <span class="muted" style="font-size:12px">${esc(thDate(x.createdAt.slice(0, 10)))}</span>` : ''}</td></tr>`).join('')}</tbody></table></div></div>`;
+    const cks = () => $$('[data-ms]', box);
+    const upd = () => { const n = cks().filter(c => c.checked).length; $('#msN').textContent = `เลือก ${n} คน`; $('#msDel').disabled = !n; $('#msAll').checked = n === cks().length; $('#msAll').indeterminate = n > 0 && n < cks().length; };
+    cks().forEach(c => c.onchange = upd); $('#msAll').onchange = e => { cks().forEach(c => c.checked = e.target.checked); upd(); }; upd();
+    $('#msDel').onclick = () => safe(async () => {
+      const ids = cks().filter(c => c.checked).map(c => c.dataset.ms);
+      if (!await confirmBox(`ลบนักเรียน ${ids.length} คนออกจากรายชื่อ?\n(ประวัติยังเก็บไว้ในชีต แต่จะไม่แสดงในหน้าดูข้อมูล)`, 'ลบรายชื่อ', true)) return;
+      const r = await api('bulkStudents', 'delete', ids);
+      toast(`ลบออกจากรายชื่อแล้ว ${r.count} คน`, 'ok'); reloadClasses();
+      wireMissing(list.filter(x => ids.indexOf(x.studentId) < 0));
+    });
+  }
   bindExcelPicker('is', (aoa, hr) => imp.load(aoa, hr));
 };
 
@@ -865,8 +895,8 @@ PAGES.students = pg => {
     $('#stList').innerHTML = `<div class="row" style="justify-content:space-between;margin:0 0 6px"><span class="muted">ทั้งหมด ${r.total} คน · ตามเงื่อนไข ${r.found} คน · แสดง ${from}–${to} (หน้า ${page}/${r.pages})</span>
       <label style="flex-direction:row;align-items:center;gap:6px;font-weight:400" class="muted">แสดงหน้าละ<select id="stPs">${[25, 50, 100, 200].map(n => `<option ${n === pageSize ? 'selected' : ''}>${n}</option>`).join('')}</select>คน</label></div>
      ${pager(page, r.pages)}<div id="stAllTip" class="muted" style="margin:4px 0"></div>
-     <table class="t"><thead><tr><th class="c"><input type="checkbox" id="stCkAll" title="เลือกทั้งหน้านี้"></th><th class="c">ที่</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>ห้อง</th><th>เบอร์โทร</th><th class="c">รูป</th><th></th></tr></thead>
-     <tbody>${items.map((s, i) => `<tr><td class="c"><input type="checkbox" data-ck="${esc(s.studentId)}" ${sel.has(s.studentId) ? 'checked' : ''}></td><td class="c muted">${from + i}</td><td>${esc(s.studentId)}</td><td>${esc(fullName(s))}</td><td>${esc(s.grade)}</td><td>${esc(s.room)}</td><td>${esc(s.phone)}</td><td class="c">${s.hasPhoto ? '<span class="chip ok">มี</span>' : '<span class="chip bad">ไม่มี</span>'}</td><td><button class="btn sm ghost" data-ed="${esc(s.studentId)}">แก้ไข</button></td></tr>`).join('') || '<tr><td colspan="9" class="c muted">ไม่พบนักเรียน</td></tr>'}</tbody></table>
+     <table class="t"><thead><tr><th class="c"><input type="checkbox" id="stCkAll" title="เลือกทั้งหน้านี้"></th><th class="c">ที่</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>ห้อง</th><th>เบอร์โทร</th><th class="c">รูป</th><th>ที่มา</th><th></th></tr></thead>
+     <tbody>${items.map((s, i) => `<tr><td class="c"><input type="checkbox" data-ck="${esc(s.studentId)}" ${sel.has(s.studentId) ? 'checked' : ''}></td><td class="c muted">${from + i}</td><td>${esc(s.studentId)}</td><td>${esc(fullName(s))}</td><td>${esc(s.grade)}</td><td>${esc(s.room)}</td><td>${esc(s.phone)}</td><td class="c">${s.hasPhoto ? '<span class="chip ok">มี</span>' : '<span class="chip bad">ไม่มี</span>'}</td><td style="font-size:12px">${/หน้าเว็บ/.test(s.source || '') ? '<span class="chip warn">เพิ่มผ่านหน้าเว็บ</span>' : '<span class="muted">Excel</span>'}</td><td><button class="btn sm ghost" data-ed="${esc(s.studentId)}">แก้ไข</button></td></tr>`).join('') || '<tr><td colspan="10" class="c muted">ไม่พบนักเรียน</td></tr>'}</tbody></table>
      ${pager(page, r.pages)}`;
     $$('[data-ed]', $('#stList')).forEach(b => b.onclick = () => safe(() => openStudent(b.dataset.ed)));
     $$('#stList input[data-ck]').forEach(c => c.onchange = () => { c.checked ? sel.add(c.dataset.ck) : sel.delete(c.dataset.ck); updSel(); });
@@ -898,7 +928,7 @@ PAGES.students = pg => {
   });
   $('#stDel').onclick = () => safe(async () => {
     const ids = selected();
-    if (!await confirmBox(`ลบนักเรียน ${ids.length} คน พร้อมข้อมูลผู้ปกครอง?\n(ประวัติพฤติกรรมและการมาสายยังเก็บไว้ · ลบแล้วกู้คืนไม่ได้)`, 'ลบ', true)) return;
+    if (!await confirmBox(`ลบนักเรียน ${ids.length} คนออกจากรายชื่อ พร้อมข้อมูลผู้ปกครอง?\n(ประวัติยังเก็บไว้ในชีต "นักเรียนที่ลบออก" แต่จะไม่แสดงในหน้าดูข้อมูล)`, 'ลบ', true)) return;
     const r = await api('bulkStudents', 'delete', ids); toast(`ลบแล้ว ${r.count} คน`, 'ok'); $('#stEdit').innerHTML = ''; sel.clear(); search(true);
   });
   $('#stDelAll').onclick = () => {
