@@ -165,23 +165,51 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 .acid{font-weight:800;min-width:70px}.acnm{flex:1}.accr{color:var(--mut);font-size:13px;white-space:nowrap}
 .acn{padding:8px 14px;font-size:12px;color:var(--mut);background:#f8fafc}
 .withstats{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start}
-.stats{position:sticky;top:66px;display:flex;flex-direction:column;gap:12px}
 .sthead{font-weight:800;font-size:16px;color:#0f172a}.sthead small{display:block;font-weight:600;font-size:12px;color:var(--mut)}
 .live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-left:4px;animation:pulse 1.5s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 #22c55e99}70%{box-shadow:0 0 0 8px #22c55e00}100%{box-shadow:0 0 0 0 #22c55e00}}
-.stb{border-radius:16px;padding:14px 16px;color:#fff;box-shadow:0 4px 14px #0f172a1f}
 .st-black{background:linear-gradient(135deg,#1f2937,#0f172a)}
 .timebar{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:14px}
 .timebar.back{background:var(--warn2);border-color:#f59e0b;color:#78350f}.timebar.edit{background:#fffbeb;border-color:#fcd34d}
 .timebar input{padding:5px 8px}.bdbig{font-size:20px;font-weight:800;color:#b45309}
 .scopelab{color:var(--bad);font-weight:800;margin-left:6px}
 .st-green{background:linear-gradient(135deg,#16a34a,#15803d)}.st-orange{background:linear-gradient(135deg,#f97316,#ea580c)}.st-pink{background:linear-gradient(135deg,#ec4899,#db2777)}
-.stt{font-size:15px;font-weight:700;opacity:.95}
-.stn{font-size:60px;font-weight:800;line-height:1.05}.stn small{font-size:20px;font-weight:700}
-.sts{font-size:19px;font-weight:600}.sts b{font-size:30px}
-.stbar{height:7px;background:#ffffff44;border-radius:6px;margin-top:8px;overflow:hidden}.stbar i{display:block;height:100%;background:#fff;border-radius:6px}
-@media(max-width:1000px){.withstats{grid-template-columns:minmax(0,1fr)}.wsmain{min-width:0}.stats{position:static;order:-1;flex-direction:row;flex-wrap:wrap;gap:8px}.sthead{width:100%}.stb{flex:1 1 0;min-width:0;padding:10px 12px}.stn{font-size:40px}.sts b{font-size:22px}.sts{font-size:15px}}
-@media(max-width:600px){.stb{padding:8px 9px;border-radius:12px;flex:1 1 calc(50% - 8px)!important}.stt{font-size:12px;line-height:1.2;min-height:29px}.stn{font-size:32px}.stn small{font-size:13px}.sts{font-size:12px}.sts b{font-size:17px}.stbar{height:5px}}
+.st-yellow{background:linear-gradient(135deg,#facc15,#eab308);color:#422006!important}.st-yellow .stbar{background:#42200622}.st-yellow .stbar i{background:#422006}
+.stb{border-radius:16px;padding:12px 16px;color:#fff;box-shadow:0 4px 14px #0f172a1f;min-width:0;overflow:hidden}
+.stt{font-size:15px;font-weight:700;opacity:.95;line-height:1.2}
+.stn{font-size:56px;font-weight:800;line-height:1.05}.stn small{font-size:20px;font-weight:700}
+.sts{font-size:18px;font-weight:600;line-height:1.25}.sts b{font-size:28px}
+.stbar{height:7px;background:#ffffff44;border-radius:6px;margin-top:6px;overflow:hidden}.stbar i{display:block;height:100%;background:#fff;border-radius:6px}
+/* คอม: 5 บล็อกเรียงแนวตั้ง สูงไม่เกินจอ */
+.stats{position:sticky;top:66px;display:flex;flex-direction:column;gap:8px;height:calc(100vh - 140px);max-height:calc(100vh - 140px);min-height:420px}
+.stats .stb{flex:1 1 0;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:6px 14px}
+.stats .stt{font-size:clamp(12px,1.75vh,15px)}
+.stats .stn{font-size:clamp(24px,4.8vh,56px)}.stats .stn small{font-size:clamp(12px,1.9vh,20px)}
+.stats .sts{font-size:clamp(11px,1.8vh,18px)}.stats .sts b{font-size:clamp(14px,2.6vh,28px)}
+.stats .stbar{height:clamp(4px,.7vh,7px);margin-top:clamp(2px,.6vh,6px);flex:0 0 auto}
+/* มือถือแนวตั้ง: ดำกึ่งกลางแถวบน / เหลือง+เขียว / ส้ม+ชมพู */
+@media(max-width:1000px) and (orientation:portrait){
+  .withstats{grid-template-columns:minmax(0,1fr)}.wsmain{min-width:0}
+  .stats{position:static;order:-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;height:auto;max-height:none;min-height:0}
+  .stats .sthead{grid-column:1/-1;order:0}
+  .stats .st-black{grid-column:1/-1;justify-self:center;width:calc(50% - 4px);order:1}
+  .stats .st-yellow{order:2}.stats .st-green{order:3}.stats .st-orange{order:4}.stats .st-pink{order:5}
+  .stats .stb{padding:9px 11px;border-radius:13px}
+  .stats .stt{font-size:clamp(11px,3.3vw,14px)}
+  .stats .stn{font-size:clamp(28px,9vw,44px)}.stats .stn small{font-size:clamp(11px,3.4vw,16px)}
+  .stats .sts{font-size:clamp(11px,3.2vw,15px)}.stats .sts b{font-size:clamp(14px,4.6vw,22px)}
+}
+/* มือถือแนวนอน: 5 บล็อกแถวเดียว */
+@media(max-width:1000px) and (orientation:landscape),(max-height:500px) and (orientation:landscape){
+  .withstats{grid-template-columns:minmax(0,1fr)}.wsmain{min-width:0}
+  .stats{position:static;order:-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;height:auto;max-height:none;min-height:0}
+  .stats .sthead{grid-column:1/-1}
+  .stats .st-black{width:auto;justify-self:stretch}
+  .stats .stb{padding:7px 8px;border-radius:12px;justify-content:flex-start}
+  .stats .stt{font-size:clamp(10px,1.5vw,13px);min-height:2.4em}
+  .stats .stn{font-size:clamp(22px,3.6vw,38px)}.stats .stn small{font-size:clamp(10px,1.4vw,14px)}
+  .stats .sts{font-size:clamp(10px,1.4vw,13px)}.stats .sts b{font-size:clamp(12px,2vw,18px)}
+}
 .btn.postpone{background:#fff;color:var(--warn);border:1px solid #fcd34d}.btn.postpone.on{background:var(--warn2);border-color:#f59e0b}
 #hdSchool,#lgSchool,.rhead .s1,.lc-school,.lc-sign div,.ml{white-space:pre-line}
 .applogo{width:96px;height:96px;object-fit:contain;filter:drop-shadow(0 4px 8px #1e3a8a33)}
@@ -213,6 +241,7 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 @media(max-width:480px){.toolbar .lbl,.toolbar .xl{display:none}.toolbar .xs{display:inline}
   .toolbar .btn{flex:0 0 auto!important;padding:7px 7px!important;font-size:12px!important}
   .toolbar input[type=date]{flex:1 1 auto!important;font-size:12px!important;padding:6px 3px!important}}
+.lc-long{display:block;font-size:6.6pt;color:#854d0e;background:#fef08a;border-radius:2mm;margin:.4mm 4mm 0;padding:0 1mm}
 .lc-pending{color:#dc2626;font-weight:800;font-size:8pt}
 [hidden]{display:none!important}
 #printArea{display:none}
@@ -265,9 +294,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.3.1';
-const MIN_SERVER_VERSION = '3.2.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '3.4.0';
+const MIN_SERVER_VERSION = '3.3.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.4.0': ['บัตรระยะยาว (เด็กวัด/ในอุปการะพิเศษ) ตั้งครั้งเดียวใช้ทุกวันในช่วงที่กำหนด', 'แผงสถิติเพิ่มบล็อกสีเหลือง จัดเรียงใหม่: คอมไม่เกินความสูงจอ / มือถือแนวตั้ง 1-2-2 / แนวนอนแถวเดียว'],
   '3.3.1': ['ปรับหน้ามือถือ: แถบบน 2 แถว ช่องค้นหา และแถบปุ่มอยู่บรรทัดเดียว ย่อขนาดอัตโนมัติ'],
   '3.3.0': ['มีบัตร/แจ้งครูที่ปรึกษา = สถิติการเข้าโรงเรียน ไม่นับเป็นมาสาย', 'ยกเลิกบัตร / ยกเลิกแล้วออกใหม่', 'เพิ่มรูปให้บัตรที่ออกแล้ว รูปขึ้นทันที พิมพ์ใหม่ได้'],
   '3.2.1': ['ไอคอนแอปเป็นรูปโรงเรียน ชื่อแอป "เข้า รร.-ติดตาม"', 'เอาปุ่มติดตั้งออกจากหน้าเว็บ (เบราว์เซอร์แสดงแถบติดตั้งเอง)'],
@@ -720,7 +750,7 @@ const A = ['admin'], ST = ['admin', 'teacher'], AL = ['admin', 'teacher', 'publi
 const MENU = [
   ['ข้อมูลพื้นฐาน', [['importStudents', 'นำเข้าข้อมูลนักเรียน', A], ['students', 'จัดการข้อมูล/รูปนักเรียน', A], ['teachers', 'ครูที่ปรึกษา', A], ['topics', 'หัวข้อพฤติกรรม', A]]],
   ['พฤติกรรม', [['behavior', 'บันทึกพฤติกรรม', ST], ['behaviorReport', 'รายงานพฤติกรรม', ST], ['report', 'รายงานผลรายบุคคล', ST]]],
-  ['การมาสาย', [['approvals', '🔔 อนุมัติบัตรเข้าสาย', A], ['pass', 'ออกบัตรอนุญาตเข้าสาย', ST], ['request', 'ครูรับเรื่องขอเข้าสาย', ST], ['status', 'ตรวจสอบสถานะ / บันทึกเข้า', AL], ['lateReport', 'รายงานนักเรียนเข้าสาย', ST]]],
+  ['การมาสาย', [['approvals', '🔔 อนุมัติบัตรเข้าสาย', A], ['pass', 'ออกบัตรอนุญาตเข้าสาย', ST], ['specials', 'บัตรระยะยาว (เด็กวัด/อุปการะพิเศษ)', A], ['request', 'ครูรับเรื่องขอเข้าสาย', ST], ['status', 'ตรวจสอบสถานะ / บันทึกเข้า', AL], ['lateReport', 'รายงานนักเรียนเข้าสาย', ST]]],
   ['ระบบ', [['settings', 'ตั้งค่า', A]]],
   ['ครูที่ปรึกษา', [['register', 'ลงทะเบียนครูที่ปรึกษา', ['register']]]]
 ];
@@ -1103,7 +1133,7 @@ PAGES.report = pg => {
 function cardHTML(d) {
   const s = d.student, p = d.pass;
   return `<div class="lcard">
-   <div class="lc-head"><div class="lc-school">${esc(d.schoolName)}</div><div class="lc-title">บัตรอนุญาตเข้าสาย</div><div class="lc-date">วันที่ ${esc(thDate(p.date))}</div></div>
+   <div class="lc-head"><div class="lc-school">${esc(d.schoolName)}</div><div class="lc-title">บัตรอนุญาตเข้าสาย${p.special ? '<span class="lc-long">ระยะยาว · ' + esc(p.category || '') + '</span>' : ''}</div><div class="lc-date">${p.special ? 'ใช้ได้ ' + esc(thDate(p.date)) + ' – ' + (p.endDate ? esc(thDate(p.endDate)) : 'ไม่กำหนด') : 'วันที่ ' + esc(thDate(p.date))}</div></div>
    <div class="lc-top">${s.photo ? `<img class="lc-photo" src="${s.photo}">` : `<div class="lc-photo nophoto" data-cardsid="${esc(s.studentId)}">${p.photoPostponed === 'TRUE' ? 'รอรูป<br>(ขอเลื่อน)' : 'ไม่มีรูป'}</div>`}<div class="lc-st"><b>${esc(fullName(s))}</b>รหัส ${esc(s.studentId)}<br>${esc(classRoom(s))}${s.phone ? '<br>โทร ' + esc(s.phone) : ''}</div></div>
    <div class="lc-time"><span>อนุญาตเข้าโรงเรียนเวลา</span><b>${esc(hm(p.entryTime))} น.</b></div>
    <div class="lc-sec"><i>เหตุผล:</i> ${esc(p.reason)}</div>
@@ -1115,8 +1145,8 @@ function cardHTML(d) {
 function cardWithActions(d) {
   const id = 'cw' + Math.random().toString(36).slice(2), p = d.pass, sid = esc(d.student.studentId);
   const photoBox = d.student.photo ? '' : `<div class="block cardphoto" data-sid="${sid}" data-html2canvas-ignore="true" style="margin-top:8px"><b>ยังไม่มีรูปนักเรียนบนบัตร</b><div class="row" style="margin:6px 0"><button class="btn sm" data-cam="${sid}">📷 ถ่ายรูป</button><button class="btn sm ghost" data-upl="${sid}">📁 อัปโหลดรูป</button></div><div class="muted">เพิ่มแล้วรูปขึ้นบนบัตรทันที พิมพ์ใหม่ได้เลย</div></div>`;
-  const cancelBox = S.role === 'admin' || S.role === 'teacher' ? `<div class="row noprint" style="margin-top:8px"><button class="btn sm ghost danger" data-cancel="${esc(p.passId)}">✖ ยกเลิกบัตร</button>${$('#psReason') || CUR === 'pass' ? `<button class="btn sm ghost" data-reissue="${esc(p.passId)}" data-rdate="${esc(p.date)}" data-rtime="${esc(p.entryTime)}" data-rreason="${esc(p.reason)}">↻ ยกเลิกแล้วออกใหม่</button>` : ''}</div>` : '';
-  if (p.status === 'cancelled') return `<div class="cardwrap"><div style="flex:1"><div class="banner" style="background:#f1f5f9;color:#475569">⊘ บัตรวันที่ ${esc(thDate(p.date))} (เวลา ${esc(hm(p.entryTime))} น.) ถูกยกเลิกแล้ว โดย ${esc(p.cancelledBy || '-')} · ${esc(p.cancelledAt || '')}</div></div></div>`;
+  const cancelBox = p.special ? (S.role === 'admin' && p.status !== 'cancelled' ? `<div class="row noprint" style="margin-top:8px"><button class="btn sm ghost danger" data-spcancel="${esc(p.passId)}">✖ ยกเลิกบัตรระยะยาว</button></div>` : '') : S.role === 'admin' || S.role === 'teacher' ? `<div class="row noprint" style="margin-top:8px"><button class="btn sm ghost danger" data-cancel="${esc(p.passId)}">✖ ยกเลิกบัตร</button>${$('#psReason') || CUR === 'pass' ? `<button class="btn sm ghost" data-reissue="${esc(p.passId)}" data-rdate="${esc(p.date)}" data-rtime="${esc(p.entryTime)}" data-rreason="${esc(p.reason)}">↻ ยกเลิกแล้วออกใหม่</button>` : ''}</div>` : '';
+  if (p.status === 'cancelled') return `<div class="cardwrap"><div style="flex:1"><div class="banner" style="background:#f1f5f9;color:#475569">⊘ ${p.special ? 'บัตรระยะยาว (' + esc(p.category || '') + ') เริ่ม' : 'บัตร'}วันที่ ${esc(thDate(p.date))} (เวลา ${esc(hm(p.entryTime))} น.) ถูกยกเลิกแล้ว โดย ${esc(p.cancelledBy || '-')} · ${esc(p.cancelledAt || '')}</div></div></div>`;
   const meta = `${p.photoPostponed === 'TRUE' && !d.student.photo ? '<div><span class="chip warn">ขอเลื่อนส่งรูปนักเรียน</span></div>' : ''}<div class="muted">ออกโดย ${esc(p.issuedBy)} · ${esc(p.createdAt)}${p.approvedBy ? ' · ' + (p.status === 'rejected' ? 'ไม่อนุมัติโดย ' : 'อนุมัติโดย ') + esc(p.approvedBy) : ''}</div>`;
   if (p.status === 'pending') {
     const adminBox = S.role === 'admin' ? `<div class="block" style="margin-top:8px"><h4>อนุมัติบัตรใบนี้</h4><div class="row"><input type="password" placeholder="รหัสลายเซ็น (ไม่ใส่ก็ได้)" data-apcode="${esc(p.passId)}" style="width:200px"><button class="btn green" data-approve="${esc(p.passId)}">✔ อนุญาตออกบัตร</button><button class="btn red" data-reject="${esc(p.passId)}">✖ ไม่อนุญาต</button></div><p class="muted">กดอนุญาตแล้วลายเซ็นจะปรากฏบนบัตรเอง</p></div>` : '';
@@ -1124,13 +1154,17 @@ function cardWithActions(d) {
   }
   if (p.status === 'rejected') return `<div class="cardwrap"><div style="flex:1"><div class="banner bad">✖ แอดมินไม่อนุมัติบัตรวันที่ ${esc(thDate(p.date))} (เวลา ${esc(hm(p.entryTime))} น.)</div>${meta}</div></div>`;
   return `<div class="cardwrap"><div id="${id}">${cardHTML(d)}</div><div>
-    <div>${p.signed === 'TRUE' ? '<span class="chip ok">อนุมัติแล้ว · มีลายเซ็น</span>' : '<span class="chip warn">อนุมัติแล้ว · ไม่มีลายเซ็น (ยังไม่ได้อัปโหลดลายเซ็น)</span>'}</div>${meta}
+    <div>${p.special ? '<span class="chip" style="background:#fef08a;color:#854d0e">บัตรระยะยาว · ' + esc(p.category || '') + '</span> ' : ''}${p.signed === 'TRUE' ? '<span class="chip ok">อนุมัติแล้ว · มีลายเซ็น</span>' : '<span class="chip warn">อนุมัติแล้ว · ไม่มีลายเซ็น (ยังไม่ได้อัปโหลดลายเซ็น)</span>'}</div>${meta}
     ${actionBar({ el: () => $('#' + id + ' .lcard'), name: 'บัตรเข้าสาย_' + d.student.studentId + '_' + p.date, card: true, printLabel: 'พิมพ์บัตร' })}
     ${photoBox}${cancelBox}
   </div></div>`;
 }
 let REISSUE = null;
 function wireApprove(root, after) {
+  $$('[data-spcancel]', root).forEach(b => b.onclick = () => safe(async () => {
+    if (!await confirmBox('ยกเลิกบัตรระยะยาวใบนี้? หลังยกเลิกนักเรียนจะไม่มีบัตรตั้งแต่วันนี้', 'ยกเลิกบัตร', true)) return;
+    const d = await api('cancelSpecialPass', b.dataset.spcancel); toast('ยกเลิกบัตรระยะยาวแล้ว', 'ok'); after(d);
+  }));
   $$('[data-cancel]', root).forEach(b => b.onclick = () => safe(async () => {
     if (!await confirmBox('ยกเลิกบัตรใบนี้? บัตรที่ยกเลิกจะใช้บันทึกเข้าโรงเรียนไม่ได้', 'ยกเลิกบัตร', true)) return;
     const d = await api('cancelPass', b.dataset.cancel); toast('ยกเลิกบัตรแล้ว', 'ok'); refreshBell(); after(d);
@@ -1252,6 +1286,57 @@ PAGES.approvals = async pg => {
   }));
 };
 
+/* ---------- บัตรระยะยาว (เด็กวัด / ในอุปการะพิเศษ) — แอดมิน ---------- */
+PAGES.specials = pg => {
+  pg.innerHTML = `<div class="card"><h3>ออกบัตรระยะยาวให้นักเรียน</h3><p class="muted">ตั้งครั้งเดียว ระบบถือว่านักเรียนมีบัตรทุกวันในช่วงวันที่ที่กำหนด (ไม่ต้องออกบัตรรายวัน) บันทึกเข้าแล้วไม่นับเป็นมาสาย</p>${searchBar('spQ')}<div id="spOut"></div></div>
+    <div class="card"><h3>บัตรระยะยาวทั้งหมด</h3><div id="spList" class="scroll"></div></div>`;
+  const stText = x => x.status === 'cancelled' ? '<span class="chip">ยกเลิก</span>' : !x.live ? '<span class="chip">หมดอายุ</span>' : x.current ? '<span class="chip ok">ใช้งานอยู่</span>' : '<span class="chip info">ยังไม่เริ่ม</span>';
+  const loadList = async () => {
+    const l = await api('listSpecialPasses');
+    $('#spList').innerHTML = `<table class="t"><thead><tr><th>รหัส</th><th>ชื่อ-สกุล</th><th class="c">ชั้น</th><th class="c">ห้อง</th><th>ประเภท</th><th>ใช้ได้</th><th class="c">เวลาเข้า</th><th class="c">สถานะ</th><th></th></tr></thead><tbody>${l.map(x => `<tr${x.live ? '' : ' style="color:var(--mut)"'}><td>${esc(x.studentId)}</td><td>${esc(fullName(x.student))}</td><td class="c">${esc(x.student.grade)}</td><td class="c">${esc(x.student.room)}</td><td>${esc(x.category)}</td><td style="white-space:nowrap">${esc(thDate(x.startDate))} – ${x.endDate ? esc(thDate(x.endDate)) : 'ไม่กำหนด'}</td><td class="c">${esc(hm(x.entryTime))}</td><td class="c">${stText(x)}</td><td><button class="btn sm ghost" data-open="${esc(x.studentId)}">เปิด</button></td></tr>`).join('') || '<tr><td colspan="9" class="c muted">ยังไม่มีบัตรระยะยาว</td></tr>'}</tbody></table>`;
+    $$('[data-open]', $('#spList')).forEach(b => b.onclick = () => { $('#spQ').value = b.dataset.open; safe(() => load(b.dataset.open)); window.scrollTo(0, 0); });
+  };
+  const load = async (sid, edit) => {
+    const r = await api('specialContext', sid); const b = r.bundle, s = b.student;
+    ON_PHOTO = () => load(s.studentId);
+    const noPhoto = !s.photo;
+    const e = edit || {};
+    const cats = ['เด็กวัด', 'ในอุปการะพิเศษ'];
+    const isOther = e.category && cats.indexOf(e.category) < 0;
+    $('#spOut').innerHTML = `<div class="grid3">${studentBlock(s, 'lg')}${parentsBlock(b.parents)}${teachersBlock(b.teachers)}</div>
+      ${r.items.length ? `<h4 style="margin-top:14px">บัตรระยะยาวของนักเรียนคนนี้</h4><div id="spItems">${r.items.map(d => cardWithActions(d) + (d.pass.status !== 'cancelled' ? `<div class="row noprint"><button class="btn sm ghost" data-spedit="${esc(d.pass.passId)}">✎ แก้ไขบัตรใบนี้</button></div>` : '')).join('<hr>')}</div>` : ''}
+      <div class="block" style="margin-top:14px"><h4>${e.spId ? 'แก้ไขบัตรระยะยาว' : 'ออกบัตรระยะยาวใบใหม่'}</h4>
+       <div class="row"><label>ประเภท<select id="spCat">${cats.map(c => `<option ${e.category === c ? 'selected' : ''}>${c}</option>`).join('')}<option value="__o" ${isOther ? 'selected' : ''}>อื่น ๆ (พิมพ์เอง)</option></select></label>
+        <label id="spCatOW" ${isOther ? '' : 'hidden'}>ระบุประเภท<input id="spCatO" value="${isOther ? esc(e.category) : ''}"></label>
+        <label>ใช้ได้ตั้งแต่<input type="date" id="spFrom" value="${esc(e.date || r.today)}"></label><label>ถึงวันที่ (เว้นว่าง = ไม่กำหนด)<input type="date" id="spTo" value="${esc(e.endDate || '')}"></label>
+        <label>เวลาเข้าโรงเรียน<input type="time" id="spTime" value="${esc(hm(e.entryTime || ''))}"></label></div>
+       <label style="width:100%">หมายเหตุ (เช่น ชื่อวัด / เหตุผล)<input id="spNote" style="width:100%" value="${esc(e.note || '')}"></label>
+       ${noPhoto ? '<div class="banner warn" style="margin-top:8px">นักเรียนยังไม่มีรูป — ถ่าย/อัปโหลดในช่องรูปด้านบน หรือกด "ขอเลื่อนรูป"</div>' : ''}
+       <div class="row"><button class="btn" id="spSave" ${noPhoto ? 'disabled' : ''}>${e.spId ? 'บันทึกการแก้ไข' : 'ออกบัตรระยะยาว'}</button>${noPhoto ? '<button class="btn postpone on" id="spLater">⏳ ขอเลื่อนรูป แล้วออกบัตร</button>' : ''}${e.spId ? '<button class="btn ghost" id="spNew">ยกเลิกการแก้ไข</button>' : ''}</div></div>
+      <div id="spCard"></div>`;
+    $('#spCat').onchange = () => { $('#spCatOW').hidden = $('#spCat').value !== '__o'; };
+    if ($('#spNew')) $('#spNew').onclick = () => load(s.studentId);
+    if ($('#spItems')) {
+      wireApprove($('#spItems'), () => { load(s.studentId); loadList(); });
+      $$('[data-spedit]', $('#spItems')).forEach(btn => btn.onclick = () => { const d = r.items.find(x => x.pass.passId === btn.dataset.spedit); const p = d.pass; load(s.studentId, { spId: p.passId, category: p.category, date: p.date, endDate: p.endDate, entryTime: p.entryTime, note: (p.reason || '').split(' — ').slice(1).join(' — ') }); });
+    }
+    const save = postpone => safe(async () => {
+      const cat = $('#spCat').value === '__o' ? $('#spCatO').value.trim() : $('#spCat').value;
+      if (!cat) return toast('ระบุประเภท', 'err');
+      try {
+        const d = await api('saveSpecialPass', { spId: e.spId || '', studentId: s.studentId, category: cat, startDate: $('#spFrom').value, endDate: $('#spTo').value, entryTime: $('#spTime').value, note: $('#spNote').value, postponePhoto: !!postpone });
+        toast('บันทึกบัตรระยะยาวแล้ว', 'ok'); await load(s.studentId); loadList();
+        $('#spCard').innerHTML = `<div class="banner ok" style="margin-top:12px">บันทึกเรียบร้อย — พิมพ์บัตรได้จากรายการด้านบน</div>`;
+        $('#spItems') && $('#spItems').scrollIntoView({ behavior: 'smooth' });
+      } catch (err) { if (err.message === 'NO_PHOTO') throw new Error('นักเรียนยังไม่มีรูป — เพิ่มรูป หรือกด "ขอเลื่อนรูป"'); throw err; }
+    });
+    $('#spSave').onclick = () => save(false);
+    if ($('#spLater')) $('#spLater').onclick = () => save(true);
+  };
+  bindSearch('spQ', sid => load(sid));
+  loadList();
+};
+
 /* ---------- 6.1 ออกบัตรอนุญาตเข้าสาย ---------- */
 PAGES.pass = pg => {
   pg.innerHTML = searchBar('psQ') + '<div id="psOut"></div>';
@@ -1337,7 +1422,7 @@ PAGES.request = pg => {
 /* ---------- 7. ตรวจสอบสถานะ ---------- */
 function entriesTableHTML(rows) {
   if (!rows.length) return '<p class="muted">ยังไม่มีนักเรียนเข้าสายในวันนี้</p>';
-  const typeChip = t => `<span class="chip ${t === 'ไม่ขออนุญาต' ? 'bad' : t === 'มีบัตรอนุญาต' ? 'ok' : 'info'}">${esc(t)}</span>${t === 'ไม่ขออนุญาต' ? '' : '<div class="muted" style="font-size:11px">ไม่นับมาสาย</div>'}`;
+  const typeChip = t => `<span class="chip ${t === 'ไม่ขออนุญาต' ? 'bad' : t === 'มีบัตรอนุญาต' ? 'ok' : 'info'}"${t.indexOf('ระยะยาว') >= 0 ? ' style="background:#fef08a;color:#854d0e"' : ''}>${esc(t)}</span>${t === 'ไม่ขออนุญาต' ? '' : '<div class="muted" style="font-size:11px">ไม่นับมาสาย</div>'}`;
   return `<table class="t"><thead><tr><th>รูป</th><th>รหัส / บทบาท</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>ชั้น</th><th>ห้อง</th><th>เบอร์โทร</th><th>ประเภท</th><th>เวลาเข้า</th><th class="noprint" data-html2canvas-ignore="true">ลบ</th></tr></thead><tbody>${rows.map((r, i) => {
     const s = r.student, rs = 1 + r.parents.length + r.teachers.length;
     const sub = (lab, p) => `<tr class="sub"><td>${lab}</td><td>${esc(p.prefix)}</td><td>${esc(p.firstName)}</td><td>${esc(p.lastName)}</td><td colspan="2"></td><td>${esc(p.phone)}</td><td colspan="2"></td></tr>`;
@@ -1373,6 +1458,7 @@ function statsHTML(r) {
   return `<div class="sthead">📊 สถิติการมาสาย${curAt() ? '' : 'วันนี้'}${lab}<small>${curAt() ? '<b style="color:var(--warn)">⏪ ย้อนหลัง</b> ' : ''}${esc(thDate(r.date))} · อัปเดต ${esc(String(r.time).slice(0, 8))} <span class="live"></span></small></div>
    <div class="stb st-black"><div class="stt">นักเรียนทั้งหมด${lab ? ' ' + esc(STATS_SCOPE.label) : ''}</div><div class="stn">${r.studentCount}<small> คน</small></div><div class="sts">มาสาย <b>${r.unauthCount}</b> · ได้รับอนุญาต <b>${r.authEntered || 0}</b> คน</div></div>
    <div class="stb st-green"><div class="stt">มีบัตรอนุญาต</div><div class="stn">${r.passCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.passEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.passEntered, r.passCount)}%"></i></div></div>
+   <div class="stb st-yellow"><div class="stt">มีบัตรอนุญาต (เด็กวัด/ในอุปการะพิเศษ)</div><div class="stn">${r.specialCount || 0}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.specialEntered || 0}</b> คน</div><div class="stbar"><i style="width:${pct(r.specialEntered || 0, r.specialCount || 0)}%"></i></div></div>
    <div class="stb st-orange"><div class="stt">ขออนุญาตครูไว้</div><div class="stn">${r.reqCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.reqEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.reqEntered, r.reqCount)}%"></i></div></div>
    <div class="stb st-pink"><div class="stt">มาสาย${curAt() ? '' : 'วันนี้'} (ไม่ขออนุญาต)</div><div class="stn">${r.unauthCount}<small> คน</small></div><div class="sts">เข้าโดยได้รับอนุญาต <b>${r.authEntered || 0}</b> คน <span style="font-size:12px">(ไม่นับมาสาย)</span></div></div>`;
 }
@@ -1496,6 +1582,10 @@ PAGES.status = pg => {
         <div class="cardwrap"><div>${cardHTML(r.card)}</div><div style="flex:1;min-width:260px"><div class="block"><h4>เหตุผลขอเข้าสาย</h4><p style="font-size:17px">${esc(r.card.pass.reason)}</p>
         <p>${r.card.pass.signed === 'TRUE' ? '<span class="chip ok">บัตรมีลายเซ็น</span>' : '<span class="chip warn">บัตรไม่มีลายเซ็น</span>'}</p></div>
         <button class="btn green" id="scIn" style="font-size:18px;padding:14px 24px;margin-top:12px">✔ บันทึกเข้าโรงเรียน</button></div></div>`;
+    } else if (r.mode === 'special') {
+      html = `<div class="banner" style="background:#fef9c3;color:#854d0e">✅ มีบัตรอนุญาตระยะยาว (${esc(r.card.pass.category)}) · เวลาเข้า ${esc(hm(r.card.pass.entryTime))} น. · ใช้ได้ถึง ${r.card.pass.endDate ? esc(thDate(r.card.pass.endDate)) : 'ไม่กำหนด'}</div>${entered}
+        <div class="cardwrap"><div>${cardHTML(r.card)}</div><div style="flex:1;min-width:260px"><div class="block"><h4>บัตรระยะยาว (เด็กวัด/ในอุปการะพิเศษ)</h4><p style="font-size:17px">${esc(r.card.pass.reason)}</p><p class="muted">บันทึกเข้าแล้วไม่นับเป็นมาสาย</p></div>
+        <button class="btn green" id="scIn" style="font-size:18px;padding:14px 24px;margin-top:12px">✔ บันทึกเข้าโรงเรียน</button></div></div>`;
     } else if (r.mode === 'request') {
       const q = r.request;
       html = `<div class="banner ok">✅ ขอเข้าสายกับครูที่ปรึกษาแล้ว · เวลาที่ขอเข้า <span style="color:var(--bad);font-size:22px">${esc(hm(q.entryTime))} น.</span></div>${entered}
@@ -1564,7 +1654,7 @@ PAGES.lateReport = pg => {
    <p class="muted noprint" style="margin-top:-6px">นับเป็น "มาสาย" เฉพาะเข้าสายโดยไม่ขออนุญาต · มีบัตรอนุญาต / แจ้งครูที่ปรึกษา เป็นสถิติการเข้าโรงเรียน ไม่นับเป็นมาสาย</p>
    <div id="lr1">${searchBar('lrQ')}<div id="lr1Out"></div></div>
    <div id="lr2" hidden><div class="card noprint"><div class="row"><label>ตั้งแต่วันที่<input type="date" id="lrFrom" value="${t.slice(0, 8)}01"></label><label>ถึงวันที่<input type="date" id="lrTo" value="${t}"></label>
-    <label>แสดง<select id="lrType"><option value="late">มาสาย (ไม่ขออนุญาต)</option><option value="auth">เข้าโดยได้รับอนุญาต (สถิติ ไม่นับมาสาย)</option><option value="มีบัตรอนุญาต">เฉพาะมีบัตรอนุญาต</option><option value="แจ้งครูที่ปรึกษา">เฉพาะแจ้งครูที่ปรึกษา</option></select></label><button class="btn" id="lrGo">ค้นหา</button></div></div><div id="lr2Out"></div></div>`;
+    <label>แสดง<select id="lrType"><option value="late">มาสาย (ไม่ขออนุญาต)</option><option value="auth">เข้าโดยได้รับอนุญาต (สถิติ ไม่นับมาสาย)</option><option value="มีบัตรอนุญาต">เฉพาะมีบัตรอนุญาต</option><option value="บัตรระยะยาว (เด็กวัด/อุปการะพิเศษ)">เฉพาะบัตรระยะยาว (เด็กวัด/อุปการะพิเศษ)</option><option value="แจ้งครูที่ปรึกษา">เฉพาะแจ้งครูที่ปรึกษา</option></select></label><button class="btn" id="lrGo">ค้นหา</button></div></div><div id="lr2Out"></div></div>`;
   $$('.tabs button', pg).forEach(b => b.onclick = () => { $$('.tabs button', pg).forEach(x => x.classList.toggle('on', x === b)); $('#lr1').hidden = b.dataset.t !== 'one'; $('#lr2').hidden = b.dataset.t !== 'all'; });
   bindSearch('lrQ', async sid => {
     const r = await api('lateReportStudent', sid); const s = r.student;
