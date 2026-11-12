@@ -245,6 +245,13 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 .lc-head.lc-y{background:#fef9c3;border-bottom:1.6mm solid #eab308;margin:-2mm -2.4mm 0;padding:1.4mm 2.4mm .8mm}
 .lc-type{font-size:6.8pt;font-weight:800}.lc-g .lc-type{color:#15803d}.lc-y .lc-type{color:#854d0e}
 .lc-long{display:block;font-size:6.6pt;color:#854d0e;background:#fef08a;border-radius:2mm;margin:.4mm 4mm 0;padding:0 1mm}
+.roster{margin-top:16px;border:1px solid var(--bd);border-radius:12px;padding:10px 12px;background:#fff}
+.roster .rhd{margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px;max-height:340px;overflow:auto}
+.rcell{display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:1px solid var(--bd);border-radius:8px;background:#f8fafc;padding:6px 9px;cursor:pointer;font-family:inherit;min-width:0}
+.rcell:hover{background:var(--pri2);border-color:#93c5fd}.rcell.on{background:var(--pri2);border-color:var(--pri);box-shadow:0 0 0 2px #bfdbfe}
+.rcell .rid{font-weight:800;font-size:13px}.rcell .rnm{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.rcell .rcr{font-size:11px;color:var(--mut)}
+@media(max-width:600px){.rgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.rcell .rnm{font-size:13px}}
 .lc-pending{color:#dc2626;font-weight:800;font-size:8pt}
 [hidden]{display:none!important}
 #printArea{display:none}
@@ -297,9 +304,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.6.1';
-const MIN_SERVER_VERSION = '3.6.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '3.7.0';
+const MIN_SERVER_VERSION = '3.7.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.7.0': ['ครู: ทุกเมนูแสดงข้อมูลห้องที่ตนเป็นที่ปรึกษาก่อน (รายชื่อห้อง/รายงานรวมห้อง) ดูห้องอื่นจากดรอปดาวน์หรือค้นหา', 'รายงานเข้าสายแบบที่ 2 กรองชั้น/ห้องได้'],
   '3.6.1': ['ครูเข้าระบบแล้วเห็นห้องที่ตนเป็นที่ปรึกษาก่อน (สถิติ ตาราง ดรอปดาวน์) ห้องอื่นดูจากดรอปดาวน์หรือค้นหา'],
   '3.6.0': ['ออกบัตรทุกประเภทในเมนูเดียว (เลือกประเภทผู้ได้บัตร ที่แอดมินตั้งในหน้าตั้งค่า)', 'บัตร/สถิติสีเขียว = ผู้มีบัตรทั้งหมดยกเว้นเด็กวัด · สีเหลือง = เด็กวัดเท่านั้น'],
   '3.5.0': ['นำเข้า Excel: ข้ามรหัสที่มีอยู่แล้ว นำเข้าเฉพาะรหัสใหม่', 'แสดงรายชื่อที่ไม่มีในไฟล์ให้เลือกลบ (คนที่เพิ่มผ่านหน้าเว็บมีหมายเหตุ)', 'ลบนักเรียน = ย้ายไปชีตนักเรียนที่ลบออก ประวัติยังอยู่แต่ไม่แสดง'],
@@ -554,6 +562,22 @@ function bindSearch(id, fn, opts = {}) {
     gSel.value = S.myRooms[0].grade; fillClassDropdowns(gSel, rSel); rSel.value = S.myRooms[0].room;
   }
   let widened = false;
+  /* รายชื่อนักเรียนของห้องที่เลือก (ครู = ห้องที่ตนเป็นที่ปรึกษา) แสดงทันที คลิกเพื่อเลือก */
+  const rosterEl = opts.roster ? $('#' + opts.roster) : null;
+  let rosterSeq = 0;
+  const drawRoster = async () => {
+    if (!rosterEl) return;
+    const g = gSel.value, r = rSel.value, my = ++rosterSeq;
+    if (!g && !r) { rosterEl.innerHTML = '<div class="muted" style="margin-top:12px">เลือกชั้น/ห้องจากดรอปดาวน์เพื่อแสดงรายชื่อนักเรียน หรือพิมพ์ค้นหา</div>'; return; }
+    rosterEl.innerHTML = '<div class="muted" style="margin-top:12px">กำลังโหลดรายชื่อ...</div>';
+    let res; try { res = await rpc('findStudents', ['', g, r], S.token); } catch (e) { rosterEl.innerHTML = ''; return; }
+    if (my !== rosterSeq) return;
+    const mine = myScope && myScope();
+    const isMine = mine && mine.grade === g && mine.room === r;
+    rosterEl.innerHTML = `<div class="roster"><div class="rhd"><b>รายชื่อนักเรียน ${esc(scopeText(g, r))}</b> ${isMine ? '<span class="chip ok">ห้องของฉัน</span>' : ''} <span class="muted">${res.total} คน · คลิกชื่อเพื่อเลือก</span></div>
+      <div class="rgrid">${res.items.map((s, k) => `<button class="rcell" data-rk="${k}"><span class="rid">${esc(s.studentId)}</span><span class="rnm">${esc(fullName(s))}</span><span class="rcr">${esc(classRoom(s))}${s.hasPhoto ? '' : ' · <b style="color:var(--bad)">ไม่มีรูป</b>'}</span></button>`).join('') || '<span class="muted">ไม่มีนักเรียน</span>'}</div></div>`;
+    $$('.rcell', rosterEl).forEach(b => b.onclick = () => { $$('.rcell.on', rosterEl).forEach(x => x.classList.remove('on')); b.classList.add('on'); choose(res.items[+b.dataset.rk]); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  };
   const choose = s => { box.hidden = true; i.value = s.studentId; lastKey = keyNow(); safe(() => fn(s.studentId)); };
   const keyNow = () => i.value.trim() + '|' + gSel.value + '|' + rSel.value;
   const label = () => [i.value.trim(), gSel.value && ('ชั้น ' + gSel.value), rSel.value && ('ห้อง ' + rSel.value)].filter(Boolean).join(' · ');
@@ -598,8 +622,8 @@ function bindSearch(id, fn, opts = {}) {
     if (!auto && list.length === 1) return choose(list[0]);
     render();
   };
-  gSel.onchange = () => { fillClassDropdowns(gSel, rSel); i.value = ''; if (opts.onScope) opts.onScope(gSel.value, rSel.value); if (opts.noAutoSelect) { seq++; box.hidden = true; } else run(true); };
-  rSel.onchange = () => { i.value = ''; if (opts.onScope) opts.onScope(gSel.value, rSel.value); if (opts.noAutoSelect) { seq++; box.hidden = true; } else run(true); };
+  gSel.onchange = () => { fillClassDropdowns(gSel, rSel); i.value = ''; if (opts.onScope) opts.onScope(gSel.value, rSel.value); if (opts.noAutoSelect || rosterEl) { seq++; box.hidden = true; drawRoster(); if (opts.onClass) opts.onClass(gSel.value, rSel.value); } else run(true); };
+  rSel.onchange = () => { i.value = ''; if (opts.onScope) opts.onScope(gSel.value, rSel.value); if (opts.noAutoSelect || rosterEl) { seq++; box.hidden = true; drawRoster(); if (opts.onClass) opts.onClass(gSel.value, rSel.value); } else run(true); };
   i.oninput = () => {
     clearTimeout(timer);
     if (!i.value.trim() && !gSel.value && !rSel.value) { seq++; lastKey = ''; box.hidden = true; return; }
@@ -618,6 +642,8 @@ function bindSearch(id, fn, opts = {}) {
   document.addEventListener('mousedown', outside);
   $('#' + id + 'Btn').onclick = () => run(false);
   setTimeout(() => i.focus(), 50);
+  drawRoster();
+  if (opts.onClass && (gSel.value || rSel.value)) setTimeout(() => opts.onClass(gSel.value, rSel.value), 0);
 }
 
 /* =================== แยกชื่อ / คำนำหน้า =================== */
@@ -1095,7 +1121,7 @@ PAGES.topics = async pg => {
 
 /* ---------- 4.1 บันทึกพฤติกรรม ---------- */
 PAGES.behavior = pg => {
-  pg.innerHTML = searchBar('bhQ') + '<div id="bhOut"></div>';
+  pg.innerHTML = searchBar('bhQ') + '<div id="bhOut"></div><div id="bhRoster"></div>';
   bindSearch('bhQ', async sid => {
     const r = await api('behaviorContext', sid);
     S.topics = r.topics;
@@ -1115,7 +1141,7 @@ PAGES.behavior = pg => {
       const logs = await api('recordBehavior', r.student.studentId, b.dataset.t, $('#bhNote').value);
       $('#bhNote').value = ''; drawToday(logs); toast('บันทึกพฤติกรรมแล้ว', 'ok');
     }));
-  });
+  }, { roster: 'bhRoster' });
 };
 
 /* ---------- 4.2 รายงานพฤติกรรม ---------- */
@@ -1156,11 +1182,12 @@ PAGES.behaviorReport = pg => {
     $$('[data-one]', $('#brOut')).forEach(el => el.onclick = e => { e.preventDefault(); $('#brQ').value = el.dataset.one; safe(() => showOne(el.dataset.one)); window.scrollTo(0, 0); });
   };
   bindSearch('brQ', showOne, { onGroup: showGroup, noAutoSelect: true });
+  if ($('#brQG').value || $('#brQR').value) safe(() => showGroup($('#brQG').value, $('#brQR').value));   // ครู: แสดงรายงานรวมห้องของตนก่อน
 };
 
 /* ---------- 5. รายงานผล ---------- */
 PAGES.report = pg => {
-  pg.innerHTML = searchBar('rpQ') + '<div id="rpOut"></div>';
+  pg.innerHTML = searchBar('rpQ') + '<div id="rpOut"></div><div id="rpRoster"></div>';
   bindSearch('rpQ', async sid => {
     const r = await api('fullReport', sid);
     const s = r.student, a = r.agg;
@@ -1170,7 +1197,7 @@ PAGES.report = pg => {
       <div style="margin-top:12px">${aggTable(a.positive, a.totalPositive, a.countPositive, 'pos', 'พฤติกรรมทางบวก')}</div>
       <div style="margin-top:12px">${aggTable(a.negative, a.totalNegative, a.countNegative, 'neg', 'พฤติกรรมทางลบ')}</div>
       ${sumBox(a)}<p class="muted" style="margin-top:10px">จำนวนครั้งที่มาสาย (ไม่ขออนุญาต): <b style="color:var(--bad)">${r.lateCount}</b> ครั้ง · เข้าโดยได้รับอนุญาต (มีบัตร/แจ้งครู ไม่นับมาสาย): <b>${r.authCount || 0}</b> ครั้ง</p></div>`;
-  });
+  }, { roster: 'rpRoster' });
 };
 
 /* ---------- บัตรอนุญาตเข้าสาย ---------- */
@@ -1332,7 +1359,7 @@ PAGES.approvals = async pg => {
 
 /* ---------- 6.1 ออกบัตรอนุญาตเข้าสาย ---------- */
 PAGES.pass = pg => {
-  pg.innerHTML = searchBar('psQ') + '<div id="psOut"></div><div class="card" style="margin-top:14px"><h3>บัตรระยะยาวที่ใช้งานอยู่</h3><div id="psLong" class="scroll"><span class="muted">กำลังโหลด...</span></div></div>';
+  pg.innerHTML = searchBar('psQ') + '<div id="psOut"></div><div id="psRoster"></div><div class="card" style="margin-top:14px"><h3>บัตรระยะยาวที่ใช้งานอยู่</h3><div id="psLong" class="scroll"><span class="muted">กำลังโหลด...</span></div></div>';
   const loadLong = async () => {
     const l = await api('listLongPasses');
     const ty = n => S.passTypes.find(x => x.name === n) || { yellow: /วัด/.test(n || '') };
@@ -1379,12 +1406,12 @@ PAGES.pass = pg => {
     $('#psGo').onclick = () => issue(false);
     if ($('#psLater')) $('#psLater').onclick = () => issue(true);
   };
-  bindSearch('psQ', load);
+  bindSearch('psQ', load, { roster: 'psRoster' });
 };
 
 /* ---------- 6.2 ครูรับเรื่องขอเข้าสาย ---------- */
 PAGES.request = pg => {
-  pg.innerHTML = searchBar('rqQ') + '<div id="rqOut"></div>';
+  pg.innerHTML = searchBar('rqQ') + '<div id="rqOut"></div><div id="rqRoster"></div>';
   const load = async sid => {
     const b = await api('requestContext', sid); const s = b.student; S.today = b.today;
     let photo = '', postpone = false;
@@ -1421,7 +1448,7 @@ PAGES.request = pg => {
       $('#rqQ').value = ''; $('#rqQ').focus();
     });
   };
-  bindSearch('rqQ', load);
+  bindSearch('rqQ', load, { roster: 'rqRoster' });
 };
 
 /* ---------- 7. ตรวจสอบสถานะ ---------- */
@@ -1670,8 +1697,9 @@ PAGES.lateReport = pg => {
   const AUTH = e => e.type !== 'ไม่ขออนุญาต';
   pg.innerHTML = `<div class="tabs noprint"><button class="on" data-t="one">แบบที่ 1 รายบุคคล</button><button data-t="all">แบบที่ 2 ทั้งหมดตามช่วงเวลา</button></div>
    <p class="muted noprint" style="margin-top:-6px">นับเป็น "มาสาย" เฉพาะเข้าสายโดยไม่ขออนุญาต · มีบัตรอนุญาต / แจ้งครูที่ปรึกษา เป็นสถิติการเข้าโรงเรียน ไม่นับเป็นมาสาย</p>
-   <div id="lr1">${searchBar('lrQ')}<div id="lr1Out"></div></div>
+   <div id="lr1">${searchBar('lrQ')}<div id="lr1Out"></div><div id="lrRoster"></div></div>
    <div id="lr2" hidden><div class="card noprint"><div class="row"><label>ตั้งแต่วันที่<input type="date" id="lrFrom" value="${t.slice(0, 8)}01"></label><label>ถึงวันที่<input type="date" id="lrTo" value="${t}"></label>
+    <label>ชั้น<select id="lrG"></select></label><label>ห้อง<select id="lrR"></select></label>
     <label>แสดง<select id="lrType"><option value="late">มาสาย (ไม่ขออนุญาต)</option><option value="auth">เข้าโดยได้รับอนุญาต (สถิติ ไม่นับมาสาย)</option><option value="มีบัตรอนุญาต">เฉพาะมีบัตรอนุญาต</option><option value="มีบัตรอนุญาต (เด็กวัด)">เฉพาะบัตรเด็กวัด</option><option value="แจ้งครูที่ปรึกษา">เฉพาะแจ้งครูที่ปรึกษา</option></select></label><button class="btn" id="lrGo">ค้นหา</button></div></div><div id="lr2Out"></div></div>`;
   $$('.tabs button', pg).forEach(b => b.onclick = () => { $$('.tabs button', pg).forEach(x => x.classList.toggle('on', x === b)); $('#lr1').hidden = b.dataset.t !== 'one'; $('#lr2').hidden = b.dataset.t !== 'all'; });
   bindSearch('lrQ', async sid => {
@@ -1682,17 +1710,25 @@ PAGES.lateReport = pg => {
        <div class="sumbox"><div style="background:var(--bad2);color:var(--bad)">จำนวนครั้งที่มาสาย (ไม่ขออนุญาต)<div class="big-num">${r.count} ครั้ง</div></div>
         <div style="background:var(--ok2);color:var(--ok)">เข้าโดยได้รับอนุญาต (มีบัตร/แจ้งครู)<div class="big-num">${r.authCount} ครั้ง</div><div style="font-size:13px">สถิติ · ไม่นับเป็นมาสาย</div></div></div>
        <table class="t" style="margin-top:12px"><thead><tr><th class="c">ที่</th><th>วันที่</th><th>เวลา</th><th>ประเภท</th><th class="c">นับเป็นมาสาย</th></tr></thead><tbody>${r.entries.map((e, i) => `<tr${AUTH(e) ? ' style="color:var(--mut)"' : ''}><td class="c">${i + 1}</td><td>${esc(thDate(e.date))}</td><td>${esc(hm(e.time))} น.</td><td>${esc(e.type)}</td><td class="c">${AUTH(e) ? '<span class="chip ok">ไม่นับ</span>' : '<span class="chip bad">นับ</span>'}</td></tr>`).join('') || '<tr><td colspan="5" class="c muted">ไม่มีประวัติการเข้าสาย</td></tr>'}</tbody></table></div>`;
-  });
+  }, { roster: 'lrRoster' });
   $('#lrGo').onclick = () => safe(async () => {
-    const r = await api('lateReportRange', $('#lrFrom').value, $('#lrTo').value, $('#lrType').value);
+    const r = await api('lateReportRange', $('#lrFrom').value, $('#lrTo').value, $('#lrType').value, $('#lrG').value, $('#lrR').value);
     const isLate = r.type === 'late';
     const what = isLate ? 'มาสาย (ไม่ขออนุญาต)' : r.type === 'auth' ? 'เข้าโดยได้รับอนุญาต (ไม่นับมาสาย)' : r.type + ' (ไม่นับมาสาย)';
     const title = isLate ? 'รายงานนักเรียนมาสาย' : 'สถิติการเข้าโรงเรียนโดยได้รับอนุญาต';
-    const sub = `ช่วงวันที่ ${esc(thDate(r.from) || 'เริ่มต้น')} – ${esc(thDate(r.to) || 'ปัจจุบัน')} · ${esc(what)} · ${r.rows.length} คน รวม ${r.total} ครั้ง`;
+    const sub = `ช่วงวันที่ ${esc(thDate(r.from) || 'เริ่มต้น')} – ${esc(thDate(r.to) || 'ปัจจุบัน')}${r.grade || r.room ? ' · <b style="color:var(--bad)">' + esc(scopeText(r.grade, r.room)) + '</b>' : ' · ทุกชั้น/ห้อง'} · ${esc(what)} · ${r.rows.length} คน รวม ${r.total} ครั้ง`;
     const colName = isLate ? 'จำนวนครั้งที่มาสาย' : 'จำนวนครั้ง';
     $('#lr2Out').innerHTML = actionBar({ el: () => $('#lr2Rep'), name: (isLate ? 'รายงานมาสาย_' : 'สถิติเข้าโดยได้รับอนุญาต_') + r.from + '_' + r.to, excel: () => [[title + ' ' + sub.replace(/<[^>]+>/g, '')], ['ที่', 'รหัสนักเรียน', 'คำนำหน้า', 'ชื่อ', 'สกุล', 'ชั้น', 'ห้อง', colName, isLate ? 'เข้าโดยได้รับอนุญาต (ไม่นับ)' : 'มาสาย (ไม่ขออนุญาต)'], ...r.rows.map((x, i) => [i + 1, x.student.studentId, x.student.prefix, x.student.firstName, x.student.lastName, x.student.grade, x.student.room, x.count, isLate ? x.auth : x.late])] }) +
       `<div class="rep" id="lr2Rep">${reportHead(title, sub, r.printedAt)}<table class="t"><thead><tr><th class="c">ที่</th><th>รูป</th><th>รหัสนักเรียน</th><th>ชื่อ</th><th>สกุล</th><th class="c">ชั้น</th><th class="c">ห้อง</th><th class="c">${colName}</th><th class="c muted">${isLate ? 'ได้รับอนุญาต (ไม่นับ)' : 'มาสาย'}</th></tr></thead><tbody>${r.rows.map((x, i) => `<tr><td class="c">${i + 1}</td><td>${stuPhoto(x.student, 'sm')}</td><td>${esc(x.student.studentId)}</td><td>${esc((x.student.prefix || '') + x.student.firstName)}</td><td>${esc(x.student.lastName)}</td><td class="c">${esc(x.student.grade)}</td><td class="c">${esc(x.student.room)}</td><td class="c"><b style="color:${isLate ? 'var(--bad)' : 'var(--ok)'}">${x.count}</b></td><td class="c muted">${isLate ? x.auth : x.late}</td></tr>`).join('') || '<tr><td colspan="9" class="c muted">ไม่พบข้อมูล</td></tr>'}</tbody></table></div>`;
   });
+  // ชั้น/ห้อง: ครู = ห้องของตนก่อน แล้วแสดงผลทันที
+  const lg = $('#lrG'), lr = $('#lrR');
+  fillClassDropdowns(lg, lr);
+  const m = myScope();
+  if (m && !m.rooms) { lg.value = m.grade; fillClassDropdowns(lg, lr); lr.value = m.room; }
+  lg.onchange = () => { fillClassDropdowns(lg, lr); $('#lrGo').click(); };
+  lr.onchange = () => $('#lrGo').click();
+  if (m) $('#lrGo').click();
 };
 
 /* ---------- ตั้งค่า ---------- */
