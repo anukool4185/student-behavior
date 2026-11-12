@@ -297,9 +297,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.6.0';
-const MIN_SERVER_VERSION = '3.5.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '3.6.1';
+const MIN_SERVER_VERSION = '3.6.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.6.1': ['ครูเข้าระบบแล้วเห็นห้องที่ตนเป็นที่ปรึกษาก่อน (สถิติ ตาราง ดรอปดาวน์) ห้องอื่นดูจากดรอปดาวน์หรือค้นหา'],
   '3.6.0': ['ออกบัตรทุกประเภทในเมนูเดียว (เลือกประเภทผู้ได้บัตร ที่แอดมินตั้งในหน้าตั้งค่า)', 'บัตร/สถิติสีเขียว = ผู้มีบัตรทั้งหมดยกเว้นเด็กวัด · สีเหลือง = เด็กวัดเท่านั้น'],
   '3.5.0': ['นำเข้า Excel: ข้ามรหัสที่มีอยู่แล้ว นำเข้าเฉพาะรหัสใหม่', 'แสดงรายชื่อที่ไม่มีในไฟล์ให้เลือกลบ (คนที่เพิ่มผ่านหน้าเว็บมีหมายเหตุ)', 'ลบนักเรียน = ย้ายไปชีตนักเรียนที่ลบออก ประวัติยังอยู่แต่ไม่แสดง'],
   '3.4.0': ['บัตรระยะยาว (เด็กวัด/ในอุปการะพิเศษ) ตั้งครั้งเดียวใช้ทุกวันในช่วงที่กำหนด', 'แผงสถิติเพิ่มบล็อกสีเหลือง จัดเรียงใหม่: คอมไม่เกินความสูงจอ / มือถือแนวตั้ง 1-2-2 / แนวนอนแถวเดียว'],
@@ -549,12 +550,17 @@ function bindSearch(id, fn, opts = {}) {
   const i = $('#' + id), box = $('#' + id + 'Ac'), gSel = $('#' + id + 'G'), rSel = $('#' + id + 'R'), wrap = $('#' + id + 'Wrap');
   let list = [], total = 0, hi = -1, seq = 0, timer = null, navigated = false, lastKey = '';
   fillClassDropdowns(gSel, rSel);
+  if (!opts.noPreselect && S.role === 'teacher' && (S.myRooms || []).length === 1) {   // ครู: เลือกห้องของตนไว้ก่อน
+    gSel.value = S.myRooms[0].grade; fillClassDropdowns(gSel, rSel); rSel.value = S.myRooms[0].room;
+  }
+  let widened = false;
   const choose = s => { box.hidden = true; i.value = s.studentId; lastKey = keyNow(); safe(() => fn(s.studentId)); };
   const keyNow = () => i.value.trim() + '|' + gSel.value + '|' + rSel.value;
   const label = () => [i.value.trim(), gSel.value && ('ชั้น ' + gSel.value), rSel.value && ('ห้อง ' + rSel.value)].filter(Boolean).join(' · ');
   const render = () => {
     if (!list.length) { box.innerHTML = `<div class="acn">ไม่พบนักเรียนที่ตรงกับ "${esc(label())}"</div>`; box.hidden = false; return; }
     box.innerHTML = list.map((s, k) => `<div class="aci ${k === hi ? 'on' : ''}" data-k="${k}"><span class="acid">${esc(s.studentId)}</span><span class="acnm">${esc(fullName(s))}</span><span class="accr">${esc(classRoom(s))}</span>${s.hasPhoto ? '' : '<span class="chip bad" style="font-size:11px">ไม่มีรูป</span>'}</div>`).join('') +
+      (widened ? `<div class="acn" style="background:#fffbeb;color:#92400e">ไม่พบใน ${esc(scopeText(gSel.value, rSel.value))} — แสดงผลจากทุกห้อง</div>` : '') +
       (total > list.length ? `<div class="acn">แสดง ${list.length} จาก ${total} คน — เลือกห้อง หรือพิมพ์เพิ่มเพื่อให้แคบลง</div>` : `<div class="acn">${total} คน · คลิกเลือก หรือใช้ ↑ ↓ แล้วกด Enter</div>`);
     box.hidden = false;
     $$('.aci', box).forEach(el => el.onmousedown = e => { e.preventDefault(); choose(list[+el.dataset.k]); });
@@ -562,7 +568,11 @@ function bindSearch(id, fn, opts = {}) {
   };
   const lookup = async () => {
     const my = ++seq;
-    const r = await rpc('findStudents', [i.value.trim(), gSel.value, rSel.value], S.token);
+    let r = await rpc('findStudents', [i.value.trim(), gSel.value, rSel.value], S.token);
+    widened = false;
+    if (!r.items.length && i.value.trim() && (gSel.value || rSel.value)) {   // ไม่พบในห้องที่เลือก → ค้นทั้งโรงเรียน
+      r = await rpc('findStudents', [i.value.trim(), '', ''], S.token); widened = r.items.length > 0;
+    }
     if (my !== seq) return false;
     list = r.items; total = r.total; hi = list.length ? 0 : -1; navigated = false;
     return true;
@@ -1442,6 +1452,13 @@ function setScopeLabel(label, page = 'status') {
   const a = $(`#nav a[data-p="${page}"]`); if (a) a.insertAdjacentHTML('beforeend', `<span class="scopelab">${esc(label)}</span>`);
   const h2 = $('#main h2'); if (h2 && CUR === page) h2.insertAdjacentHTML('beforeend', `<span class="scopelab">${esc(label)}</span>`);
 }
+/** ห้องที่ครูเป็นที่ปรึกษา → ขอบเขตเริ่มต้น */
+function myScope() {
+  const m = S.role === 'teacher' ? (S.myRooms || []) : [];
+  if (!m.length) return null;
+  if (m.length === 1) return { grade: m[0].grade, room: m[0].room, label: scopeText(m[0].grade, m[0].room), mine: true };
+  return { rooms: m, label: m.map(x => scopeText(x.grade, x.room)).join(', '), mine: true };
+}
 const scopeText = (g, r) => g && r ? `${g}/${r}` : g ? g : r ? 'ห้อง ' + r : '';
 
 /* ---------- แผงสถิติการมาสาย (ด้านขวา, อัปเดตทุก 15 วินาที) ---------- */
@@ -1545,18 +1562,21 @@ PAGES.status = pg => {
   PAGE_CLEANUP.push(() => clearInterval(tmr));
   if (bdExpired()) { BACKDATE = null; bdSave(); }
   /* ขอบเขตที่กำลังดู: ไม่เลือก = ทั้งหมด / เลือกชั้น-ห้อง หรือเลือกนักเรียน = เฉพาะห้องนั้น */
-  const setScope = (g, r) => {
-    STATS_SCOPE = (g || r) ? { grade: g || '', room: r || '', label: scopeText(g, r) } : null;
+  const setScope = (g, r, obj) => {
+    STATS_SCOPE = obj || ((g || r) ? { grade: g || '', room: r || '', label: scopeText(g, r) } : null);
     setScopeLabel(STATS_SCOPE ? STATS_SCOPE.label : '');
     refreshStats(); loadTable();
   };
   const loadTable = async () => {
     const sc = STATS_SCOPE || {};
-    const d = await api('entriesOfDay', $('#scDate').value, sc.grade || '', sc.room || '');
-    const scopeChip = STATS_SCOPE ? ` · <span style="color:var(--bad);font-weight:800">${esc(STATS_SCOPE.label)}</span> <a href="#" id="scAll" class="noprint" style="font-size:13px">✕ ดูทั้งหมด</a>` : ' · ทุกชั้น/ห้อง';
+    const d = await api('entriesOfDay', $('#scDate').value, sc.grade || '', sc.room || '', sc.rooms || []);
+    const mine = myScope();
+    const mineLink = mine && !(STATS_SCOPE && STATS_SCOPE.label === mine.label) ? ` <a href="#" id="scMine" class="noprint" style="font-size:13px">🏠 ห้องของฉัน (${esc(mine.label)})</a>` : '';
+    const scopeChip = (STATS_SCOPE ? ` · <span style="color:var(--bad);font-weight:800">${esc(STATS_SCOPE.label)}</span> <a href="#" id="scAll" class="noprint" style="font-size:13px">✕ ดูทั้งหมด</a>` : ' · ทุกชั้น/ห้อง') + mineLink;
     lastDay = d;
     $('#scTbl').innerHTML =
       `<div class="rep" id="scRep" style="padding:0;border:0">${reportHead('รายการบันทึกเข้าโรงเรียน', 'วันที่ ' + esc(thDate(d.date)) + scopeChip + ` · มาสาย (ไม่ขออนุญาต) <b style="color:var(--bad)">${d.rows.filter(x => x.entry.type === 'ไม่ขออนุญาต').length}</b> คน · ได้รับอนุญาต (ไม่นับมาสาย) <b style="color:var(--ok)">${d.rows.filter(x => x.entry.type !== 'ไม่ขออนุญาต').length}</b> คน`, localStamp())}<div class="scroll">${entriesTableHTML(d.rows)}</div></div>`;
+    if ($('#scMine')) $('#scMine').onclick = e => { e.preventDefault(); const m = myScope(); if (m.grade !== undefined && !m.rooms) { $('#scQG').value = m.grade; fillClassDropdowns($('#scQG'), $('#scQR')); $('#scQR').value = m.room; } setScope('', '', m); };
     if ($('#scAll')) $('#scAll').onclick = e => { e.preventDefault(); $('#scQG').value = ''; fillClassDropdowns($('#scQG'), $('#scQR')); $('#scQR').value = ''; setScope('', ''); };
     $$('[data-delent]', $('#scTbl')).forEach(b => b.onclick = () => safe(async () => {
       const unauth = b.dataset.deltype === 'ไม่ขออนุญาต';
@@ -1630,6 +1650,9 @@ PAGES.status = pg => {
   }, { onScope: (g, r) => setScope(g, r) });
   drawTime();
   if (curAt()) $('#scDate').value = curAt().date;
+  // ครู: เริ่มต้นแสดงห้องที่ตนเป็นที่ปรึกษา
+  const mine = myScope();
+  if (mine) { STATS_SCOPE = mine; setScopeLabel(mine.label); refreshStats(); }
   loadTable();
 };
 async function unauthorized(s, outEl) {
@@ -1783,7 +1806,7 @@ function showWhatsNew() {
 /* =================== เข้าสู่ระบบ =================== */
 async function startApp() {
   const b = await api('getBootstrap');
-  Object.assign(S, { role: b.role, roleName: b.roleName, school: b.schoolName, topics: b.topics, today: b.today, passTypes: b.passTypes || [{ name: 'นักเรียนทั่วไป', long: false, yellow: false }], classes: b.classes || [], backdateMinutes: b.backdateMinutes || 10, canBackdate: !!b.canBackdate });
+  Object.assign(S, { role: b.role, roleName: b.roleName, school: b.schoolName, topics: b.topics, today: b.today, myRooms: b.myRooms || [], passTypes: b.passTypes || [{ name: 'นักเรียนทั่วไป', long: false, yellow: false }], classes: b.classes || [], backdateMinutes: b.backdateMinutes || 10, canBackdate: !!b.canBackdate });
   $('#loginView').hidden = true; $('#appView').hidden = false;
   $('#hdSchool').textContent = S.school; $('#hdRole').textContent = S.roleName;
   renderNav(); updateBell(b.pendingCount); showVersions();
