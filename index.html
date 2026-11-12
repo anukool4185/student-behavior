@@ -241,6 +241,9 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 @media(max-width:480px){.toolbar .lbl,.toolbar .xl{display:none}.toolbar .xs{display:inline}
   .toolbar .btn{flex:0 0 auto!important;padding:7px 7px!important;font-size:12px!important}
   .toolbar input[type=date]{flex:1 1 auto!important;font-size:12px!important;padding:6px 3px!important}}
+.lc-head.lc-g{background:#dcfce7;border-bottom:1.6mm solid #16a34a;margin:-2mm -2.4mm 0;padding:1.4mm 2.4mm .8mm}
+.lc-head.lc-y{background:#fef9c3;border-bottom:1.6mm solid #eab308;margin:-2mm -2.4mm 0;padding:1.4mm 2.4mm .8mm}
+.lc-type{font-size:6.8pt;font-weight:800}.lc-g .lc-type{color:#15803d}.lc-y .lc-type{color:#854d0e}
 .lc-long{display:block;font-size:6.6pt;color:#854d0e;background:#fef08a;border-radius:2mm;margin:.4mm 4mm 0;padding:0 1mm}
 .lc-pending{color:#dc2626;font-weight:800;font-size:8pt}
 [hidden]{display:none!important}
@@ -294,9 +297,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.5.0';
-const MIN_SERVER_VERSION = '3.4.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '3.6.0';
+const MIN_SERVER_VERSION = '3.5.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.6.0': ['ออกบัตรทุกประเภทในเมนูเดียว (เลือกประเภทผู้ได้บัตร ที่แอดมินตั้งในหน้าตั้งค่า)', 'บัตร/สถิติสีเขียว = ผู้มีบัตรทั้งหมดยกเว้นเด็กวัด · สีเหลือง = เด็กวัดเท่านั้น'],
   '3.5.0': ['นำเข้า Excel: ข้ามรหัสที่มีอยู่แล้ว นำเข้าเฉพาะรหัสใหม่', 'แสดงรายชื่อที่ไม่มีในไฟล์ให้เลือกลบ (คนที่เพิ่มผ่านหน้าเว็บมีหมายเหตุ)', 'ลบนักเรียน = ย้ายไปชีตนักเรียนที่ลบออก ประวัติยังอยู่แต่ไม่แสดง'],
   '3.4.0': ['บัตรระยะยาว (เด็กวัด/ในอุปการะพิเศษ) ตั้งครั้งเดียวใช้ทุกวันในช่วงที่กำหนด', 'แผงสถิติเพิ่มบล็อกสีเหลือง จัดเรียงใหม่: คอมไม่เกินความสูงจอ / มือถือแนวตั้ง 1-2-2 / แนวนอนแถวเดียว'],
   '3.3.1': ['ปรับหน้ามือถือ: แถบบน 2 แถว ช่องค้นหา และแถบปุ่มอยู่บรรทัดเดียว ย่อขนาดอัตโนมัติ'],
@@ -751,7 +755,7 @@ const A = ['admin'], ST = ['admin', 'teacher'], AL = ['admin', 'teacher', 'publi
 const MENU = [
   ['ข้อมูลพื้นฐาน', [['importStudents', 'นำเข้าข้อมูลนักเรียน', A], ['students', 'จัดการข้อมูล/รูปนักเรียน', A], ['teachers', 'ครูที่ปรึกษา', A], ['topics', 'หัวข้อพฤติกรรม', A]]],
   ['พฤติกรรม', [['behavior', 'บันทึกพฤติกรรม', ST], ['behaviorReport', 'รายงานพฤติกรรม', ST], ['report', 'รายงานผลรายบุคคล', ST]]],
-  ['การมาสาย', [['approvals', '🔔 อนุมัติบัตรเข้าสาย', A], ['pass', 'ออกบัตรอนุญาตเข้าสาย', ST], ['specials', 'บัตรระยะยาว (เด็กวัด/อุปการะพิเศษ)', A], ['request', 'ครูรับเรื่องขอเข้าสาย', ST], ['status', 'ตรวจสอบสถานะ / บันทึกเข้า', AL], ['lateReport', 'รายงานนักเรียนเข้าสาย', ST]]],
+  ['การมาสาย', [['approvals', '🔔 อนุมัติบัตรเข้าสาย', A], ['pass', 'ออกบัตรอนุญาตเข้าสาย', ST], ['request', 'ครูรับเรื่องขอเข้าสาย', ST], ['status', 'ตรวจสอบสถานะ / บันทึกเข้า', AL], ['lateReport', 'รายงานนักเรียนเข้าสาย', ST]]],
   ['ระบบ', [['settings', 'ตั้งค่า', A]]],
   ['ครูที่ปรึกษา', [['register', 'ลงทะเบียนครูที่ปรึกษา', ['register']]]]
 ];
@@ -1163,7 +1167,7 @@ PAGES.report = pg => {
 function cardHTML(d) {
   const s = d.student, p = d.pass;
   return `<div class="lcard">
-   <div class="lc-head"><div class="lc-school">${esc(d.schoolName)}</div><div class="lc-title">บัตรอนุญาตเข้าสาย${p.special ? '<span class="lc-long">ระยะยาว · ' + esc(p.category || '') + '</span>' : ''}</div><div class="lc-date">${p.special ? 'ใช้ได้ ' + esc(thDate(p.date)) + ' – ' + (p.endDate ? esc(thDate(p.endDate)) : 'ไม่กำหนด') : 'วันที่ ' + esc(thDate(p.date))}</div></div>
+   <div class="lc-head ${p.yellow ? 'lc-y' : 'lc-g'}"><div class="lc-school">${esc(d.schoolName)}</div><div class="lc-title">บัตรอนุญาตเข้าสาย</div><div class="lc-type">${esc(p.category || 'นักเรียนทั่วไป')}${p.special ? ' · ระยะยาว' : ''}</div><div class="lc-date">${p.special ? 'ใช้ได้ ' + esc(thDate(p.date)) + ' – ' + (p.endDate ? esc(thDate(p.endDate)) : 'ไม่กำหนด') : 'วันที่ ' + esc(thDate(p.date))}</div></div>
    <div class="lc-top">${s.photo ? `<img class="lc-photo" src="${s.photo}">` : `<div class="lc-photo nophoto" data-cardsid="${esc(s.studentId)}">${p.photoPostponed === 'TRUE' ? 'รอรูป<br>(ขอเลื่อน)' : 'ไม่มีรูป'}</div>`}<div class="lc-st"><b>${esc(fullName(s))}</b>รหัส ${esc(s.studentId)}<br>${esc(classRoom(s))}${s.phone ? '<br>โทร ' + esc(s.phone) : ''}</div></div>
    <div class="lc-time"><span>อนุญาตเข้าโรงเรียนเวลา</span><b>${esc(hm(p.entryTime))} น.</b></div>
    <div class="lc-sec"><i>เหตุผล:</i> ${esc(p.reason)}</div>
@@ -1175,8 +1179,8 @@ function cardHTML(d) {
 function cardWithActions(d) {
   const id = 'cw' + Math.random().toString(36).slice(2), p = d.pass, sid = esc(d.student.studentId);
   const photoBox = d.student.photo ? '' : `<div class="block cardphoto" data-sid="${sid}" data-html2canvas-ignore="true" style="margin-top:8px"><b>ยังไม่มีรูปนักเรียนบนบัตร</b><div class="row" style="margin:6px 0"><button class="btn sm" data-cam="${sid}">📷 ถ่ายรูป</button><button class="btn sm ghost" data-upl="${sid}">📁 อัปโหลดรูป</button></div><div class="muted">เพิ่มแล้วรูปขึ้นบนบัตรทันที พิมพ์ใหม่ได้เลย</div></div>`;
-  const cancelBox = p.special ? (S.role === 'admin' && p.status !== 'cancelled' ? `<div class="row noprint" style="margin-top:8px"><button class="btn sm ghost danger" data-spcancel="${esc(p.passId)}">✖ ยกเลิกบัตรระยะยาว</button></div>` : '') : S.role === 'admin' || S.role === 'teacher' ? `<div class="row noprint" style="margin-top:8px"><button class="btn sm ghost danger" data-cancel="${esc(p.passId)}">✖ ยกเลิกบัตร</button>${$('#psReason') || CUR === 'pass' ? `<button class="btn sm ghost" data-reissue="${esc(p.passId)}" data-rdate="${esc(p.date)}" data-rtime="${esc(p.entryTime)}" data-rreason="${esc(p.reason)}">↻ ยกเลิกแล้วออกใหม่</button>` : ''}</div>` : '';
-  if (p.status === 'cancelled') return `<div class="cardwrap"><div style="flex:1"><div class="banner" style="background:#f1f5f9;color:#475569">⊘ ${p.special ? 'บัตรระยะยาว (' + esc(p.category || '') + ') เริ่ม' : 'บัตร'}วันที่ ${esc(thDate(p.date))} (เวลา ${esc(hm(p.entryTime))} น.) ถูกยกเลิกแล้ว โดย ${esc(p.cancelledBy || '-')} · ${esc(p.cancelledAt || '')}</div></div></div>`;
+  const cancelBox = S.role === 'admin' || S.role === 'teacher' ? `<div class="row noprint" style="margin-top:8px"><button class="btn sm ghost danger" data-cancel="${esc(p.passId)}">✖ ยกเลิกบัตร</button>${$('#psReason') || CUR === 'pass' ? `<button class="btn sm ghost" data-reissue="${esc(p.passId)}" data-rdate="${esc(p.date)}" data-rtime="${esc(p.entryTime)}" data-rreason="${esc(p.reason)}" data-rtype="${esc(p.category || '')}" data-rend="${esc(p.endDate || '')}">↻ ยกเลิกแล้วออกใหม่</button>` : ''}</div>` : '';
+  if (p.status === 'cancelled') return `<div class="cardwrap"><div style="flex:1"><div class="banner" style="background:#f1f5f9;color:#475569">⊘ บัตร${esc(p.category ? ' ' + p.category : '')}${p.special ? ' (ระยะยาว) เริ่ม' : ''}วันที่ ${esc(thDate(p.date))} (เวลา ${esc(hm(p.entryTime))} น.) ถูกยกเลิกแล้ว โดย ${esc(p.cancelledBy || '-')} · ${esc(p.cancelledAt || '')}</div></div></div>`;
   const meta = `${p.photoPostponed === 'TRUE' && !d.student.photo ? '<div><span class="chip warn">ขอเลื่อนส่งรูปนักเรียน</span></div>' : ''}<div class="muted">ออกโดย ${esc(p.issuedBy)} · ${esc(p.createdAt)}${p.approvedBy ? ' · ' + (p.status === 'rejected' ? 'ไม่อนุมัติโดย ' : 'อนุมัติโดย ') + esc(p.approvedBy) : ''}</div>`;
   if (p.status === 'pending') {
     const adminBox = S.role === 'admin' ? `<div class="block" style="margin-top:8px"><h4>อนุมัติบัตรใบนี้</h4><div class="row"><input type="password" placeholder="รหัสลายเซ็น (ไม่ใส่ก็ได้)" data-apcode="${esc(p.passId)}" style="width:200px"><button class="btn green" data-approve="${esc(p.passId)}">✔ อนุญาตออกบัตร</button><button class="btn red" data-reject="${esc(p.passId)}">✖ ไม่อนุญาต</button></div><p class="muted">กดอนุญาตแล้วลายเซ็นจะปรากฏบนบัตรเอง</p></div>` : '';
@@ -1184,7 +1188,7 @@ function cardWithActions(d) {
   }
   if (p.status === 'rejected') return `<div class="cardwrap"><div style="flex:1"><div class="banner bad">✖ แอดมินไม่อนุมัติบัตรวันที่ ${esc(thDate(p.date))} (เวลา ${esc(hm(p.entryTime))} น.)</div>${meta}</div></div>`;
   return `<div class="cardwrap"><div id="${id}">${cardHTML(d)}</div><div>
-    <div>${p.special ? '<span class="chip" style="background:#fef08a;color:#854d0e">บัตรระยะยาว · ' + esc(p.category || '') + '</span> ' : ''}${p.signed === 'TRUE' ? '<span class="chip ok">อนุมัติแล้ว · มีลายเซ็น</span>' : '<span class="chip warn">อนุมัติแล้ว · ไม่มีลายเซ็น (ยังไม่ได้อัปโหลดลายเซ็น)</span>'}</div>${meta}
+    <div><span class="chip" style="${p.yellow ? 'background:#fef08a;color:#854d0e' : 'background:var(--ok2);color:var(--ok)'}">${esc(p.category || 'นักเรียนทั่วไป')}${p.special ? ' · ระยะยาว' : ''}</span> ${p.signed === 'TRUE' ? '<span class="chip ok">อนุมัติแล้ว · มีลายเซ็น</span>' : '<span class="chip warn">อนุมัติแล้ว · ไม่มีลายเซ็น (ยังไม่ได้อัปโหลดลายเซ็น)</span>'}</div>${meta}
     ${actionBar({ el: () => $('#' + id + ' .lcard'), name: 'บัตรเข้าสาย_' + d.student.studentId + '_' + p.date, card: true, printLabel: 'พิมพ์บัตร' })}
     ${photoBox}${cancelBox}
   </div></div>`;
@@ -1202,7 +1206,7 @@ function wireApprove(root, after) {
   $$('[data-reissue]', root).forEach(b => b.onclick = () => safe(async () => {
     if (!await confirmBox('ยกเลิกบัตรใบนี้ แล้วออกบัตรใหม่ (ใช้ข้อมูลเดิมให้แก้ไขได้)?', 'ยกเลิกแล้วออกใหม่', true)) return;
     const d = await api('cancelPass', b.dataset.reissue);
-    REISSUE = { studentId: d.student.studentId, date: b.dataset.rdate, time: b.dataset.rtime, reason: b.dataset.rreason };
+    REISSUE = { studentId: d.student.studentId, date: b.dataset.rdate, time: b.dataset.rtime, reason: b.dataset.rreason, type: b.dataset.rtype, end: b.dataset.rend };
     toast('ยกเลิกบัตรเดิมแล้ว — แก้ไขข้อมูลแล้วกดออกบัตรใหม่', 'ok'); refreshBell(); after(d);
   }));
   $$('[data-approve]', root).forEach(b => b.onclick = () => safe(async () => {
@@ -1316,60 +1320,16 @@ PAGES.approvals = async pg => {
   }));
 };
 
-/* ---------- บัตรระยะยาว (เด็กวัด / ในอุปการะพิเศษ) — แอดมิน ---------- */
-PAGES.specials = pg => {
-  pg.innerHTML = `<div class="card"><h3>ออกบัตรระยะยาวให้นักเรียน</h3><p class="muted">ตั้งครั้งเดียว ระบบถือว่านักเรียนมีบัตรทุกวันในช่วงวันที่ที่กำหนด (ไม่ต้องออกบัตรรายวัน) บันทึกเข้าแล้วไม่นับเป็นมาสาย</p>${searchBar('spQ')}<div id="spOut"></div></div>
-    <div class="card"><h3>บัตรระยะยาวทั้งหมด</h3><div id="spList" class="scroll"></div></div>`;
-  const stText = x => x.status === 'cancelled' ? '<span class="chip">ยกเลิก</span>' : !x.live ? '<span class="chip">หมดอายุ</span>' : x.current ? '<span class="chip ok">ใช้งานอยู่</span>' : '<span class="chip info">ยังไม่เริ่ม</span>';
-  const loadList = async () => {
-    const l = await api('listSpecialPasses');
-    $('#spList').innerHTML = `<table class="t"><thead><tr><th>รหัส</th><th>ชื่อ-สกุล</th><th class="c">ชั้น</th><th class="c">ห้อง</th><th>ประเภท</th><th>ใช้ได้</th><th class="c">เวลาเข้า</th><th class="c">สถานะ</th><th></th></tr></thead><tbody>${l.map(x => `<tr${x.live ? '' : ' style="color:var(--mut)"'}><td>${esc(x.studentId)}</td><td>${esc(fullName(x.student))}</td><td class="c">${esc(x.student.grade)}</td><td class="c">${esc(x.student.room)}</td><td>${esc(x.category)}</td><td style="white-space:nowrap">${esc(thDate(x.startDate))} – ${x.endDate ? esc(thDate(x.endDate)) : 'ไม่กำหนด'}</td><td class="c">${esc(hm(x.entryTime))}</td><td class="c">${stText(x)}</td><td><button class="btn sm ghost" data-open="${esc(x.studentId)}">เปิด</button></td></tr>`).join('') || '<tr><td colspan="9" class="c muted">ยังไม่มีบัตรระยะยาว</td></tr>'}</tbody></table>`;
-    $$('[data-open]', $('#spList')).forEach(b => b.onclick = () => { $('#spQ').value = b.dataset.open; safe(() => load(b.dataset.open)); window.scrollTo(0, 0); });
-  };
-  const load = async (sid, edit) => {
-    const r = await api('specialContext', sid); const b = r.bundle, s = b.student;
-    ON_PHOTO = () => load(s.studentId);
-    const noPhoto = !s.photo;
-    const e = edit || {};
-    const cats = ['เด็กวัด', 'ในอุปการะพิเศษ'];
-    const isOther = e.category && cats.indexOf(e.category) < 0;
-    $('#spOut').innerHTML = `<div class="grid3">${studentBlock(s, 'lg')}${parentsBlock(b.parents)}${teachersBlock(b.teachers)}</div>
-      ${r.items.length ? `<h4 style="margin-top:14px">บัตรระยะยาวของนักเรียนคนนี้</h4><div id="spItems">${r.items.map(d => cardWithActions(d) + (d.pass.status !== 'cancelled' ? `<div class="row noprint"><button class="btn sm ghost" data-spedit="${esc(d.pass.passId)}">✎ แก้ไขบัตรใบนี้</button></div>` : '')).join('<hr>')}</div>` : ''}
-      <div class="block" style="margin-top:14px"><h4>${e.spId ? 'แก้ไขบัตรระยะยาว' : 'ออกบัตรระยะยาวใบใหม่'}</h4>
-       <div class="row"><label>ประเภท<select id="spCat">${cats.map(c => `<option ${e.category === c ? 'selected' : ''}>${c}</option>`).join('')}<option value="__o" ${isOther ? 'selected' : ''}>อื่น ๆ (พิมพ์เอง)</option></select></label>
-        <label id="spCatOW" ${isOther ? '' : 'hidden'}>ระบุประเภท<input id="spCatO" value="${isOther ? esc(e.category) : ''}"></label>
-        <label>ใช้ได้ตั้งแต่<input type="date" id="spFrom" value="${esc(e.date || r.today)}"></label><label>ถึงวันที่ (เว้นว่าง = ไม่กำหนด)<input type="date" id="spTo" value="${esc(e.endDate || '')}"></label>
-        <label>เวลาเข้าโรงเรียน<input type="time" id="spTime" value="${esc(hm(e.entryTime || ''))}"></label></div>
-       <label style="width:100%">หมายเหตุ (เช่น ชื่อวัด / เหตุผล)<input id="spNote" style="width:100%" value="${esc(e.note || '')}"></label>
-       ${noPhoto ? '<div class="banner warn" style="margin-top:8px">นักเรียนยังไม่มีรูป — ถ่าย/อัปโหลดในช่องรูปด้านบน หรือกด "ขอเลื่อนรูป"</div>' : ''}
-       <div class="row"><button class="btn" id="spSave" ${noPhoto ? 'disabled' : ''}>${e.spId ? 'บันทึกการแก้ไข' : 'ออกบัตรระยะยาว'}</button>${noPhoto ? '<button class="btn postpone on" id="spLater">⏳ ขอเลื่อนรูป แล้วออกบัตร</button>' : ''}${e.spId ? '<button class="btn ghost" id="spNew">ยกเลิกการแก้ไข</button>' : ''}</div></div>
-      <div id="spCard"></div>`;
-    $('#spCat').onchange = () => { $('#spCatOW').hidden = $('#spCat').value !== '__o'; };
-    if ($('#spNew')) $('#spNew').onclick = () => load(s.studentId);
-    if ($('#spItems')) {
-      wireApprove($('#spItems'), () => { load(s.studentId); loadList(); });
-      $$('[data-spedit]', $('#spItems')).forEach(btn => btn.onclick = () => { const d = r.items.find(x => x.pass.passId === btn.dataset.spedit); const p = d.pass; load(s.studentId, { spId: p.passId, category: p.category, date: p.date, endDate: p.endDate, entryTime: p.entryTime, note: (p.reason || '').split(' — ').slice(1).join(' — ') }); });
-    }
-    const save = postpone => safe(async () => {
-      const cat = $('#spCat').value === '__o' ? $('#spCatO').value.trim() : $('#spCat').value;
-      if (!cat) return toast('ระบุประเภท', 'err');
-      try {
-        const d = await api('saveSpecialPass', { spId: e.spId || '', studentId: s.studentId, category: cat, startDate: $('#spFrom').value, endDate: $('#spTo').value, entryTime: $('#spTime').value, note: $('#spNote').value, postponePhoto: !!postpone });
-        toast('บันทึกบัตรระยะยาวแล้ว', 'ok'); await load(s.studentId); loadList();
-        $('#spCard').innerHTML = `<div class="banner ok" style="margin-top:12px">บันทึกเรียบร้อย — พิมพ์บัตรได้จากรายการด้านบน</div>`;
-        $('#spItems') && $('#spItems').scrollIntoView({ behavior: 'smooth' });
-      } catch (err) { if (err.message === 'NO_PHOTO') throw new Error('นักเรียนยังไม่มีรูป — เพิ่มรูป หรือกด "ขอเลื่อนรูป"'); throw err; }
-    });
-    $('#spSave').onclick = () => save(false);
-    if ($('#spLater')) $('#spLater').onclick = () => save(true);
-  };
-  bindSearch('spQ', sid => load(sid));
-  loadList();
-};
-
 /* ---------- 6.1 ออกบัตรอนุญาตเข้าสาย ---------- */
 PAGES.pass = pg => {
-  pg.innerHTML = searchBar('psQ') + '<div id="psOut"></div>';
+  pg.innerHTML = searchBar('psQ') + '<div id="psOut"></div><div class="card" style="margin-top:14px"><h3>บัตรระยะยาวที่ใช้งานอยู่</h3><div id="psLong" class="scroll"><span class="muted">กำลังโหลด...</span></div></div>';
+  const loadLong = async () => {
+    const l = await api('listLongPasses');
+    const ty = n => S.passTypes.find(x => x.name === n) || { yellow: /วัด/.test(n || '') };
+    $('#psLong').innerHTML = `<table class="t"><thead><tr><th>รหัส</th><th>ชื่อ-สกุล</th><th class="c">ชั้น</th><th class="c">ห้อง</th><th>ประเภท</th><th>ใช้ได้</th><th class="c">เวลาเข้า</th><th class="c">สถานะ</th><th></th></tr></thead><tbody>${l.map(x => `<tr><td>${esc(x.studentId)}</td><td>${esc(fullName(x.student))}</td><td class="c">${esc(x.student.grade)}</td><td class="c">${esc(x.student.room)}</td><td><span class="chip" style="${ty(x.passType).yellow ? 'background:#fef08a;color:#854d0e' : 'background:var(--ok2);color:var(--ok)'}">${esc(x.passType || '-')}</span></td><td style="white-space:nowrap">${esc(thDate(x.date))} – ${x.endDate ? esc(thDate(x.endDate)) : 'ไม่กำหนด'}</td><td class="c">${esc(hm(x.entryTime))}</td><td class="c">${x.status === 'pending' ? '<span class="chip warn">รออนุมัติ</span>' : x.current ? '<span class="chip ok">ใช้งานอยู่</span>' : '<span class="chip info">ยังไม่เริ่ม</span>'}</td><td><button class="btn sm ghost" data-lopen="${esc(x.studentId)}">เปิด</button></td></tr>`).join('') || '<tr><td colspan="9" class="c muted">ยังไม่มีบัตรระยะยาว</td></tr>'}</tbody></table>`;
+    $$('[data-lopen]', $('#psLong')).forEach(b => b.onclick = () => { $('#psQ').value = b.dataset.lopen; safe(() => load(b.dataset.lopen)); window.scrollTo(0, 0); });
+  };
+  setTimeout(() => safe(loadLong), 0);
   const load = async sid => {
     const r = await api('passContext', sid);
     const b = r.bundle, s = b.student; S.today = r.today;
@@ -1380,25 +1340,30 @@ PAGES.pass = pg => {
       ${r.passes.length ? `<div class="card" style="margin-top:14px"><h3>บัตรที่ออกแล้ว (วันนี้เป็นต้นไป)</h3><div id="psOld">${r.passes.map(cardWithActions).join('<hr>')}</div></div>` : ''}
       <div class="card" style="margin-top:14px"><h3>ออกบัตรอนุญาตเข้าสาย</h3>
        <div class="row"><label class="chk" style="font-size:17px"><input type="checkbox" id="psAllow"> อนุญาตให้เข้าสาย</label></div>
-       <div class="row"><label>วันที่อนุญาต<input type="date" id="psDate" value="${r.today}"></label><label>เวลาที่จะเข้าโรงเรียน<input type="time" id="psTime"></label></div>
+       <div class="row"><label>ประเภทผู้ได้บัตร<select id="psType">${S.passTypes.map(t => `<option value="${esc(t.name)}">${esc(t.name)}${t.long ? ' (ระยะยาว)' : ''}${t.yellow ? ' 🟡' : ' 🟢'}</option>`).join('')}</select></label>
+        <label><span id="psDateL">วันที่อนุญาต</span><input type="date" id="psDate" value="${r.today}"></label><label id="psEndW" hidden>ถึงวันที่ (เว้นว่าง = ไม่กำหนด)<input type="date" id="psEnd"></label><label>เวลาที่จะเข้าโรงเรียน<input type="time" id="psTime"></label></div>
        <label style="width:100%">เหตุผล<textarea id="psReason"></textarea></label>
        <p class="muted">${S.role === 'admin' ? 'แอดมินออกบัตร: อนุมัติทันทีและลายเซ็นขึ้นบนบัตรอัตโนมัติ' : 'บัตรที่ครูออกจะส่งไปให้แอดมินอนุมัติก่อน (มีกระดิ่งแจ้งเตือน) เมื่ออนุมัติแล้วลายเซ็นจะปรากฏและพิมพ์บัตรได้'}</p>
        <div class="row"><button class="btn" id="psGo" ${noPhoto ? 'disabled' : ''}>${S.role === 'admin' ? 'ออกบัตร' : 'ส่งคำขอทำบัตร'}</button>${noPhoto ? `<button class="btn postpone on" id="psLater">⏳ ขอเลื่อนรูป แล้ว${S.role === 'admin' ? 'ออกบัตร' : 'ส่งคำขอทำบัตร'}</button>` : ''}</div>
        ${noPhoto ? '<p class="muted">ขอเลื่อนรูป: บัตรจะออกได้โดยช่องรูปเป็น "รอรูป" เมื่อเพิ่มรูปนักเรียนภายหลัง รูปจะขึ้นบนบัตรเองเมื่อพิมพ์ใหม่</p>' : ''}</div><div id="psCard" class="card" hidden></div>`;
-    if ($('#psOld')) wireApprove($('#psOld'), () => load(s.studentId));
+    if ($('#psOld')) wireApprove($('#psOld'), () => { load(s.studentId); safe(loadLong); });
+    const syncType = () => { const t = S.passTypes.find(x => x.name === $('#psType').value) || {}; $('#psEndW').hidden = !t.long; $('#psDateL').textContent = t.long ? 'ใช้ได้ตั้งแต่' : 'วันที่อนุญาต'; };
+    $('#psType').onchange = syncType;
     if (REISSUE && REISSUE.studentId === s.studentId) {
+      if (REISSUE.type && S.passTypes.some(x => x.name === REISSUE.type)) $('#psType').value = REISSUE.type;
+      $('#psEnd').value = REISSUE.end || '';
       $('#psAllow').checked = true; $('#psDate').value = REISSUE.date >= r.today ? REISSUE.date : r.today; $('#psTime').value = hm(REISSUE.time); $('#psReason').value = REISSUE.reason;
-      REISSUE = null; setTimeout(() => $('#psReason').scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+      REISSUE = null; syncType(); setTimeout(() => $('#psReason').scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
     }
     const issue = postponePhoto => safe(async () => {
       if (noPhoto && !postponePhoto) return alertBox('นักเรียนยังไม่มีรูปในระบบ — เพิ่มรูป หรือกด "ขอเลื่อนรูป"');
       if (postponePhoto && !await confirmBox('ออกบัตรโดยขอเลื่อนส่งรูปนักเรียนภายหลัง?', 'ขอเลื่อนรูป')) return;
       try {
-        const d = await api('issueLatePass', { studentId: s.studentId, allowed: $('#psAllow').checked, date: $('#psDate').value, entryTime: $('#psTime').value, reason: $('#psReason').value, postponePhoto: !!postponePhoto });
+        const d = await api('issueLatePass', { studentId: s.studentId, allowed: $('#psAllow').checked, date: $('#psDate').value, passType: $('#psType').value, endDate: $('#psEnd').value, entryTime: $('#psTime').value, reason: $('#psReason').value, postponePhoto: !!postponePhoto });
         const box = $('#psCard'); box.hidden = false;
         box.innerHTML = `<div class="banner ${d.pass.status === 'pending' ? 'warn' : 'ok'}">${d.pass.status === 'pending' ? 'ส่งคำขอทำบัตรแล้ว รอแอดมินอนุมัติ' : 'ออกบัตรเรียบร้อย'}</div>${cardWithActions(d)}`;
         wireApprove(box, () => load(s.studentId));
-        $('#psGo').disabled = true; if ($('#psLater')) $('#psLater').disabled = true; box.scrollIntoView({ behavior: 'smooth' }); refreshBell();
+        $('#psGo').disabled = true; if ($('#psLater')) $('#psLater').disabled = true; box.scrollIntoView({ behavior: 'smooth' }); refreshBell(); safe(loadLong);
       } catch (e) { if (e.message === 'NO_PHOTO') throw new Error('นักเรียนยังไม่มีรูปในระบบ — เพิ่มรูป หรือกด "ขอเลื่อนรูป"'); throw e; }
     });
     $('#psGo').onclick = () => issue(false);
@@ -1452,7 +1417,7 @@ PAGES.request = pg => {
 /* ---------- 7. ตรวจสอบสถานะ ---------- */
 function entriesTableHTML(rows) {
   if (!rows.length) return '<p class="muted">ยังไม่มีนักเรียนเข้าสายในวันนี้</p>';
-  const typeChip = t => `<span class="chip ${t === 'ไม่ขออนุญาต' ? 'bad' : t === 'มีบัตรอนุญาต' ? 'ok' : 'info'}"${t.indexOf('ระยะยาว') >= 0 ? ' style="background:#fef08a;color:#854d0e"' : ''}>${esc(t)}</span>${t === 'ไม่ขออนุญาต' ? '' : '<div class="muted" style="font-size:11px">ไม่นับมาสาย</div>'}`;
+  const typeChip = t => `<span class="chip ${t === 'ไม่ขออนุญาต' ? 'bad' : t === 'มีบัตรอนุญาต' ? 'ok' : 'info'}"${t.indexOf('เด็กวัด') >= 0 ? ' style="background:#fef08a;color:#854d0e"' : ''}>${esc(t)}</span>${t === 'ไม่ขออนุญาต' ? '' : '<div class="muted" style="font-size:11px">ไม่นับมาสาย</div>'}`;
   return `<table class="t"><thead><tr><th>รูป</th><th>รหัส / บทบาท</th><th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>ชั้น</th><th>ห้อง</th><th>เบอร์โทร</th><th>ประเภท</th><th>เวลาเข้า</th><th class="noprint" data-html2canvas-ignore="true">ลบ</th></tr></thead><tbody>${rows.map((r, i) => {
     const s = r.student, rs = 1 + r.parents.length + r.teachers.length;
     const sub = (lab, p) => `<tr class="sub"><td>${lab}</td><td>${esc(p.prefix)}</td><td>${esc(p.firstName)}</td><td>${esc(p.lastName)}</td><td colspan="2"></td><td>${esc(p.phone)}</td><td colspan="2"></td></tr>`;
@@ -1487,8 +1452,8 @@ function statsHTML(r) {
   const lab = STATS_SCOPE && STATS_SCOPE.label ? ` <span style="color:var(--bad)">${esc(STATS_SCOPE.label)}</span>` : '';
   return `<div class="sthead">📊 สถิติการมาสาย${curAt() ? '' : 'วันนี้'}${lab}<small>${curAt() ? '<b style="color:var(--warn)">⏪ ย้อนหลัง</b> ' : ''}${esc(thDate(r.date))} · อัปเดต ${esc(String(r.time).slice(0, 8))} <span class="live"></span></small></div>
    <div class="stb st-black"><div class="stt">นักเรียนทั้งหมด${lab ? ' ' + esc(STATS_SCOPE.label) : ''}</div><div class="stn">${r.studentCount}<small> คน</small></div><div class="sts">มาสาย <b>${r.unauthCount}</b> · ได้รับอนุญาต <b>${r.authEntered || 0}</b> คน</div></div>
-   <div class="stb st-green"><div class="stt">มีบัตรอนุญาต</div><div class="stn">${r.passCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.passEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.passEntered, r.passCount)}%"></i></div></div>
-   <div class="stb st-yellow"><div class="stt">มีบัตรอนุญาต (เด็กวัด/ในอุปการะพิเศษ)</div><div class="stn">${r.specialCount || 0}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.specialEntered || 0}</b> คน</div><div class="stbar"><i style="width:${pct(r.specialEntered || 0, r.specialCount || 0)}%"></i></div></div>
+   <div class="stb st-green"><div class="stt">มีบัตรอนุญาต (ยกเว้นเด็กวัด)</div><div class="stn">${r.passCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.passEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.passEntered, r.passCount)}%"></i></div></div>
+   <div class="stb st-yellow"><div class="stt">มีบัตรอนุญาต (เด็กวัด)</div><div class="stn">${r.specialCount || 0}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.specialEntered || 0}</b> คน</div><div class="stbar"><i style="width:${pct(r.specialEntered || 0, r.specialCount || 0)}%"></i></div></div>
    <div class="stb st-orange"><div class="stt">ขออนุญาตครูไว้</div><div class="stn">${r.reqCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.reqEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.reqEntered, r.reqCount)}%"></i></div></div>
    <div class="stb st-pink"><div class="stt">มาสาย${curAt() ? '' : 'วันนี้'} (ไม่ขออนุญาต)</div><div class="stn">${r.unauthCount}<small> คน</small></div><div class="sts">เข้าโดยได้รับอนุญาต <b>${r.authEntered || 0}</b> คน <span style="font-size:12px">(ไม่นับมาสาย)</span></div></div>`;
 }
@@ -1613,8 +1578,8 @@ PAGES.status = pg => {
         <p>${r.card.pass.signed === 'TRUE' ? '<span class="chip ok">บัตรมีลายเซ็น</span>' : '<span class="chip warn">บัตรไม่มีลายเซ็น</span>'}</p></div>
         <button class="btn green" id="scIn" style="font-size:18px;padding:14px 24px;margin-top:12px">✔ บันทึกเข้าโรงเรียน</button></div></div>`;
     } else if (r.mode === 'special') {
-      html = `<div class="banner" style="background:#fef9c3;color:#854d0e">✅ มีบัตรอนุญาตระยะยาว (${esc(r.card.pass.category)}) · เวลาเข้า ${esc(hm(r.card.pass.entryTime))} น. · ใช้ได้ถึง ${r.card.pass.endDate ? esc(thDate(r.card.pass.endDate)) : 'ไม่กำหนด'}</div>${entered}
-        <div class="cardwrap"><div>${cardHTML(r.card)}</div><div style="flex:1;min-width:260px"><div class="block"><h4>บัตรระยะยาว (เด็กวัด/ในอุปการะพิเศษ)</h4><p style="font-size:17px">${esc(r.card.pass.reason)}</p><p class="muted">บันทึกเข้าแล้วไม่นับเป็นมาสาย</p></div>
+      html = `<div class="banner" style="background:#fef9c3;color:#854d0e">✅ มีบัตรอนุญาต (${esc(r.card.pass.category || 'เด็กวัด')}) · เวลาเข้า ${esc(hm(r.card.pass.entryTime))} น.${r.card.pass.special ? ' · ใช้ได้ถึง ' + (r.card.pass.endDate ? esc(thDate(r.card.pass.endDate)) : 'ไม่กำหนด') : ''}</div>${entered}
+        <div class="cardwrap"><div>${cardHTML(r.card)}</div><div style="flex:1;min-width:260px"><div class="block"><h4>บัตรอนุญาต (เด็กวัด)</h4><p style="font-size:17px">${esc(r.card.pass.reason)}</p><p class="muted">บันทึกเข้าแล้วไม่นับเป็นมาสาย</p></div>
         <button class="btn green" id="scIn" style="font-size:18px;padding:14px 24px;margin-top:12px">✔ บันทึกเข้าโรงเรียน</button></div></div>`;
     } else if (r.mode === 'request') {
       const q = r.request;
@@ -1684,7 +1649,7 @@ PAGES.lateReport = pg => {
    <p class="muted noprint" style="margin-top:-6px">นับเป็น "มาสาย" เฉพาะเข้าสายโดยไม่ขออนุญาต · มีบัตรอนุญาต / แจ้งครูที่ปรึกษา เป็นสถิติการเข้าโรงเรียน ไม่นับเป็นมาสาย</p>
    <div id="lr1">${searchBar('lrQ')}<div id="lr1Out"></div></div>
    <div id="lr2" hidden><div class="card noprint"><div class="row"><label>ตั้งแต่วันที่<input type="date" id="lrFrom" value="${t.slice(0, 8)}01"></label><label>ถึงวันที่<input type="date" id="lrTo" value="${t}"></label>
-    <label>แสดง<select id="lrType"><option value="late">มาสาย (ไม่ขออนุญาต)</option><option value="auth">เข้าโดยได้รับอนุญาต (สถิติ ไม่นับมาสาย)</option><option value="มีบัตรอนุญาต">เฉพาะมีบัตรอนุญาต</option><option value="บัตรระยะยาว (เด็กวัด/อุปการะพิเศษ)">เฉพาะบัตรระยะยาว (เด็กวัด/อุปการะพิเศษ)</option><option value="แจ้งครูที่ปรึกษา">เฉพาะแจ้งครูที่ปรึกษา</option></select></label><button class="btn" id="lrGo">ค้นหา</button></div></div><div id="lr2Out"></div></div>`;
+    <label>แสดง<select id="lrType"><option value="late">มาสาย (ไม่ขออนุญาต)</option><option value="auth">เข้าโดยได้รับอนุญาต (สถิติ ไม่นับมาสาย)</option><option value="มีบัตรอนุญาต">เฉพาะมีบัตรอนุญาต</option><option value="มีบัตรอนุญาต (เด็กวัด)">เฉพาะบัตรเด็กวัด</option><option value="แจ้งครูที่ปรึกษา">เฉพาะแจ้งครูที่ปรึกษา</option></select></label><button class="btn" id="lrGo">ค้นหา</button></div></div><div id="lr2Out"></div></div>`;
   $$('.tabs button', pg).forEach(b => b.onclick = () => { $$('.tabs button', pg).forEach(x => x.classList.toggle('on', x === b)); $('#lr1').hidden = b.dataset.t !== 'one'; $('#lr2').hidden = b.dataset.t !== 'all'; });
   bindSearch('lrQ', async sid => {
     const r = await api('lateReportStudent', sid); const s = r.student;
@@ -1717,12 +1682,26 @@ PAGES.settings = async pg => {
     <h3 style="margin-top:14px">บันทึกย้อนหลัง (หน้าตรวจสอบสถานะ)</h3><div class="row">${f('backdateMinutes', 'คงค่าวันเวลาย้อนหลังไว้ (นาที) ถ้าไม่ใช้งานเกินนี้ กลับเป็นเวลาปัจจุบัน', 'number')}
     <div><div style="font-weight:600;font-size:14px;margin-bottom:6px">บทบาทที่ลงย้อนหลังได้</div><label class="chk"><input type="checkbox" checked disabled> แอดมิน</label> <label class="chk"><input type="checkbox" data-bdr="teacher" ${String(s.backdateRoles || '').split(',').includes('teacher') ? 'checked' : ''}> ครู</label> <label class="chk"><input type="checkbox" data-bdr="public" ${String(s.backdateRoles || '').split(',').includes('public') ? 'checked' : ''}> บุคคลทั่วไป</label></div></div>
     <p class="muted">ครูเข้าระบบด้วยเบอร์โทรที่อยู่ในรายชื่อครูที่ปรึกษา (เบอร์เป็นทั้งชื่อผู้ใช้และรหัสผ่าน) · บุคคลทั่วไปเข้าได้โดยไม่ต้องใส่รหัส</p></div>
+   <div class="card"><h3>ประเภทผู้ได้บัตรอนุญาตเข้าสาย</h3><p class="muted" style="margin-top:-6px">ใช้เป็นตัวเลือกตอนออกบัตร · <b>ระยะยาว</b> = ตั้งช่วงวันที่ครั้งเดียวใช้ทุกวัน · <b>กลุ่มสี</b>: 🟢 เขียว = บัตรอนุญาตทั่วไป (ยกเว้นเด็กวัด) / 🟡 เหลือง = เด็กวัด (บัตรและสถิติแยกสีเหลือง)</p>
+    <table class="t" id="ptTbl"><thead><tr><th>ชื่อประเภท</th><th class="c">บัตร</th><th class="c">กลุ่มสี</th><th></th></tr></thead><tbody></tbody></table>
+    <div class="row"><button class="btn ghost sm" id="ptAdd">+ เพิ่มประเภท</button></div></div>
    <div class="row"><button class="btn" id="sfSave">บันทึกการตั้งค่า</button></div>
    <div class="card"><h3>ภาพลายเซ็นผู้ออกบัตร</h3><p class="muted">แนะนำไฟล์ PNG พื้นโปร่งใส ระบบย่อให้กว้าง 400px ลายเซ็นจะขึ้นบนบัตรเฉพาะเมื่อใส่รหัสลายเซ็นถูกต้อง</p>
     <div class="row"><div id="sigPrev" style="border:1px dashed #cbd5e1;padding:8px;border-radius:8px;min-width:200px;min-height:60px">${s.signature ? `<img src="${s.signature}" style="max-height:90px">` : '<span class="muted">ยังไม่มีลายเซ็น</span>'}</div><button class="btn ghost" id="sigUp">อัปโหลดลายเซ็น</button></div></div>
    <div class="card"><h3>คะแนนหักเมื่อมาสายโดยไม่ขออนุญาต</h3><p>ปัจจุบัน <b style="color:var(--bad)">${esc(s.latePoints)}</b> คะแนน — แก้ไขได้ที่เมนู "หัวข้อพฤติกรรม"</p></div>`;
+  let pt = []; try { pt = JSON.parse(s.passTypes || '[]'); } catch (e) { }
+  const ptRow = t => `<tr><td><input data-pn value="${esc(t.name || '')}" placeholder="เช่น เด็กวัด" style="width:100%"></td>
+    <td class="c"><select data-pl><option value="0" ${t.long ? '' : 'selected'}>รายวัน</option><option value="1" ${t.long ? 'selected' : ''}>ระยะยาว</option></select></td>
+    <td class="c"><select data-py><option value="0" ${t.yellow ? '' : 'selected'}>🟢 เขียว</option><option value="1" ${t.yellow ? 'selected' : ''}>🟡 เหลือง (เด็กวัด)</option></select></td>
+    <td class="c"><button class="btn sm ghost danger" data-pdel>ลบ</button></td></tr>`;
+  const drawPt = () => { $('#ptTbl tbody').innerHTML = pt.map(ptRow).join(''); $$('#ptTbl [data-pdel]').forEach(b => b.onclick = () => { b.closest('tr').remove(); }); };
+  drawPt();
+  $('#ptAdd').onclick = () => { $('#ptTbl tbody').insertAdjacentHTML('beforeend', ptRow({})); const b = $$('#ptTbl [data-pdel]').pop(); b.onclick = () => b.closest('tr').remove(); };
   $('#sfSave').onclick = () => safe(async () => {
     const o = {}; $$('[data-f]', pg).forEach(i => o[i.dataset.f] = i.value);
+    const pts = $$('#ptTbl tbody tr').map(tr => ({ name: $('[data-pn]', tr).value.trim(), long: $('[data-pl]', tr).value === '1', yellow: $('[data-py]', tr).value === '1' })).filter(x => x.name);
+    if (!pts.length) throw new Error('ต้องมีประเภทผู้ได้บัตรอย่างน้อย 1 ประเภท');
+    o.passTypes = JSON.stringify(pts); S.passTypes = pts;
     o.backdateRoles = ['admin'].concat($$('[data-bdr]', pg).filter(c => c.checked).map(c => c.dataset.bdr)).join(',');
     S.backdateMinutes = Number(o.backdateMinutes) || S.backdateMinutes;
     S.school = await api('saveSettings', o); $('#hdSchool').textContent = S.school; toast('บันทึกแล้ว', 'ok');
@@ -1804,7 +1783,7 @@ function showWhatsNew() {
 /* =================== เข้าสู่ระบบ =================== */
 async function startApp() {
   const b = await api('getBootstrap');
-  Object.assign(S, { role: b.role, roleName: b.roleName, school: b.schoolName, topics: b.topics, today: b.today, classes: b.classes || [], backdateMinutes: b.backdateMinutes || 10, canBackdate: !!b.canBackdate });
+  Object.assign(S, { role: b.role, roleName: b.roleName, school: b.schoolName, topics: b.topics, today: b.today, passTypes: b.passTypes || [{ name: 'นักเรียนทั่วไป', long: false, yellow: false }], classes: b.classes || [], backdateMinutes: b.backdateMinutes || 10, canBackdate: !!b.canBackdate });
   $('#loginView').hidden = true; $('#appView').hidden = false;
   $('#hdSchool').textContent = S.school; $('#hdRole').textContent = S.roleName;
   renderNav(); updateBell(b.pendingCount); showVersions();
