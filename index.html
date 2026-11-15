@@ -318,9 +318,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.9.1';
+const APP_VERSION = '3.9.2';
 const MIN_SERVER_VERSION = '3.9.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.9.2': ['หน้าต่างติดตั้งแอป: เพิ่มข้อ 2 กดติดตั้งจากลิงก์นี้'],
   '3.9.1': ['หน้าเข้าสู่ระบบ: สแกนคิวอาร์โค้ดเพื่อติดตั้งแอป'],
   '3.9.0': ['ตั้งค่า: ล้างจำนวนครั้งมาสาย รายสัปดาห์/เดือน/ภาค/ปี (เริ่มนับใหม่ เก็บประวัติ คืนคะแนนที่หักจากมาสาย)'],
   '3.8.1': ['สีเขียวเปลี่ยนชื่อเป็น มีบัตรอนุญาต (นักเรียนทั่วไป)', 'บัตรที่ยกเลิก/ไม่อนุมัติ ถูกลบออกจากฐานข้อมูลทันที'],
@@ -1957,7 +1958,7 @@ function qrSvg(text) { const q = qrcode(0, 'M'); q.addData(text); q.make(); retu
 $('#lgQr').onclick = () => {
   const u = installUrl();
   openModal(`<div class="qrbox"><h3 style="margin-top:0">สแกนเพื่อติดตั้งแอป</h3>${qrSvg(u)}
-    <ol><li>เปิดกล้องมือถือ (หรือแอปสแกน QR) แล้วสแกนรูปนี้</li><li>เว็บจะเปิดในเบราว์เซอร์ พร้อมปุ่ม/คำแนะนำติดตั้งแอป</li><li>ติดตั้งแล้ว จะมีไอคอน "เข้า รร.-ติดตาม" บนหน้าจอโฮม</li></ol>
+    <ol><li>เปิดกล้องมือถือ (หรือแอปสแกน QR) แล้วสแกนรูปนี้</li><li>หรือ <a href="${esc(u)}" id="qrGo" style="font-weight:600;color:var(--pri,#1d4ed8);text-decoration:underline">กดติดตั้งจากลิงก์นี้</a> (ใช้กับเครื่องที่เปิดหน้านี้อยู่)</li><li>เว็บจะเปิดในเบราว์เซอร์ พร้อมปุ่ม/คำแนะนำติดตั้งแอป</li><li>ติดตั้งแล้ว จะมีไอคอน "เข้า รร.-ติดตาม" บนหน้าจอโฮม</li></ol>
     <div class="row" style="margin-top:10px;justify-content:center"><input id="qrUrl" readonly value="${esc(u)}" style="flex:1;min-width:0;font-size:12px"><button class="btn sm ghost" id="qrCopy">คัดลอกลิงก์</button></div></div>`);
   $('#qrCopy').onclick = () => { const i = $('#qrUrl'); i.select(); try { navigator.clipboard.writeText(i.value).then(() => toast('คัดลอกแล้ว', 'ok'), () => { document.execCommand('copy'); toast('คัดลอกแล้ว', 'ok'); }); } catch (e) { document.execCommand('copy'); toast('คัดลอกแล้ว', 'ok'); } };
 };
