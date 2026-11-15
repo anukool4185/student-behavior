@@ -318,9 +318,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.9.2';
+const APP_VERSION = '3.9.3';
 const MIN_SERVER_VERSION = '3.9.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.9.3': ['ข้อ 2 กดลิงก์แล้วขึ้นหน้าต่างติดตั้งทันที ไม่ต้องเปิดหน้าใหม่'],
   '3.9.2': ['หน้าต่างติดตั้งแอป: เพิ่มข้อ 2 กดติดตั้งจากลิงก์นี้'],
   '3.9.1': ['หน้าเข้าสู่ระบบ: สแกนคิวอาร์โค้ดเพื่อติดตั้งแอป'],
   '3.9.0': ['ตั้งค่า: ล้างจำนวนครั้งมาสาย รายสัปดาห์/เดือน/ภาค/ปี (เริ่มนับใหม่ เก็บประวัติ คืนคะแนนที่หักจากมาสาย)'],
@@ -1958,8 +1959,14 @@ function qrSvg(text) { const q = qrcode(0, 'M'); q.addData(text); q.make(); retu
 $('#lgQr').onclick = () => {
   const u = installUrl();
   openModal(`<div class="qrbox"><h3 style="margin-top:0">สแกนเพื่อติดตั้งแอป</h3>${qrSvg(u)}
-    <ol><li>เปิดกล้องมือถือ (หรือแอปสแกน QR) แล้วสแกนรูปนี้</li><li>หรือ <a href="${esc(u)}" id="qrGo" style="font-weight:600;color:var(--pri,#1d4ed8);text-decoration:underline">กดติดตั้งจากลิงก์นี้</a> (ใช้กับเครื่องที่เปิดหน้านี้อยู่)</li><li>เว็บจะเปิดในเบราว์เซอร์ พร้อมปุ่ม/คำแนะนำติดตั้งแอป</li><li>ติดตั้งแล้ว จะมีไอคอน "เข้า รร.-ติดตาม" บนหน้าจอโฮม</li></ol>
+    <ol><li>เปิดกล้องมือถือ (หรือแอปสแกน QR) แล้วสแกนรูปนี้</li><li>หรือ <a href="${esc(u)}" id="qrGo" style="font-weight:600;color:var(--pri,#1d4ed8);text-decoration:underline">กดติดตั้งจากลิงก์นี้</a> (ใช้กับเครื่องที่เปิดหน้านี้อยู่)<div id="qrMsg" hidden style="margin-top:6px;padding:8px 10px;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe"></div></li><li>เว็บจะเปิดในเบราว์เซอร์ พร้อมปุ่ม/คำแนะนำติดตั้งแอป</li><li>ติดตั้งแล้ว จะมีไอคอน "เข้า รร.-ติดตาม" บนหน้าจอโฮม</li></ol>
     <div class="row" style="margin-top:10px;justify-content:center"><input id="qrUrl" readonly value="${esc(u)}" style="flex:1;min-width:0;font-size:12px"><button class="btn sm ghost" id="qrCopy">คัดลอกลิงก์</button></div></div>`);
+  $('#qrGo').onclick = e => {   // ข้อ 2: กดแล้วเรียกหน้าต่างติดตั้งของเบราว์เซอร์ทันที (ไม่เปิดหน้าใหม่)
+    if (IN_APP()) return;            // อยู่ในแอป LINE/Facebook → ปล่อยให้เปิดลิงก์ เพื่อเด้งไปเบราว์เซอร์หลัก
+    e.preventDefault();
+    if (INSTALL_EVT) { closeModal(); promptInstall(); return; }
+    const m = $('#qrMsg'); m.hidden = false; m.innerHTML = isStandalone() ? '✅ กำลังใช้งานในแอปอยู่แล้ว' : installHelp();
+  };
   $('#qrCopy').onclick = () => { const i = $('#qrUrl'); i.select(); try { navigator.clipboard.writeText(i.value).then(() => toast('คัดลอกแล้ว', 'ok'), () => { document.execCommand('copy'); toast('คัดลอกแล้ว', 'ok'); }); } catch (e) { document.execCommand('copy'); toast('คัดลอกแล้ว', 'ok'); } };
 };
 let INSTALL_EVT = null;
@@ -1967,17 +1974,27 @@ window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); INSTAL
 window.addEventListener('appinstalled', () => { INSTALL_EVT = null; const b = $('#lgInstall'); if (b) b.innerHTML = '✅ ติดตั้งแอปแล้ว เปิดได้จากไอคอนบนหน้าจอโฮม'; });
 const FROM_QR = /[?&]install=1\b/.test(location.search);
 if (FROM_QR) history.replaceState(null, '', appUrl() + location.hash);   // เอาพารามิเตอร์ออกจากแถบที่อยู่
+const IN_APP = () => /Line\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(navigator.userAgent);
+async function promptInstall() {
+  const ev = INSTALL_EVT; if (!ev) return; INSTALL_EVT = null;
+  ev.prompt();
+  try { const r = await ev.userChoice; if (r.outcome === 'accepted') toast('กำลังติดตั้งแอป…', 'ok'); } catch (e) { }
+}
+/* คำแนะนำเมื่อเบราว์เซอร์ไม่มีปุ่มติดตั้งให้เรียก (iPhone, ติดตั้งไว้แล้ว, เบราว์เซอร์ไม่รองรับ) */
+function installHelp() {
+  if (isIOS()) return '📲 iPhone/iPad ติดตั้งด้วยปุ่มไม่ได้ (Apple ไม่อนุญาต) — ใน Safari กดปุ่ม <b>แชร์</b> (สี่เหลี่ยมมีลูกศรขึ้น) แล้วเลือก <b>"เพิ่มไปยังหน้าจอโฮม"</b>';
+  return '📲 เบราว์เซอร์ยังไม่เปิดให้ติดตั้งด้วยปุ่ม — กดเมนู <b>⋮</b> แล้วเลือก <b>"ติดตั้งแอป"</b> หรือ <b>"เพิ่มลงในหน้าจอหลัก"</b><br><span class="muted">ถ้าไม่มีเมนูนี้ แสดงว่าติดตั้งไว้แล้ว หรือเบราว์เซอร์ไม่รองรับ (แนะนำ Chrome)</span>';
+}
 function drawInstall() {
   const b = $('#lgInstall');
   if (!b || !FROM_QR || isStandalone()) return;
-  const inApp = /Line\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(navigator.userAgent);
+  const inApp = IN_APP();
   b.hidden = false;
   if (inApp) b.innerHTML = '⚠ เปิดอยู่ในแอป (เช่น LINE/Facebook) ซึ่งติดตั้งไม่ได้ — กดเมนู ⋮ หรือ ⋯ แล้วเลือก <b>"เปิดในเบราว์เซอร์"</b> (Chrome/Safari) ก่อน';
   else if (INSTALL_EVT) {
     b.innerHTML = '📲 ติดตั้งแอป "เข้า รร.-ติดตาม" ลงเครื่องนี้<br><button class="btn full" id="lgInstBtn">ติดตั้งแอป</button>';
-    $('#lgInstBtn').onclick = async () => { const ev = INSTALL_EVT; INSTALL_EVT = null; ev.prompt(); try { const r = await ev.userChoice; if (r.outcome !== 'accepted') { INSTALL_EVT = null; drawInstall(); } } catch (e) { } };
-  } else if (isIOS()) b.innerHTML = '📲 ติดตั้งแอปบน iPhone/iPad (ใช้ Safari):<br>1) กดปุ่ม <b>แชร์</b> (สี่เหลี่ยมมีลูกศรขึ้น)<br>2) เลือก <b>"เพิ่มไปยังหน้าจอโฮม"</b> แล้วกด <b>เพิ่ม</b>';
-  else b.innerHTML = '📲 ติดตั้งแอป: กดเมนู <b>⋮</b> ของเบราว์เซอร์ แล้วเลือก <b>"ติดตั้งแอป"</b> หรือ <b>"เพิ่มลงในหน้าจอหลัก"</b><br><span class="muted">ถ้าไม่มีเมนูนี้ แสดงว่าติดตั้งไว้แล้ว หรือเบราว์เซอร์ไม่รองรับ (แนะนำ Chrome)</span>';
+    $('#lgInstBtn').onclick = () => promptInstall();
+  } else b.innerHTML = installHelp();
 }
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => { });
 
