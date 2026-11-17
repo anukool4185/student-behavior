@@ -91,6 +91,9 @@ table.t tfoot td{font-weight:800;background:#f8fafc}
 .tbtn{border:2px solid;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700;background:#fff;text-align:left}
 .tbtn.p{border-color:#86efac;color:var(--ok)}.tbtn.p:hover{background:var(--ok2)}
 .tbtn.n{border-color:#fca5a5;color:var(--bad)}.tbtn.n:hover{background:var(--bad2)}
+.tbtn.p.on{background:var(--ok);color:#fff;border-color:var(--ok)}.tbtn.n.on{background:var(--bad);color:#fff;border-color:var(--bad)}
+.tbtn .cnt{display:inline-block;margin-left:6px;background:#fff;color:#0f172a;border-radius:999px;padding:0 7px;font-size:12px}
+.pbt td{vertical-align:top}.pbt .pl{min-height:28px;display:flex;flex-direction:column;justify-content:flex-start}.pbt .pp{min-height:46px}.pbt .sub{display:block;font-size:12px;color:var(--mut)}.pbt .lk{font-size:12px;padding:2px 8px}
 .tbtn b{display:block;font-size:18px}
 /* tabs */
 .tabs{display:flex;gap:4px;border-bottom:2px solid var(--bd);margin-bottom:14px}
@@ -318,9 +321,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.9.3';
-const MIN_SERVER_VERSION = '3.9.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '3.10.0';
+const MIN_SERVER_VERSION = '3.10.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.10.0': ['บุคคลทั่วไป: เมนูบันทึกพฤติกรรมแบบตาราง เพิ่มหลายชื่อแล้วบันทึกพร้อมกัน', 'เบอร์โทรซ่อนไว้ ต้องใส่รหัสดูข้อมูล (ตั้งในหน้าตั้งค่า)'],
   '3.9.3': ['ข้อ 2 กดลิงก์แล้วขึ้นหน้าต่างติดตั้งทันที ไม่ต้องเปิดหน้าใหม่'],
   '3.9.2': ['หน้าต่างติดตั้งแอป: เพิ่มข้อ 2 กดติดตั้งจากลิงก์นี้'],
   '3.9.1': ['หน้าเข้าสู่ระบบ: สแกนคิวอาร์โค้ดเพื่อติดตั้งแอป'],
@@ -814,7 +818,7 @@ function bindExcelPicker(prefix, onAoa) {
 const A = ['admin'], ST = ['admin', 'teacher'], AL = ['admin', 'teacher', 'public'];
 const MENU = [
   ['ข้อมูลพื้นฐาน', [['importStudents', 'นำเข้าข้อมูลนักเรียน', A], ['students', 'จัดการข้อมูล/รูปนักเรียน', A], ['teachers', 'ครูที่ปรึกษา', A], ['topics', 'หัวข้อพฤติกรรม', A]]],
-  ['พฤติกรรม', [['behavior', 'บันทึกพฤติกรรม', ST], ['behaviorReport', 'รายงานพฤติกรรม', ST, 'รายงานพฤติกรรม(ภาพรวมห้อง)'], ['report', 'รายงานผลรายบุคคล', ST, 'รายงานรายบุคคล(ติดต่อ ผปค./ครู)']]],
+  ['พฤติกรรม', [['behavior', 'บันทึกพฤติกรรม', ST], ['pubBehavior', 'บันทึกพฤติกรรม', ['public']], ['behaviorReport', 'รายงานพฤติกรรม', ST, 'รายงานพฤติกรรม(ภาพรวมห้อง)'], ['report', 'รายงานผลรายบุคคล', ST, 'รายงานรายบุคคล(ติดต่อ ผปค./ครู)']]],
   ['การมาสาย', [['approvals', '🔔 อนุมัติบัตรเข้าสาย', A], ['pass', 'ออกบัตรอนุญาตเข้าสาย', ST], ['request', 'ครูรับเรื่องขอเข้าสาย', ST], ['status', 'ตรวจสอบสถานะ / บันทึกเข้า', AL], ['lateReport', 'รายงานนักเรียนเข้าสาย', ST]]],
   ['ระบบ', [['settings', 'ตั้งค่า', A]]],
   ['ครูที่ปรึกษา', [['register', 'ลงทะเบียนครูที่ปรึกษา', ['register']]]]
@@ -1142,6 +1146,74 @@ PAGES.topics = async pg => {
   $('#tpReset').onclick = reset;
   $('#tpSave').onclick = () => safe(async () => { render(await api('saveTopic', { topicId: $('#tpId').value, name: $('#tpName').value, type: $('#tpType').value, points: $('#tpPts').value, active: $('#tpActW').hidden ? true : $('#tpAct').checked })); reset(); toast('บันทึกแล้ว', 'ok'); });
   render(await api('listTopics'));
+};
+
+/* ---------- บันทึกพฤติกรรมแบบตาราง (บุคคลทั่วไป) ----------
+   กดหัวข้อ → ตารางรายชื่อที่จะบันทึก → แถวท้ายตาราง "+ เพิ่มชื่อ" → ค้นหาจากชั้น/ห้อง/พิมพ์ → บันทึกพร้อมกัน
+   เบอร์โทรซ่อนไว้ กด "แสดงเบอร์" แล้วใส่รหัสดูข้อมูล (แอดมินตั้งในหน้าตั้งค่า) */
+PAGES.pubBehavior = async pg => {
+  const r = await api('pubBehaviorTopics');
+  let unlocked = r.unlocked, cur = null;
+  const lists = {};          // topicId → [แถวข้อมูลนักเรียน] ที่รอบันทึก
+  const btn = t => `<button class="tbtn ${+t.points >= 0 ? 'p' : 'n'}" data-t="${esc(t.topicId)}">${esc(t.name)} <b>${+t.points > 0 ? '+' : ''}${esc(t.points)}</b><span class="cnt" hidden></span></button>`;
+  pg.innerHTML = `<div class="card"><h4 style="margin-top:0;color:var(--ok)">พฤติกรรมทางบวก</h4><div class="tbtns">${r.topics.filter(t => +t.points >= 0).map(btn).join('') || '<span class="muted">-</span>'}</div>
+     <h4 style="margin-top:12px;color:var(--bad)">พฤติกรรมทางลบ</h4><div class="tbtns">${r.topics.filter(t => +t.points < 0).map(btn).join('') || '<span class="muted">-</span>'}</div></div>
+     <div id="pbOut"><div class="muted">กดเลือกหัวข้อพฤติกรรมด้านบน</div></div>`;
+  const phoneCell = p => p ? `<a href="tel:${esc(p)}">${esc(p)}</a>` : (unlocked ? '-' : '<button class="btn sm ghost lk" data-unlock>🔒 แสดงเบอร์</button>');
+  const updCounts = () => $$('[data-t]', pg).forEach(b => { const n = (lists[b.dataset.t] || []).length, c = $('.cnt', b); c.hidden = !n; c.textContent = n; });
+  const draw = () => {
+    if (!cur) return;
+    const L = lists[cur.topicId] || (lists[cur.topicId] = []);
+    $('#pbOut').innerHTML = `<div class="card"><h3 style="margin-top:0">${esc(cur.name)} <span style="color:${+cur.points >= 0 ? 'var(--ok)' : 'var(--bad)'}">${+cur.points > 0 ? '+' : ''}${esc(cur.points)} คะแนน</span></h3>
+      <div class="tblwrap"><table class="t pbt"><thead><tr><th>#</th><th>ชื่อ - สกุล</th><th>ชั้น/ห้อง</th><th>เบอร์นักเรียน</th><th>ครูที่ปรึกษา</th><th>เบอร์ครู</th><th>ผู้ปกครอง</th><th>เบอร์ผู้ปกครอง</th><th></th></tr></thead><tbody>
+      ${L.map((s, i) => `<tr><td>${i + 1}</td><td><b>${esc(s.name)}</b><span class="sub">${esc(s.studentId)}</span></td><td>${esc(s.grade || '-')}/${esc(s.room || '-')}</td><td>${phoneCell(s.phone)}</td>
+        <td>${s.teachers.map(t => `<div class="pl">${esc(t.name)}</div>`).join('') || '-'}</td><td>${s.teachers.map(t => `<div class="pl">${phoneCell(t.phone)}</div>`).join('') || '-'}</td>
+        <td>${s.parents.map(p => `<div class="pl pp">${esc(p.name)}${p.relation ? `<span class="sub">${esc(p.relation)}</span>` : ''}</div>`).join('') || '-'}</td><td>${s.parents.map(p => `<div class="pl pp">${phoneCell(p.phone)}</div>`).join('') || '-'}</td>
+        <td><button class="btn sm ghost" data-rm="${i}" title="เอาออก">✕</button></td></tr>`).join('')}
+      <tr><td colspan="9" style="text-align:center"><button class="btn sm" id="pbAdd">+ เพิ่มชื่อ</button></td></tr></tbody></table></div>
+      <label style="width:100%;margin-top:10px">หมายเหตุ (ถ้ามี)<input id="pbNote" style="width:100%" value="${esc(cur.note || '')}"></label>
+      <div class="row" style="margin-top:10px"><button class="btn" id="pbSave" ${L.length ? '' : 'disabled'}>💾 บันทึก ${L.length ? L.length + ' คน' : ''}</button><span class="muted">ยังไม่บันทึกจนกว่าจะกดปุ่มนี้ · เพิ่มชื่อได้เรื่อย ๆ แล้วบันทึกพร้อมกัน</span></div></div>`;
+    $('#pbNote').oninput = e => cur.note = e.target.value;
+    $$('[data-rm]', pg).forEach(b => b.onclick = () => { L.splice(+b.dataset.rm, 1); draw(); updCounts(); });
+    $$('[data-unlock]', pg).forEach(b => b.onclick = unlock);
+    $('#pbAdd').onclick = addDialog;
+    $('#pbSave').onclick = () => safe(async () => {
+      const res = await api('recordBehaviorBatch', cur.topicId, L.map(s => s.studentId), cur.note || '');
+      toast(`บันทึก "${res.topicName}" แล้ว ${res.count} คน`, 'ok');
+      L.length = 0; cur.note = ''; draw(); updCounts();
+    });
+  };
+  const unlock = () => {
+    if (!r.hasCode) return toast('แอดมินยังไม่ได้ตั้งรหัสดูข้อมูล', 'bad');
+    openModal(`<h3 style="margin-top:0">🔒 ใส่รหัสดูข้อมูล</h3><p class="muted">เพื่อแสดงเบอร์โทรนักเรียน ครู และผู้ปกครอง</p>
+      <input type="password" id="ulCode" style="width:100%" autocomplete="off"><div id="ulErr" style="color:var(--bad);font-size:13px;min-height:18px;margin-top:4px"></div><div class="row" style="margin-top:10px"><button class="btn" id="ulOk">แสดงเบอร์</button></div>`);
+    const go = () => safe(async () => {
+      try { await api('unlockContacts', $('#ulCode').value); } catch (e) { $('#ulErr').textContent = e.message; $('#ulCode').select(); return; }
+      unlocked = true; closeModal();
+      const ids = [...new Set(Object.values(lists).flat().map(s => s.studentId))];
+      if (ids.length) { const m = {}; (await api('behaviorPeople', ids)).items.forEach(x => m[x.studentId] = x); Object.keys(lists).forEach(k => lists[k] = lists[k].map(s => m[s.studentId] || s)); }
+      draw(); toast('แสดงเบอร์แล้ว', 'ok');
+    });
+    $('#ulOk').onclick = go; $('#ulCode').onkeydown = e => { if (e.key === 'Enter') go(); }; $('#ulCode').focus();
+  };
+  const addDialog = () => {
+    const L = lists[cur.topicId];
+    openModal(`<h3 style="margin-top:0">เพิ่มชื่อ: ${esc(cur.name)}</h3>${searchBar('pbQ')}<div id="pbAddMsg" class="muted" style="margin:8px 0"></div><div id="pbRoster"></div>
+      <div class="row" style="margin-top:10px"><button class="btn" id="pbDone">เสร็จ</button></div>`, true);
+    const msg = () => $('#pbAddMsg').textContent = L.length ? `รอบันทึก ${L.length} คน · เลือกเพิ่มได้อีก หรือกด "เสร็จ"` : 'เลือกชั้น/ห้อง หรือพิมพ์ค้นหา แล้วคลิกชื่อ';
+    msg();
+    bindSearch('pbQ', async sid => {
+      if (L.some(s => String(s.studentId).trim() === String(sid).trim())) return toast('ชื่อนี้อยู่ในตารางแล้ว');
+      const res = await api('behaviorPeople', [sid]); if (!res.items.length) return;
+      L.push(res.items[0]); draw(); updCounts(); msg(); toast('เพิ่ม ' + res.items[0].name, 'ok');
+      $('#pbQ').value = '';
+    }, { roster: 'pbRoster', noPreselect: true });
+    $('#pbDone').onclick = closeModal;
+  };
+  $$('[data-t]', pg).forEach(b => b.onclick = () => {
+    $$('[data-t]', pg).forEach(x => x.classList.toggle('on', x === b));
+    cur = r.topics.find(t => t.topicId === b.dataset.t); draw();
+  });
 };
 
 /* ---------- 4.1 บันทึกพฤติกรรม ---------- */
@@ -1769,7 +1841,7 @@ PAGES.settings = async pg => {
   const f = (k, l, type = 'text') => `<label>${l}<input type="${type}" data-f="${k}" value="${esc(s[k] || '')}"></label>`;
   const ta = (k, l) => `<label style="flex:1;min-width:240px">${l}<textarea data-f="${k}" rows="2" style="min-height:0">${esc(s[k] || '')}</textarea></label>`;
   pg.innerHTML = `<div class="card"><h3>ข้อมูลโรงเรียน / บัตร</h3><p class="muted" style="margin-top:-6px">กด Enter เพื่อขึ้นบรรทัดใหม่ได้ ที่แสดงผล (หัวเว็บ หน้าเข้าสู่ระบบ รายงาน บัตร) จะขึ้นบรรทัดใหม่ตาม</p><div class="row" id="sf1">${ta('schoolName', 'ชื่อโรงเรียน')}${ta('signerName', 'ชื่อผู้ลงนามในบัตร')}${ta('signerPosition', 'ตำแหน่งใต้ลายเซ็น')}</div></div>
-   <div class="card"><h3>บัญชีแอดมิน / รหัสลายเซ็น</h3><div class="row" id="sf2">${f('adminUser', 'ชื่อผู้ใช้แอดมิน')}${f('adminPassword', 'รหัสผ่านแอดมิน')}${f('signatureCode', 'รหัสลายเซ็นบนบัตร (ใช้ตอนอนุมัติ)')}${f('registerCode', 'รหัสลงทะเบียนครู (เว้นว่าง = ปิด)')}</div>
+   <div class="card"><h3>บัญชีแอดมิน / รหัสลายเซ็น</h3><div class="row" id="sf2">${f('adminUser', 'ชื่อผู้ใช้แอดมิน')}${f('adminPassword', 'รหัสผ่านแอดมิน')}${f('signatureCode', 'รหัสลายเซ็นบนบัตร (ใช้ตอนอนุมัติ)')}${f('registerCode', 'รหัสลงทะเบียนครู (เว้นว่าง = ปิด)')}${f('contactCode', 'รหัสดูเบอร์โทร (บุคคลทั่วไป · เว้นว่าง = ดูไม่ได้)')}</div>
     <h3 style="margin-top:14px">บันทึกย้อนหลัง (หน้าตรวจสอบสถานะ)</h3><div class="row">${f('backdateMinutes', 'คงค่าวันเวลาย้อนหลังไว้ (นาที) ถ้าไม่ใช้งานเกินนี้ กลับเป็นเวลาปัจจุบัน', 'number')}
     <div><div style="font-weight:600;font-size:14px;margin-bottom:6px">บทบาทที่ลงย้อนหลังได้</div><label class="chk"><input type="checkbox" checked disabled> แอดมิน</label> <label class="chk"><input type="checkbox" data-bdr="teacher" ${String(s.backdateRoles || '').split(',').includes('teacher') ? 'checked' : ''}> ครู</label> <label class="chk"><input type="checkbox" data-bdr="public" ${String(s.backdateRoles || '').split(',').includes('public') ? 'checked' : ''}> บุคคลทั่วไป</label></div></div>
     <p class="muted">ครูเข้าระบบด้วยเบอร์โทรที่อยู่ในรายชื่อครูที่ปรึกษา (เบอร์เป็นทั้งชื่อผู้ใช้และรหัสผ่าน) · บุคคลทั่วไปเข้าได้โดยไม่ต้องใส่รหัส</p></div>
