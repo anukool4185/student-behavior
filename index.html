@@ -112,7 +112,7 @@ table.t tfoot td{font-weight:800;background:#f8fafc}
 .sumbox{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
 .sumbox div{flex:1;min-width:140px;border-radius:10px;padding:10px;text-align:center;font-weight:700}
 /* late card 5.6 x 8.8 cm */
-.a4sheet{width:210mm;height:296mm;box-sizing:border-box;padding:12mm 0 0;display:grid;grid-template-columns:repeat(3,56mm);grid-auto-rows:88mm;gap:3mm;justify-content:center;align-content:start;background:#fff;page-break-after:always;break-after:page;overflow:hidden}
+.a4sheet{width:210mm;height:296mm;box-sizing:border-box;padding:12mm 0 0;display:grid;grid-template-columns:repeat(3,56mm);grid-auto-rows:88mm;grid-auto-flow:row;gap:3mm;justify-content:center;align-content:start;justify-items:start;align-items:start;background:#fff;page-break-after:always;break-after:page;overflow:hidden}
 .a4sheet:last-child{page-break-after:auto;break-after:auto}
 .a4prev{display:flex;flex-direction:column;gap:10px;align-items:center;overflow:auto;background:#e2e8f0;padding:12px;border-radius:12px;max-height:70vh}
 .a4prev .a4sheet{box-shadow:0 2px 10px rgba(0,0,0,.15);zoom:.55}
@@ -325,9 +325,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.11.1';
+const APP_VERSION = '3.11.2';
 const MIN_SERVER_VERSION = '3.11.1';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.11.2': ['ปริ้นท์บัตร: กำหนดจำนวนใบต่อคนได้ (ทุกคน หรือรายคน) เรียงจากมุมบนซ้าย ซ้าย→ขวา บน→ล่าง'],
   '3.11.1': ['เพิ่มปุ่มถ่าย/อัปโหลดรูปนักเรียนในหน้าที่ยังไม่มี: จัดการข้อมูลนักเรียน, ปริ้นท์บัตร, บันทึกพฤติกรรม (บุคคลทั่วไป)', 'หน้าแก้ไขนักเรียน/ผู้ปกครอง ถ่ายรูปด้วยกล้องได้'],
   '3.11.0': ['จัดลำดับเมนูการมาสายใหม่', 'เมนูใหม่: ปริ้นท์บัตรที่อนุญาตเข้าสาย เลือกหลายคน เรียงลง A4 แผ่นละ 9 ใบ'],
   '3.10.0': ['บุคคลทั่วไป: เมนูบันทึกพฤติกรรมแบบตาราง เพิ่มหลายชื่อแล้วบันทึกพร้อมกัน', 'เบอร์โทรซ่อนไว้ ต้องใส่รหัสดูข้อมูล (ตั้งในหน้าตั้งค่า)'],
@@ -1323,21 +1324,25 @@ PAGES.printPasses = async pg => {
       <button class="btn" id="ppGo">แสดงรายชื่อ</button></div>
       <p class="muted" style="margin:8px 0 0">แสดงเฉพาะบัตรที่แอดมินอนุมัติแล้ว${teacher ? ' · ครูเห็นเฉพาะห้องที่ตนเป็นครูที่ปรึกษา' : ''} · บัตรระยะยาวที่ยังใช้ได้ในช่วงวันที่จะแสดงด้วย</p></div>
     <div id="ppOut"></div>`;
-  let items = [];
-  const sel = new Set();
-  const bar = () => { const n = sel.size, sh = Math.ceil(n / PER_SHEET); $('#ppPrint').disabled = !n; $('#ppPrint').textContent = n ? `🖨 ปริ้นท์บัตรที่เลือก ${n} ใบ (${sh} แผ่น A4)` : '🖨 ปริ้นท์บัตรที่เลือก'; $('#ppAll').checked = n && n === items.length; };
+  let items = [], copiesAll = 1;
+  const sel = new Set(), copies = {};      // passId → จำนวนใบที่จะพิมพ์
+  const cp = id => Math.max(1, Math.min(PER_SHEET, +copies[id] || 1));
+  const bar = () => { const n = sel.size, tot = [...sel].reduce((a, id) => a + cp(id), 0), sh = Math.ceil(tot / PER_SHEET); $('#ppPrint').disabled = !n; $('#ppPrint').textContent = n ? `🖨 ปริ้นท์ ${n} คน · ${tot} ใบ (${sh} แผ่น A4)` : '🖨 ปริ้นท์บัตรที่เลือก'; $('#ppAll').checked = n && n === items.length; };
   const load = () => safe(async () => {
     const [g, r] = ($('#ppCls').value || '|').split('|');
     const res = await api('listPrintPasses', $('#ppFrom').value, $('#ppTo').value, g, r);
-    items = res.items; sel.clear(); items.forEach(x => sel.add(x.passId));
-    $('#ppOut').innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="ppAll"> เลือกทั้งหมด (${items.length} ใบ)</label>
+    items = res.items; sel.clear(); items.forEach(x => { sel.add(x.passId); copies[x.passId] = copiesAll; });
+    $('#ppOut').innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="ppAll"> เลือกทั้งหมด (${items.length} คน)</label>
+      <label style="flex-direction:row;align-items:center;gap:6px">จำนวนใบต่อคน (ทุกคน)<input type="number" id="ppCopies" min="1" max="${PER_SHEET}" value="${copiesAll}" style="width:64px"></label>
       <button class="btn" id="ppPrint">🖨 ปริ้นท์บัตรที่เลือก</button></div>
-      ${items.length ? `<div class="tblwrap"><table class="t"><thead><tr><th></th><th>รูป</th><th>รหัส</th><th>ชื่อ - สกุล</th><th>ชั้น/ห้อง</th><th>ประเภท</th><th>วันที่</th><th>เวลาเข้า</th><th>เหตุผล</th></tr></thead><tbody>
+      ${items.length ? `<div class="tblwrap"><table class="t"><thead><tr><th></th><th>รูป</th><th>รหัส</th><th>ชื่อ - สกุล</th><th>ชั้น/ห้อง</th><th>ประเภท</th><th>วันที่</th><th>เวลาเข้า</th><th>เหตุผล</th><th>จำนวนใบ</th></tr></thead><tbody>
       ${items.map((x, i) => `<tr><td><input type="checkbox" data-pp="${esc(x.passId)}" checked></td><td class="c">${x.hasPhoto ? '<span class="chip ok">มี</span>' : `<span data-nophoto="${esc(x.studentId)}" style="white-space:nowrap"><span class="chip bad">ไม่มี</span> <button class="btn sm" data-phmenu="${esc(x.studentId)}" title="เพิ่มรูปนักเรียน">📷</button></span>`}</td><td>${esc(x.studentId)}</td><td>${esc(x.name)}</td><td>${esc(x.grade)}/${esc(x.room)}</td>
         <td><span class="stdot st-${x.yellow ? 'yellow' : 'green'}"></span> ${esc(x.category || 'นักเรียนทั่วไป')}${x.longTerm ? ' · ระยะยาว' : ''}</td>
-        <td>${x.longTerm ? esc(thDate(x.date)) + ' – ' + (x.endDate ? esc(thDate(x.endDate)) : 'ไม่กำหนด') : esc(thDate(x.date))}</td><td>${esc(x.entryTime || '-')}</td><td>${esc(x.reason || '-')}</td></tr>`).join('')}</tbody></table></div>`
+        <td>${x.longTerm ? esc(thDate(x.date)) + ' – ' + (x.endDate ? esc(thDate(x.endDate)) : 'ไม่กำหนด') : esc(thDate(x.date))}</td><td>${esc(x.entryTime || '-')}</td><td>${esc(x.reason || '-')}</td><td><input type="number" data-cp="${esc(x.passId)}" min="1" max="${PER_SHEET}" value="${cp(x.passId)}" style="width:60px"></td></tr>`).join('')}</tbody></table></div>`
         : '<p class="muted">ไม่มีบัตรที่อนุมัติแล้วในช่วงวันที่นี้</p>'}</div>`;
     $$('[data-pp]', pg).forEach(c => c.onchange = () => { c.checked ? sel.add(c.dataset.pp) : sel.delete(c.dataset.pp); bar(); });
+    $$('[data-cp]', pg).forEach(c => c.oninput = () => { copies[c.dataset.cp] = c.value; bar(); });
+    $('#ppCopies').oninput = e => { copiesAll = Math.max(1, Math.min(PER_SHEET, +e.target.value || 1)); items.forEach(x => copies[x.passId] = copiesAll); $$('[data-cp]', pg).forEach(c => c.value = copiesAll); bar(); };
     $('#ppAll').onchange = e => { $$('[data-pp]', pg).forEach(c => { c.checked = e.target.checked; c.checked ? sel.add(c.dataset.pp) : sel.delete(c.dataset.pp); }); bar(); };
     $('#ppPrint').onclick = () => safe(printSel);
     bar();
@@ -1350,10 +1355,12 @@ PAGES.printPasses = async pg => {
     for (let i = 0; i < ids.length; i += 18) cards = cards.concat(await api('printPassCards', ids.slice(i, i + 18)));
     const order = {}; ids.forEach((id, i) => order[id] = i);
     cards.sort((a, b) => order[a.pass.passId] - order[b.pass.passId]);
+    // ทำซ้ำตามจำนวนใบต่อคน · วางเริ่มมุมบนซ้ายของกระดาษ เรียงซ้าย→ขวา แล้วบน→ล่าง
+    cards = cards.flatMap(c => Array(cp(c.pass.passId)).fill(c));
     const sheets = [];
     for (let i = 0; i < cards.length; i += PER_SHEET) sheets.push(`<div class="a4sheet">${cards.slice(i, i + PER_SHEET).map(cardHTML).join('')}</div>`);
     const html = `<div class="a4wrap">${sheets.join('')}</div>`;
-    openModal(`<h3 style="margin-top:0">บัตร ${cards.length} ใบ · ${sheets.length} แผ่น A4</h3><div class="a4prev">${html}</div>
+    openModal(`<h3 style="margin-top:0">บัตร ${cards.length} ใบ · ${sheets.length} แผ่น A4</h3><p class="muted" style="margin:-4px 0 8px">เรียงจากมุมบนซ้าย ซ้าย→ขวา แล้วบน→ล่าง · แผ่นละ ${PER_SHEET} ใบ</p><div class="a4prev">${html}</div>
       <div class="row" style="margin-top:10px"><button class="btn" id="ppDo">🖨 ปริ้นท์</button><button class="btn ghost" id="ppPdf">⬇ ดาวน์โหลด PDF</button></div>
       <p class="muted" style="margin:6px 0 0">ตั้งค่าเครื่องพิมพ์: กระดาษ A4 · ขนาดจริง 100% (ไม่ย่อ/ขยาย) · ไม่มีขอบ</p>`, true);
     const el = () => { const d = document.createElement('div'); d.innerHTML = html; return d.firstChild; };
