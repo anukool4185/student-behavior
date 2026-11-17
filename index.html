@@ -112,6 +112,10 @@ table.t tfoot td{font-weight:800;background:#f8fafc}
 .sumbox{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
 .sumbox div{flex:1;min-width:140px;border-radius:10px;padding:10px;text-align:center;font-weight:700}
 /* late card 5.6 x 8.8 cm */
+.a4sheet{width:210mm;height:296mm;box-sizing:border-box;padding:12mm 0 0;display:grid;grid-template-columns:repeat(3,56mm);grid-auto-rows:88mm;gap:3mm;justify-content:center;align-content:start;background:#fff;page-break-after:always;break-after:page;overflow:hidden}
+.a4sheet:last-child{page-break-after:auto;break-after:auto}
+.a4prev{display:flex;flex-direction:column;gap:10px;align-items:center;overflow:auto;background:#e2e8f0;padding:12px;border-radius:12px;max-height:70vh}
+.a4prev .a4sheet{box-shadow:0 2px 10px rgba(0,0,0,.15);zoom:.55}
 .lcard{width:56mm;height:87.6mm;box-sizing:border-box;border:1px solid #334155;padding:2mm 2.4mm;font-size:6.8pt;line-height:1.22;background:#fff;color:#000;overflow:hidden;display:flex;flex-direction:column;gap:.9mm;font-family:'Sarabun',sans-serif}
 .lc-head{text-align:center;border-bottom:1px solid #94a3b8;padding-bottom:.8mm}
 .lc-school{font-size:6.8pt;font-weight:700}.lc-title{font-size:10pt;font-weight:800;color:#b91c1c;line-height:1.1}.lc-date{font-size:6.6pt}
@@ -321,9 +325,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.10.0';
-const MIN_SERVER_VERSION = '3.10.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '3.11.0';
+const MIN_SERVER_VERSION = '3.11.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.11.0': ['จัดลำดับเมนูการมาสายใหม่', 'เมนูใหม่: ปริ้นท์บัตรที่อนุญาตเข้าสาย เลือกหลายคน เรียงลง A4 แผ่นละ 9 ใบ'],
   '3.10.0': ['บุคคลทั่วไป: เมนูบันทึกพฤติกรรมแบบตาราง เพิ่มหลายชื่อแล้วบันทึกพร้อมกัน', 'เบอร์โทรซ่อนไว้ ต้องใส่รหัสดูข้อมูล (ตั้งในหน้าตั้งค่า)'],
   '3.9.3': ['ข้อ 2 กดลิงก์แล้วขึ้นหน้าต่างติดตั้งทันที ไม่ต้องเปิดหน้าใหม่'],
   '3.9.2': ['หน้าต่างติดตั้งแอป: เพิ่มข้อ 2 กดติดตั้งจากลิงก์นี้'],
@@ -499,7 +504,7 @@ document.addEventListener('click', e => {
 /* =================== พิมพ์ / PDF / Excel / แชร์ =================== */
 function doPrint(el, card) {
   const pa = $('#printArea'); pa.innerHTML = ''; pa.appendChild(el.cloneNode(true));
-  $('#pageStyle').textContent = card ? '@page{size:56mm 88mm;margin:0}' : '@page{size:A4 portrait;margin:10mm}';
+  $('#pageStyle').textContent = card === 'a4cards' ? '@page{size:A4 portrait;margin:0}' : card ? '@page{size:56mm 88mm;margin:0}' : '@page{size:A4 portrait;margin:10mm}';
   document.body.classList.add('printing');
   setTimeout(() => { window.print(); document.body.classList.remove('printing'); pa.innerHTML = ''; }, 350);
 }
@@ -819,7 +824,7 @@ const A = ['admin'], ST = ['admin', 'teacher'], AL = ['admin', 'teacher', 'publi
 const MENU = [
   ['ข้อมูลพื้นฐาน', [['importStudents', 'นำเข้าข้อมูลนักเรียน', A], ['students', 'จัดการข้อมูล/รูปนักเรียน', A], ['teachers', 'ครูที่ปรึกษา', A], ['topics', 'หัวข้อพฤติกรรม', A]]],
   ['พฤติกรรม', [['behavior', 'บันทึกพฤติกรรม', ST], ['pubBehavior', 'บันทึกพฤติกรรม', ['public']], ['behaviorReport', 'รายงานพฤติกรรม', ST, 'รายงานพฤติกรรม(ภาพรวมห้อง)'], ['report', 'รายงานผลรายบุคคล', ST, 'รายงานรายบุคคล(ติดต่อ ผปค./ครู)']]],
-  ['การมาสาย', [['approvals', '🔔 อนุมัติบัตรเข้าสาย', A], ['pass', 'ออกบัตรอนุญาตเข้าสาย', ST], ['request', 'ครูรับเรื่องขอเข้าสาย', ST], ['status', 'ตรวจสอบสถานะ / บันทึกเข้า', AL], ['lateReport', 'รายงานนักเรียนเข้าสาย', ST]]],
+  ['การมาสาย', [['request', 'ครูรับเรื่องขอเข้าสาย', ST], ['pass', 'ออกบัตรอนุญาตเข้าสาย', ST], ['approvals', '🔔 อนุมัติบัตรเข้าสาย', A], ['printPasses', 'ปริ้นท์บัตรที่อนุญาตเข้าสาย', ST], ['status', 'ตรวจสอบสถานะ / บันทึกเข้า', AL], ['lateReport', 'รายงานนักเรียนเข้าสาย', ST]]],
   ['ระบบ', [['settings', 'ตั้งค่า', A]]],
   ['ครูที่ปรึกษา', [['register', 'ลงทะเบียนครูที่ปรึกษา', ['register']]]]
 ];
@@ -1295,6 +1300,63 @@ PAGES.report = pg => {
       <div style="margin-top:12px">${aggTable(a.negative, a.totalNegative, a.countNegative, 'neg', 'พฤติกรรมทางลบ')}</div>
       ${sumBox(a)}<p class="muted" style="margin-top:10px">จำนวนครั้งที่มาสาย (ไม่ขออนุญาต): <b style="color:var(--bad)">${r.lateCount}</b> ครั้ง${r.lateStart ? ` (นับตั้งแต่ ${esc(thDate(r.lateStart))})` : ''} · เข้าโดยได้รับอนุญาต (มีบัตร/แจ้งครู ไม่นับมาสาย): <b>${r.authCount || 0}</b> ครั้ง</p></div>`;
   }, { roster: 'rpRoster' });
+};
+
+/* ---------- ปริ้นท์บัตรที่อนุญาตเข้าสาย (หลายใบลง A4 · 9 ใบ/แผ่น) ----------
+   แอดมิน: ทุกห้อง | ครู: เฉพาะห้องที่ตนเป็นที่ปรึกษา (เซิร์ฟเวอร์ตรวจซ้ำ) */
+const PER_SHEET = 9;
+PAGES.printPasses = async pg => {
+  const t = S.today || (d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)(new Date()), teacher = S.role === 'teacher';
+  const cls = teacher ? (S.myRooms || []) : (S.classes || []);
+  pg.innerHTML = `<div class="card"><div class="row" style="align-items:flex-end">
+      <label>ตั้งแต่วันที่<input type="date" id="ppFrom" value="${t}"></label><label>ถึงวันที่<input type="date" id="ppTo" value="${t}"></label>
+      <label>ชั้น/ห้อง<select id="ppCls"><option value="">${teacher ? 'ทุกห้องที่ปรึกษา' : 'ทุกห้อง'}</option>${cls.map(c => `<option value="${esc(c.grade)}|${esc(c.room)}">${esc(classRoom(c))}</option>`).join('')}</select></label>
+      <button class="btn" id="ppGo">แสดงรายชื่อ</button></div>
+      <p class="muted" style="margin:8px 0 0">แสดงเฉพาะบัตรที่แอดมินอนุมัติแล้ว${teacher ? ' · ครูเห็นเฉพาะห้องที่ตนเป็นครูที่ปรึกษา' : ''} · บัตรระยะยาวที่ยังใช้ได้ในช่วงวันที่จะแสดงด้วย</p></div>
+    <div id="ppOut"></div>`;
+  let items = [];
+  const sel = new Set();
+  const bar = () => { const n = sel.size, sh = Math.ceil(n / PER_SHEET); $('#ppPrint').disabled = !n; $('#ppPrint').textContent = n ? `🖨 ปริ้นท์บัตรที่เลือก ${n} ใบ (${sh} แผ่น A4)` : '🖨 ปริ้นท์บัตรที่เลือก'; $('#ppAll').checked = n && n === items.length; };
+  const load = () => safe(async () => {
+    const [g, r] = ($('#ppCls').value || '|').split('|');
+    const res = await api('listPrintPasses', $('#ppFrom').value, $('#ppTo').value, g, r);
+    items = res.items; sel.clear(); items.forEach(x => sel.add(x.passId));
+    $('#ppOut').innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="ppAll"> เลือกทั้งหมด (${items.length} ใบ)</label>
+      <button class="btn" id="ppPrint">🖨 ปริ้นท์บัตรที่เลือก</button></div>
+      ${items.length ? `<div class="tblwrap"><table class="t"><thead><tr><th></th><th>รหัส</th><th>ชื่อ - สกุล</th><th>ชั้น/ห้อง</th><th>ประเภท</th><th>วันที่</th><th>เวลาเข้า</th><th>เหตุผล</th></tr></thead><tbody>
+      ${items.map((x, i) => `<tr><td><input type="checkbox" data-pp="${esc(x.passId)}" checked></td><td>${esc(x.studentId)}</td><td>${esc(x.name)}</td><td>${esc(x.grade)}/${esc(x.room)}</td>
+        <td><span class="stdot st-${x.yellow ? 'yellow' : 'green'}"></span> ${esc(x.category || 'นักเรียนทั่วไป')}${x.longTerm ? ' · ระยะยาว' : ''}</td>
+        <td>${x.longTerm ? esc(thDate(x.date)) + ' – ' + (x.endDate ? esc(thDate(x.endDate)) : 'ไม่กำหนด') : esc(thDate(x.date))}</td><td>${esc(x.entryTime || '-')}</td><td>${esc(x.reason || '-')}</td></tr>`).join('')}</tbody></table></div>`
+        : '<p class="muted">ไม่มีบัตรที่อนุมัติแล้วในช่วงวันที่นี้</p>'}</div>`;
+    $$('[data-pp]', pg).forEach(c => c.onchange = () => { c.checked ? sel.add(c.dataset.pp) : sel.delete(c.dataset.pp); bar(); });
+    $('#ppAll').onchange = e => { $$('[data-pp]', pg).forEach(c => { c.checked = e.target.checked; c.checked ? sel.add(c.dataset.pp) : sel.delete(c.dataset.pp); }); bar(); };
+    $('#ppPrint').onclick = () => safe(printSel);
+    bar();
+  });
+  const printSel = async () => {
+    const ids = items.filter(x => sel.has(x.passId)).map(x => x.passId);   // เรียงตามตาราง
+    if (!ids.length) return;
+    toast('กำลังเตรียมบัตร ' + ids.length + ' ใบ…');
+    let cards = [];
+    for (let i = 0; i < ids.length; i += 18) cards = cards.concat(await api('printPassCards', ids.slice(i, i + 18)));
+    const order = {}; ids.forEach((id, i) => order[id] = i);
+    cards.sort((a, b) => order[a.pass.passId] - order[b.pass.passId]);
+    const sheets = [];
+    for (let i = 0; i < cards.length; i += PER_SHEET) sheets.push(`<div class="a4sheet">${cards.slice(i, i + PER_SHEET).map(cardHTML).join('')}</div>`);
+    const html = `<div class="a4wrap">${sheets.join('')}</div>`;
+    openModal(`<h3 style="margin-top:0">บัตร ${cards.length} ใบ · ${sheets.length} แผ่น A4</h3><div class="a4prev">${html}</div>
+      <div class="row" style="margin-top:10px"><button class="btn" id="ppDo">🖨 ปริ้นท์</button><button class="btn ghost" id="ppPdf">⬇ ดาวน์โหลด PDF</button></div>
+      <p class="muted" style="margin:6px 0 0">ตั้งค่าเครื่องพิมพ์: กระดาษ A4 · ขนาดจริง 100% (ไม่ย่อ/ขยาย) · ไม่มีขอบ</p>`, true);
+    const el = () => { const d = document.createElement('div'); d.innerHTML = html; return d.firstChild; };
+    $('#ppDo').onclick = () => doPrint(el(), 'a4cards');
+    $('#ppPdf').onclick = () => safe(async () => {
+      toast('กำลังสร้าง PDF…');
+      await html2pdf().set({ margin: 0, filename: 'บัตรเข้าสาย_' + $('#ppFrom').value + '.pdf', image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css'], after: '.a4sheet' } }).from(el()).save();
+    });
+  };
+  $('#ppGo').onclick = load;
+  ['ppFrom', 'ppTo', 'ppCls'].forEach(id => $('#' + id).onchange = load);
+  load();
 };
 
 /* ---------- บัตรอนุญาตเข้าสาย ---------- */
