@@ -325,9 +325,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.11.0';
-const MIN_SERVER_VERSION = '3.11.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '3.11.1';
+const MIN_SERVER_VERSION = '3.11.1';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.11.1': ['เพิ่มปุ่มถ่าย/อัปโหลดรูปนักเรียนในหน้าที่ยังไม่มี: จัดการข้อมูลนักเรียน, ปริ้นท์บัตร, บันทึกพฤติกรรม (บุคคลทั่วไป)', 'หน้าแก้ไขนักเรียน/ผู้ปกครอง ถ่ายรูปด้วยกล้องได้'],
   '3.11.0': ['จัดลำดับเมนูการมาสายใหม่', 'เมนูใหม่: ปริ้นท์บัตรที่อนุญาตเข้าสาย เลือกหลายคน เรียงลง A4 แผ่นละ 9 ใบ'],
   '3.10.0': ['บุคคลทั่วไป: เมนูบันทึกพฤติกรรมแบบตาราง เพิ่มหลายชื่อแล้วบันทึกพร้อมกัน', 'เบอร์โทรซ่อนไว้ ต้องใส่รหัสดูข้อมูล (ตั้งในหน้าตั้งค่า)'],
   '3.9.3': ['ข้อ 2 กดลิงก์แล้วขึ้นหน้าต่างติดตั้งทันที ไม่ต้องเปิดหน้าใหม่'],
@@ -466,6 +467,12 @@ function takePhoto(cb) {
     const d = c.toDataURL('image/jpeg', 0.85); closeModal(); safe(() => cb(d));
   };
 }
+/* เลือกถ่ายรูปหรืออัปโหลดไฟล์ แล้วส่งรูปที่ย่อแล้วให้ cb */
+function photoSource(cb, title = 'เพิ่มรูป') {
+  openModal(`<h3>${esc(title)}</h3><p class="muted">ระบบย่อรูปให้กว้าง 400px แล้วบันทึกลง Google Drive</p><div class="row"><button class="btn" id="psCam">📷 ถ่ายรูป</button><button class="btn ghost" id="psFile">📁 อัปโหลดไฟล์</button></div>`);
+  $('#psCam').onclick = () => { closeModal(); takePhoto(cb); };
+  $('#psFile').onclick = () => { closeModal(); pickImage(cb); };
+}
 /* สีสถานะรายวันของนักเรียน (ตรงกับสีแผงสถิติ) */
 const ST_NAME = { green: 'มีบัตรอนุญาต (นักเรียนทั่วไป)', yellow: 'มีบัตรอนุญาต (เด็กวัด)', orange: 'ขออนุญาตครูที่ปรึกษา', pink: 'มาสายไม่ขออนุญาต (วันนี้)' };
 const stLegend = () => `<span class="stleg">${Object.keys(ST_NAME).map(k => `<span><i class="stdot st-${k}"></i>${ST_NAME[k]}</span>`).join('')}</span>`;
@@ -496,6 +503,7 @@ document.addEventListener('click', e => {
     closeModal();
     const r = await api('uploadStudentPhoto', sid, d);
     applyPhoto(sid, r.photo); toast('บันทึกรูปนักเรียนแล้ว', 'ok');
+    $$('[data-nophoto]').filter(el => el.dataset.nophoto === sid).forEach(el => el.outerHTML = '<span class="chip ok">มี</span>');
     if (ON_PHOTO) ON_PHOTO(sid);
   };
   if (b.dataset.cam) takePhoto(done); else pickImage(done);
@@ -970,7 +978,7 @@ PAGES.students = pg => {
       <label style="flex-direction:row;align-items:center;gap:6px;font-weight:400" class="muted">แสดงหน้าละ<select id="stPs">${[25, 50, 100, 200].map(n => `<option ${n === pageSize ? 'selected' : ''}>${n}</option>`).join('')}</select>คน</label></div>
      ${pager(page, r.pages)}<div id="stAllTip" class="muted" style="margin:4px 0"></div>
      <table class="t"><thead><tr><th class="c"><input type="checkbox" id="stCkAll" title="เลือกทั้งหน้านี้"></th><th class="c">ที่</th><th>รหัส</th><th>ชื่อ-สกุล</th><th>ชั้น</th><th>ห้อง</th><th>เบอร์โทร</th><th class="c">รูป</th><th>ที่มา</th><th></th></tr></thead>
-     <tbody>${items.map((s, i) => `<tr><td class="c"><input type="checkbox" data-ck="${esc(s.studentId)}" ${sel.has(s.studentId) ? 'checked' : ''}></td><td class="c muted">${from + i}</td><td>${esc(s.studentId)}</td><td>${esc(fullName(s))}</td><td>${esc(s.grade)}</td><td>${esc(s.room)}</td><td>${esc(s.phone)}</td><td class="c">${s.hasPhoto ? '<span class="chip ok">มี</span>' : '<span class="chip bad">ไม่มี</span>'}</td><td style="font-size:12px">${/หน้าเว็บ/.test(s.source || '') ? '<span class="chip warn">เพิ่มผ่านหน้าเว็บ</span>' : '<span class="muted">Excel</span>'}</td><td><button class="btn sm ghost" data-ed="${esc(s.studentId)}">แก้ไข</button></td></tr>`).join('') || '<tr><td colspan="10" class="c muted">ไม่พบนักเรียน</td></tr>'}</tbody></table>
+     <tbody>${items.map((s, i) => `<tr><td class="c"><input type="checkbox" data-ck="${esc(s.studentId)}" ${sel.has(s.studentId) ? 'checked' : ''}></td><td class="c muted">${from + i}</td><td>${esc(s.studentId)}</td><td>${esc(fullName(s))}</td><td>${esc(s.grade)}</td><td>${esc(s.room)}</td><td>${esc(s.phone)}</td><td class="c">${s.hasPhoto ? '<span class="chip ok">มี</span>' : `<span data-nophoto="${esc(s.studentId)}" style="white-space:nowrap"><span class="chip bad">ไม่มี</span> <button class="btn sm" data-phmenu="${esc(s.studentId)}" title="เพิ่มรูปนักเรียน">📷</button></span>`}</td><td style="font-size:12px">${/หน้าเว็บ/.test(s.source || '') ? '<span class="chip warn">เพิ่มผ่านหน้าเว็บ</span>' : '<span class="muted">Excel</span>'}</td><td><button class="btn sm ghost" data-ed="${esc(s.studentId)}">แก้ไข</button></td></tr>`).join('') || '<tr><td colspan="10" class="c muted">ไม่พบนักเรียน</td></tr>'}</tbody></table>
      ${pager(page, r.pages)}`;
     $$('[data-ed]', $('#stList')).forEach(b => b.onclick = () => safe(() => openStudent(b.dataset.ed)));
     $$('#stList input[data-ck]').forEach(c => c.onchange = () => { c.checked ? sel.add(c.dataset.ck) : sel.delete(c.dataset.ck); updSel(); });
@@ -1041,7 +1049,7 @@ function renderStudentEditor(b) {
     renderStudentEditor(await api('saveStudent', o, isNew)); toast('บันทึกแล้ว', 'ok'); if (STU_REFRESH) STU_REFRESH();
   });
   if (isNew) return;
-  $('#seUp').onclick = () => pickImage(async d => { await api('uploadStudentPhoto', s.studentId, d); await openStudent(s.studentId); toast('อัปโหลดรูปแล้ว', 'ok'); });
+  $('#seUp').onclick = () => photoSource(async d => { await api('uploadStudentPhoto', s.studentId, d); await openStudent(s.studentId); toast('อัปโหลดรูปแล้ว', 'ok'); if (STU_REFRESH) STU_REFRESH(); }, 'รูปนักเรียน ' + s.studentId);
   $('#seDel').onclick = () => safe(async () => { if (await confirmBox(`ลบนักเรียน ${esc(fullName(s))} และผู้ปกครองทั้งหมด?`, 'ลบ', true)) { await api('deleteStudent', s.studentId); box.innerHTML = ''; toast('ลบแล้ว', 'ok'); if (STU_REFRESH) STU_REFRESH(); } });
   const parCard = p => {
     const g = (k, l) => `<label>${l}<input data-f="${k}" value="${esc(p[k] || '')}"></label>`;
@@ -1054,7 +1062,7 @@ function renderStudentEditor(b) {
     $('[data-sv]', el).onclick = () => safe(async () => { renderStudentEditor(await api('saveParent', read())); toast('บันทึกแล้ว', 'ok'); });
     if ($('[data-dl]', el)) $('[data-dl]', el).onclick = () => safe(async () => { if (await confirmBox('ลบผู้ปกครองคนนี้?', 'ลบ', true)) renderStudentEditor(await api('deleteParent', pid)); });
     if ($('[data-cn]', el)) $('[data-cn]', el).onclick = () => el.remove();
-    if ($('[data-up]', el)) $('[data-up]', el).onclick = () => pickImage(async d => { const r = await api('uploadParentPhoto', pid, d); $('.ph', el).outerHTML = img(r.photo, 'md'); toast('อัปโหลดรูปแล้ว', 'ok'); });
+    if ($('[data-up]', el)) $('[data-up]', el).onclick = () => photoSource(async d => { const r = await api('uploadParentPhoto', pid, d); $('.ph', el).outerHTML = img(r.photo, 'md'); toast('อัปโหลดรูปแล้ว', 'ok'); }, 'รูปผู้ปกครอง');
   });
   $('#sePar').innerHTML = b.parents.map(parCard).join('') || '<p class="muted">ยังไม่มีผู้ปกครอง</p>';
   wire();
@@ -1158,6 +1166,7 @@ PAGES.topics = async pg => {
    เบอร์โทรซ่อนไว้ กด "แสดงเบอร์" แล้วใส่รหัสดูข้อมูล (แอดมินตั้งในหน้าตั้งค่า) */
 PAGES.pubBehavior = async pg => {
   const r = await api('pubBehaviorTopics');
+  ON_PHOTO = async sid => { const x = (await api('behaviorPeople', [sid])).items[0]; if (x) Object.keys(lists).forEach(k => lists[k] = lists[k].map(s => s.studentId === x.studentId ? x : s)); };
   let unlocked = r.unlocked, cur = null;
   const lists = {};          // topicId → [แถวข้อมูลนักเรียน] ที่รอบันทึก
   const btn = t => `<button class="tbtn ${+t.points >= 0 ? 'p' : 'n'}" data-t="${esc(t.topicId)}">${esc(t.name)} <b>${+t.points > 0 ? '+' : ''}${esc(t.points)}</b><span class="cnt" hidden></span></button>`;
@@ -1170,12 +1179,12 @@ PAGES.pubBehavior = async pg => {
     if (!cur) return;
     const L = lists[cur.topicId] || (lists[cur.topicId] = []);
     $('#pbOut').innerHTML = `<div class="card"><h3 style="margin-top:0">${esc(cur.name)} <span style="color:${+cur.points >= 0 ? 'var(--ok)' : 'var(--bad)'}">${+cur.points > 0 ? '+' : ''}${esc(cur.points)} คะแนน</span></h3>
-      <div class="tblwrap"><table class="t pbt"><thead><tr><th>#</th><th>ชื่อ - สกุล</th><th>ชั้น/ห้อง</th><th>เบอร์นักเรียน</th><th>ครูที่ปรึกษา</th><th>เบอร์ครู</th><th>ผู้ปกครอง</th><th>เบอร์ผู้ปกครอง</th><th></th></tr></thead><tbody>
-      ${L.map((s, i) => `<tr><td>${i + 1}</td><td><b>${esc(s.name)}</b><span class="sub">${esc(s.studentId)}</span></td><td>${esc(s.grade || '-')}/${esc(s.room || '-')}</td><td>${phoneCell(s.phone)}</td>
+      <div class="tblwrap"><table class="t pbt"><thead><tr><th>#</th><th>รูป</th><th>ชื่อ - สกุล</th><th>ชั้น/ห้อง</th><th>เบอร์นักเรียน</th><th>ครูที่ปรึกษา</th><th>เบอร์ครู</th><th>ผู้ปกครอง</th><th>เบอร์ผู้ปกครอง</th><th></th></tr></thead><tbody>
+      ${L.map((s, i) => `<tr><td>${i + 1}</td><td>${stuPhoto(s, 'sm')}</td><td><b>${esc(s.name)}</b><span class="sub">${esc(s.studentId)}</span></td><td>${esc(s.grade || '-')}/${esc(s.room || '-')}</td><td>${phoneCell(s.phone)}</td>
         <td>${s.teachers.map(t => `<div class="pl">${esc(t.name)}</div>`).join('') || '-'}</td><td>${s.teachers.map(t => `<div class="pl">${phoneCell(t.phone)}</div>`).join('') || '-'}</td>
         <td>${s.parents.map(p => `<div class="pl pp">${esc(p.name)}${p.relation ? `<span class="sub">${esc(p.relation)}</span>` : ''}</div>`).join('') || '-'}</td><td>${s.parents.map(p => `<div class="pl pp">${phoneCell(p.phone)}</div>`).join('') || '-'}</td>
         <td><button class="btn sm ghost" data-rm="${i}" title="เอาออก">✕</button></td></tr>`).join('')}
-      <tr><td colspan="9" style="text-align:center"><button class="btn sm" id="pbAdd">+ เพิ่มชื่อ</button></td></tr></tbody></table></div>
+      <tr><td colspan="10" style="text-align:center"><button class="btn sm" id="pbAdd">+ เพิ่มชื่อ</button></td></tr></tbody></table></div>
       <label style="width:100%;margin-top:10px">หมายเหตุ (ถ้ามี)<input id="pbNote" style="width:100%" value="${esc(cur.note || '')}"></label>
       <div class="row" style="margin-top:10px"><button class="btn" id="pbSave" ${L.length ? '' : 'disabled'}>💾 บันทึก ${L.length ? L.length + ' คน' : ''}</button><span class="muted">ยังไม่บันทึกจนกว่าจะกดปุ่มนี้ · เพิ่มชื่อได้เรื่อย ๆ แล้วบันทึกพร้อมกัน</span></div></div>`;
     $('#pbNote').oninput = e => cur.note = e.target.value;
@@ -1323,8 +1332,8 @@ PAGES.printPasses = async pg => {
     items = res.items; sel.clear(); items.forEach(x => sel.add(x.passId));
     $('#ppOut').innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="ppAll"> เลือกทั้งหมด (${items.length} ใบ)</label>
       <button class="btn" id="ppPrint">🖨 ปริ้นท์บัตรที่เลือก</button></div>
-      ${items.length ? `<div class="tblwrap"><table class="t"><thead><tr><th></th><th>รหัส</th><th>ชื่อ - สกุล</th><th>ชั้น/ห้อง</th><th>ประเภท</th><th>วันที่</th><th>เวลาเข้า</th><th>เหตุผล</th></tr></thead><tbody>
-      ${items.map((x, i) => `<tr><td><input type="checkbox" data-pp="${esc(x.passId)}" checked></td><td>${esc(x.studentId)}</td><td>${esc(x.name)}</td><td>${esc(x.grade)}/${esc(x.room)}</td>
+      ${items.length ? `<div class="tblwrap"><table class="t"><thead><tr><th></th><th>รูป</th><th>รหัส</th><th>ชื่อ - สกุล</th><th>ชั้น/ห้อง</th><th>ประเภท</th><th>วันที่</th><th>เวลาเข้า</th><th>เหตุผล</th></tr></thead><tbody>
+      ${items.map((x, i) => `<tr><td><input type="checkbox" data-pp="${esc(x.passId)}" checked></td><td class="c">${x.hasPhoto ? '<span class="chip ok">มี</span>' : `<span data-nophoto="${esc(x.studentId)}" style="white-space:nowrap"><span class="chip bad">ไม่มี</span> <button class="btn sm" data-phmenu="${esc(x.studentId)}" title="เพิ่มรูปนักเรียน">📷</button></span>`}</td><td>${esc(x.studentId)}</td><td>${esc(x.name)}</td><td>${esc(x.grade)}/${esc(x.room)}</td>
         <td><span class="stdot st-${x.yellow ? 'yellow' : 'green'}"></span> ${esc(x.category || 'นักเรียนทั่วไป')}${x.longTerm ? ' · ระยะยาว' : ''}</td>
         <td>${x.longTerm ? esc(thDate(x.date)) + ' – ' + (x.endDate ? esc(thDate(x.endDate)) : 'ไม่กำหนด') : esc(thDate(x.date))}</td><td>${esc(x.entryTime || '-')}</td><td>${esc(x.reason || '-')}</td></tr>`).join('')}</tbody></table></div>`
         : '<p class="muted">ไม่มีบัตรที่อนุมัติแล้วในช่วงวันที่นี้</p>'}</div>`;
