@@ -178,11 +178,22 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 .aci:hover,.aci.on{background:var(--pri2)}
 .acid{font-weight:800;min-width:70px}.acnm{flex:1}.accr{color:var(--mut);font-size:13px;white-space:nowrap}
 .acn{padding:8px 14px;font-size:12px;color:var(--mut);background:#f8fafc}
-.withstats{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start}
+.withstats{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
 .sthead{font-weight:800;font-size:16px;color:#0f172a}.sthead small{display:block;font-weight:600;font-size:12px;color:var(--mut)}
 .live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-left:4px;animation:pulse 1.5s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 #22c55e99}70%{box-shadow:0 0 0 8px #22c55e00}100%{box-shadow:0 0 0 0 #22c55e00}}
 .st-black{background:linear-gradient(135deg,#1f2937,#0f172a)}
+.stsplit .stn{white-space:nowrap}.stsplit .stn small{font-size:.42em}
+.stats .stb{container-type:inline-size}
+.stats .stb .stsplit .stn{font-size:min(14cqi,7vh,56px)}
+.stats .stb .bkbot .stv{font-size:min(11cqi,5vh,40px)}
+.stats .stb .bkrow{font-size:clamp(10px,min(4.6cqi,2vh),15px)}
+.stats .stb .stlab{font-size:clamp(11px,min(5cqi,2.2vh),17px)}
+.stats .stb .bkbot .stlab{font-size:clamp(10px,min(4.2cqi,1.9vh),15px)}
+.bkbot{align-items:stretch}.bkbot .stl{flex:1.5 1 0}.bkbot .stlab{font-size:.8em}.bkbot .str{display:flex;flex-direction:column;justify-content:space-between}
+.bkrows{text-align:left;display:flex;flex-direction:column;justify-content:center;gap:2px;padding-left:4px}
+.bkrow{display:flex;align-items:center;gap:4px;font-size:clamp(10px,1.5vh,13px);font-weight:600;white-space:nowrap}.bkrow b{font-size:1.15em}.bkrow .stdot{border:1.5px solid #fff}
+.stats .stb.st-black{flex:0 0 auto;padding-top:10px;padding-bottom:10px}
 .stmix{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:2px}.stmix span{display:inline-flex;align-items:center;gap:4px;font-weight:700}.stmix .stdot{border:1.5px solid #fff}
 .timebar{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:14px}
 .timebar.back{background:var(--warn2);border-color:#f59e0b;color:#78350f}.timebar.edit{background:#fffbeb;border-color:#fcd34d}
@@ -194,6 +205,14 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 .stt{font-size:15px;font-weight:700;opacity:.95;line-height:1.2}
 .stn{font-size:56px;font-weight:800;line-height:1.05}.stn small{font-size:20px;font-weight:700}
 .sts{font-size:18px;font-weight:600;line-height:1.25}.sts b{font-size:28px}
+.stt{text-align:center}
+.stsplit{display:flex;align-items:center;margin-top:2px}.stl,.str{flex:1 1 0;min-width:0;text-align:center}
+.str{border-left:2px solid currentColor;border-left-color:rgba(255,255,255,.75)}.st-yellow .str{border-left-color:#422006aa}
+.stlab{font-size:.95em;font-weight:700;line-height:1.1}
+.stats .stv{font-size:clamp(20px,3.6vh,44px)}
+.stprog{position:relative;height:9px;margin:8px 7px 4px;background:#fcd9a0;border:1.5px solid #1e293b;border-radius:6px;flex:0 0 auto}
+.stprog i{position:absolute;left:0;top:0;bottom:0;background:#2b9fd8;border-radius:5px}
+.stprog b{position:absolute;top:50%;width:15px;height:15px;margin:-7.5px 0 0 -7.5px;background:#16a34a;border:2px solid #1e293b;border-radius:50%;box-shadow:0 1px 3px #0005}
 .stbar{height:7px;background:#ffffff44;border-radius:6px;margin-top:6px;overflow:hidden}.stbar i{display:block;height:100%;background:#fff;border-radius:6px}
 /* คอม: 5 บล็อกเรียงแนวตั้ง สูงไม่เกินจอ */
 .stats{position:sticky;top:66px;display:flex;flex-direction:column;gap:8px;height:calc(100vh - 140px);max-height:calc(100vh - 140px);min-height:420px}
@@ -207,8 +226,9 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
   .withstats{grid-template-columns:minmax(0,1fr)}.wsmain{min-width:0}
   .stats{position:static;order:-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;height:auto;max-height:none;min-height:0}
   .stats .sthead{grid-column:1/-1;order:0}
-  .stats .st-black{grid-column:1/-1;justify-self:center;width:calc(50% - 4px);order:1}
-  .stats .st-yellow{order:2}.stats .st-green{order:3}.stats .st-orange{order:4}.stats .st-pink{order:5}
+  .stats .st-black{grid-column:1/-1;justify-self:stretch;width:auto;order:1}
+  .bkrow{font-size:clamp(11px,3.2vw,14px)}
+  .stats .stb.st-yellow{order:2}.stats .stb.st-green{order:3}.stats .stb.st-orange{order:4}.stats .stb.st-pink{order:5}
   .stats .stb{padding:9px 11px;border-radius:13px}
   .stats .stt{font-size:clamp(11px,3.3vw,14px)}
   .stats .stn{font-size:clamp(28px,9vw,44px)}.stats .stn small{font-size:clamp(11px,3.4vw,16px)}
@@ -217,9 +237,11 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 /* มือถือแนวนอน: 5 บล็อกแถวเดียว */
 @media(max-width:1000px) and (orientation:landscape),(max-height:500px) and (orientation:landscape){
   .withstats{grid-template-columns:minmax(0,1fr)}.wsmain{min-width:0}
-  .stats{position:static;order:-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;height:auto;max-height:none;min-height:0}
+  .stats{position:static;order:-1;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;height:auto;max-height:none;min-height:0}
   .stats .sthead{grid-column:1/-1}
-  .stats .st-black{width:auto;justify-self:stretch}
+  .stats .st-black{width:auto;justify-self:stretch;grid-column:span 3}
+  .bkrow{font-size:clamp(9px,1.3vw,12px)}
+  .stats .stlab{font-size:clamp(9px,1.2vw,12px)}
   .stats .stb{padding:7px 8px;border-radius:12px;justify-content:flex-start}
   .stats .stt{font-size:clamp(10px,1.5vw,13px);min-height:2.4em}
   .stats .stn{font-size:clamp(22px,3.6vw,38px)}.stats .stn small{font-size:clamp(10px,1.4vw,14px)}
@@ -326,9 +348,11 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.12.1';
+const APP_VERSION = '3.12.3';
 const MIN_SERVER_VERSION = '3.12.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.12.3': ['บล็อกสีดำแบบใหม่: นักเรียนทั้งหมด | เข้าสาย · รายสี ขอ/เข้าแล้ว · เข้าสาย (ไม่นับขออนุญาต)'],
+  '3.12.2': ['ปรับหน้าตาบล็อกสถิติแต่ละสี: จำนวนทั้งหมด | เข้าแล้ว พร้อมแถบความคืบหน้า'],
   '3.12.1': ['สีดำแสดงจำนวนนักเรียนทั้งโรงเรียน (ตามขอบเขตที่เลือก)'],
   '3.12.0': ['สถิติ: สีดำ = เขียว+เหลือง+ส้ม+ชมพู พร้อมแยกจำนวนแต่ละสี', 'นับมาสายจริงเฉพาะที่ไม่ได้รับอนุญาต (ตัดเขียว/เหลือง/ส้ม ออกทุกรายงาน)'],
   '3.11.2': ['ปริ้นท์บัตร: กำหนดจำนวนใบต่อคนได้ (ทุกคน หรือรายคน) เรียงจากมุมบนซ้าย ซ้าย→ขวา บน→ล่าง'],
@@ -1676,17 +1700,34 @@ const scopeText = (g, r) => g && r ? `${g}/${r}` : g ? g : r ? 'ห้อง ' +
 /* ---------- แผงสถิติการมาสาย (ด้านขวา, อัปเดตทุก 15 วินาที) ---------- */
 let PAGE_CLEANUP = [], STATS_SCOPE = null;
 function statsLayout(inner) { return `<div class="withstats"><div class="wsmain">${inner}</div><aside class="stats noprint" id="statsPanel"><div class="muted">กำลังโหลดสถิติ...</div></aside></div>`; }
+/* บล็อกสถิติแต่ละสี: ชื่อ · ซ้าย = จำนวนทั้งหมด | ขวา = เข้าแล้ว · แถบความคืบหน้า (ฟ้า + ปุ่มเขียว) */
+function stCard(cls, title, total, entered) {
+  const p = total ? Math.min(100, Math.round(entered * 100 / total)) : 0;
+  return `<div class="stb ${cls}"><div class="stt">${title}</div>
+    <div class="stsplit"><div class="stl"><div class="stn">${total}<small> คน</small></div></div>
+      <div class="str"><div class="stlab">เข้าแล้ว</div><div class="stn stv">${entered}<small> คน</small></div></div></div>
+    <div class="stprog" title="เข้าแล้ว ${p}%"><i style="width:${p}%"></i><b style="left:${p}%"></b></div></div>`;
+}
+/* บล็อกสีดำ: นักเรียนทั้งหมด | เข้าสาย · แถบ (เข้าสาย/ทั้งหมด) · รายสี ขอ/เข้าแล้ว | เข้าสาย (ไม่นับขออนุญาต) */
+function stBlack(r, lab) {
+  const late = (r.authEntered || 0) + (r.unauthCount || 0), p = r.studentCount ? Math.min(100, Math.round(late * 100 / r.studentCount)) : 0;
+  const row = (c, n, e) => `<div class="bkrow"><i class="stdot st-${c}"></i>ขอ <b>${n}</b> คน / เข้าแล้ว <b>${e}</b> คน</div>`;
+  return `<div class="stb st-black"><div class="stt">นักเรียนทั้งหมด${lab ? ' ' + esc(STATS_SCOPE.label) : ''}</div>
+    <div class="stsplit"><div class="stl"><div class="stn">${r.studentCount}<small> คน</small></div></div>
+      <div class="str"><div class="stlab">เข้าสาย</div><div class="stn stv">${late}<small> คน</small></div></div></div>
+    <div class="stprog" title="เข้าสาย ${p}% ของนักเรียนทั้งหมด"><i style="width:${p}%"></i><b style="left:${p}%"></b></div>
+    <div class="stsplit bkbot"><div class="stl bkrows">${row('green', r.passCount, r.passEntered)}${row('yellow', r.specialCount || 0, r.specialEntered || 0)}${row('orange', r.reqCount, r.reqEntered)}</div>
+      <div class="str"><div class="stlab">เข้าสาย (ไม่นับขออนุญาต)</div><div class="stn stv">${r.unauthCount}<small> คน</small></div></div></div></div>`;
+}
 function statsHTML(r) {
   const pct = (a, b) => b ? Math.min(100, Math.round(a * 100 / b)) : 0;
   const lab = STATS_SCOPE && STATS_SCOPE.label ? ` <span style="color:var(--bad)">${esc(STATS_SCOPE.label)}</span>` : '';
   return `<div class="sthead">📊 สถิติการมาสาย${curAt() ? '' : 'วันนี้'}${lab}<small>${curAt() ? '<b style="color:var(--warn)">⏪ ย้อนหลัง</b> ' : ''}${esc(thDate(r.date))} · อัปเดต ${esc(String(r.time).slice(0, 8))} <span class="live"></span></small></div>
-   <div class="stb st-black"><div class="stt">นักเรียนทั้งหมด${lab ? ' ' + esc(STATS_SCOPE.label) : ''}</div><div class="stn">${r.studentCount}<small> คน</small></div>
-     <div class="sts">ได้รับอนุญาต <b>${r.permitCount ?? 0}</b> · มาสาย <b>${r.unauthCount}</b> คน</div>
-     <div class="sts stmix"><span><i class="stdot st-green"></i>${r.passCount}</span><span><i class="stdot st-yellow"></i>${r.specialCount || 0}</span><span><i class="stdot st-orange"></i>${r.reqCount}</span><span><i class="stdot st-pink"></i>${r.unauthCount}</span></div></div>
-   <div class="stb st-green"><div class="stt">มีบัตรอนุญาต (นักเรียนทั่วไป)</div><div class="stn">${r.passCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.passEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.passEntered, r.passCount)}%"></i></div></div>
-   <div class="stb st-yellow"><div class="stt">มีบัตรอนุญาต (เด็กวัด)</div><div class="stn">${r.specialCount || 0}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.specialEntered || 0}</b> คน</div><div class="stbar"><i style="width:${pct(r.specialEntered || 0, r.specialCount || 0)}%"></i></div></div>
-   <div class="stb st-orange"><div class="stt">ขออนุญาตครูไว้</div><div class="stn">${r.reqCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.reqEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.reqEntered, r.reqCount)}%"></i></div></div>
-   <div class="stb st-pink"><div class="stt">มาสาย${curAt() ? '' : 'วันนี้'} (ไม่ขออนุญาต)</div><div class="stn">${r.unauthCount}<small> คน</small></div><div class="sts">นับเป็นมาสายจริง (ไม่รวม เขียว/เหลือง/ส้ม)</div></div>`;
+   ${stBlack(r, lab)}
+   ${stCard('st-green', 'มีบัตรอนุญาต (นักเรียนทั่วไป)', r.passCount, r.passEntered)}
+   ${stCard('st-yellow', 'มีบัตรอนุญาต (เด็กวัด)', r.specialCount || 0, r.specialEntered || 0)}
+   ${stCard('st-orange', 'ขออนุญาตครูไว้', r.reqCount, r.reqEntered)}
+   ${stCard('st-pink', 'มาสาย' + (curAt() ? '' : 'วันนี้') + ' (ไม่ขออนุญาต)', r.unauthCount, r.unauthCount)}`;
 }
 async function refreshStats() {
   const el = $('#statsPanel'); if (!el) return;
