@@ -183,6 +183,7 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 .live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-left:4px;animation:pulse 1.5s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 #22c55e99}70%{box-shadow:0 0 0 8px #22c55e00}100%{box-shadow:0 0 0 0 #22c55e00}}
 .st-black{background:linear-gradient(135deg,#1f2937,#0f172a)}
+.stmix{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:2px}.stmix span{display:inline-flex;align-items:center;gap:4px;font-weight:700}.stmix .stdot{border:1.5px solid #fff}
 .timebar{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:14px}
 .timebar.back{background:var(--warn2);border-color:#f59e0b;color:#78350f}.timebar.edit{background:#fffbeb;border-color:#fcd34d}
 .timebar input{padding:5px 8px}.bdbig{font-size:20px;font-weight:800;color:#b45309}
@@ -325,9 +326,10 @@ nav .ver{text-align:left;padding:16px 18px 8px;border-top:1px solid var(--bd);ma
 const API_URL = 'https://script.google.com/macros/s/AKfycbybvlZlAAa2HzVerol4Z0XC5RsNJaIuZ9SZKUQvirjHecgLE9G2V6kTXhj5GFd1_Kyq2Q/exec';
 
 /* =================== เวอร์ชัน (เปลี่ยนทุกครั้งที่อัปโหลด index.html ใหม่) =================== */
-const APP_VERSION = '3.11.2';
-const MIN_SERVER_VERSION = '3.11.1';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
+const APP_VERSION = '3.12.0';
+const MIN_SERVER_VERSION = '3.12.0';   // Code.gs ต้องเป็นเวอร์ชันนี้ขึ้นไป
 const CHANGELOG = {
+  '3.12.0': ['สถิติ: สีดำ = เขียว+เหลือง+ส้ม+ชมพู พร้อมแยกจำนวนแต่ละสี', 'นับมาสายจริงเฉพาะที่ไม่ได้รับอนุญาต (ตัดเขียว/เหลือง/ส้ม ออกทุกรายงาน)'],
   '3.11.2': ['ปริ้นท์บัตร: กำหนดจำนวนใบต่อคนได้ (ทุกคน หรือรายคน) เรียงจากมุมบนซ้าย ซ้าย→ขวา บน→ล่าง'],
   '3.11.1': ['เพิ่มปุ่มถ่าย/อัปโหลดรูปนักเรียนในหน้าที่ยังไม่มี: จัดการข้อมูลนักเรียน, ปริ้นท์บัตร, บันทึกพฤติกรรม (บุคคลทั่วไป)', 'หน้าแก้ไขนักเรียน/ผู้ปกครอง ถ่ายรูปด้วยกล้องได้'],
   '3.11.0': ['จัดลำดับเมนูการมาสายใหม่', 'เมนูใหม่: ปริ้นท์บัตรที่อนุญาตเข้าสาย เลือกหลายคน เรียงลง A4 แผ่นละ 9 ใบ'],
@@ -1677,11 +1679,13 @@ function statsHTML(r) {
   const pct = (a, b) => b ? Math.min(100, Math.round(a * 100 / b)) : 0;
   const lab = STATS_SCOPE && STATS_SCOPE.label ? ` <span style="color:var(--bad)">${esc(STATS_SCOPE.label)}</span>` : '';
   return `<div class="sthead">📊 สถิติการมาสาย${curAt() ? '' : 'วันนี้'}${lab}<small>${curAt() ? '<b style="color:var(--warn)">⏪ ย้อนหลัง</b> ' : ''}${esc(thDate(r.date))} · อัปเดต ${esc(String(r.time).slice(0, 8))} <span class="live"></span></small></div>
-   <div class="stb st-black"><div class="stt">นักเรียนทั้งหมด${lab ? ' ' + esc(STATS_SCOPE.label) : ''}</div><div class="stn">${r.studentCount}<small> คน</small></div><div class="sts">มาสาย <b>${r.unauthCount}</b> · ได้รับอนุญาต <b>${r.authEntered || 0}</b> คน</div></div>
+   <div class="stb st-black"><div class="stt">นักเรียนทั้งหมด${lab ? ' ' + esc(STATS_SCOPE.label) : ''}</div><div class="stn">${r.total ?? 0}<small> คน</small></div>
+     <div class="sts">ได้รับอนุญาต <b>${r.permitCount ?? 0}</b> · มาสาย <b>${r.unauthCount}</b> คน</div>
+     <div class="sts stmix"><span><i class="stdot st-green"></i>${r.passCount}</span><span><i class="stdot st-yellow"></i>${r.specialCount || 0}</span><span><i class="stdot st-orange"></i>${r.reqCount}</span><span><i class="stdot st-pink"></i>${r.unauthCount}</span></div></div>
    <div class="stb st-green"><div class="stt">มีบัตรอนุญาต (นักเรียนทั่วไป)</div><div class="stn">${r.passCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.passEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.passEntered, r.passCount)}%"></i></div></div>
    <div class="stb st-yellow"><div class="stt">มีบัตรอนุญาต (เด็กวัด)</div><div class="stn">${r.specialCount || 0}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.specialEntered || 0}</b> คน</div><div class="stbar"><i style="width:${pct(r.specialEntered || 0, r.specialCount || 0)}%"></i></div></div>
    <div class="stb st-orange"><div class="stt">ขออนุญาตครูไว้</div><div class="stn">${r.reqCount}<small> คน</small></div><div class="sts">เข้าแล้ว <b>${r.reqEntered}</b> คน</div><div class="stbar"><i style="width:${pct(r.reqEntered, r.reqCount)}%"></i></div></div>
-   <div class="stb st-pink"><div class="stt">มาสาย${curAt() ? '' : 'วันนี้'} (ไม่ขออนุญาต)</div><div class="stn">${r.unauthCount}<small> คน</small></div><div class="sts">เข้าโดยได้รับอนุญาต <b>${r.authEntered || 0}</b> คน <span style="font-size:12px">(ไม่นับมาสาย)</span></div></div>`;
+   <div class="stb st-pink"><div class="stt">มาสาย${curAt() ? '' : 'วันนี้'} (ไม่ขออนุญาต)</div><div class="stn">${r.unauthCount}<small> คน</small></div><div class="sts">นับเป็นมาสายจริง (ไม่รวม เขียว/เหลือง/ส้ม)</div></div>`;
 }
 async function refreshStats() {
   const el = $('#statsPanel'); if (!el) return;
